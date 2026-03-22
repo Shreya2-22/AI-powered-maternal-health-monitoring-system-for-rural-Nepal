@@ -1,121 +1,220 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useState, useEffect } from 'react';
+import './App.css';
+import Dashboard from './components/Dashboard.jsx';
+import ChatBot from './components/ChatBot.jsx';
+import HealthTracker from './components/HealthTracker.jsx';
+import Appointments from './components/Appointments.jsx';
+import Education from './components/Education.jsx';
+import Emergency from './components/Emergency.jsx';
+
+const API = 'http://localhost:8001/api';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [language, setLanguage] = useState('ne');
+  const [currentUser, setCurrentUser] = useState(null);
+  const [showOnboarding, setShowOnboarding] = useState(true);
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem('aamasuraksha_user');
+    if (savedUser) {
+      setCurrentUser(JSON.parse(savedUser));
+      setShowOnboarding(false);
+    }
+  }, []);
+
+  const handleUserCreation = async (userData) => {
+    try {
+      const response = await fetch(`${API}/users`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData)
+      });
+      const data = await response.json();
+      setCurrentUser(data);
+      localStorage.setItem('aamasuraksha_user', JSON.stringify(data));
+      setShowOnboarding(false);
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Error creating user');
+    }
+  };
+
+  if (showOnboarding) {
+    return <Onboarding onComplete={handleUserCreation} language={language} setLanguage={setLanguage} />;
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+    <div className="App">
+      {currentUser && (
+        <Dashboard user={currentUser} language={language} setLanguage={setLanguage} />
+      )}
+    </div>
+  );
 }
 
-export default App
+const Onboarding = ({ onComplete, language, setLanguage }) => {
+  const [formData, setFormData] = useState({
+    name: '',
+    age: '',
+    phone: '',
+    district: '',
+    weeks_pregnant: '',
+    due_date: ''
+  });
+
+  const text = {
+    ne: {
+      welcome: 'आमा सुरक्षामा स्वागत छ!',
+      subtitle: 'तपाईंको गर्भावस्था यात्रामा हामी तपाईंसँग छौं',
+      name: 'तपाईंको नाम',
+      age: 'उमेर',
+      phone: 'फोन नम्बर (वैकल्पिक)',
+      district: 'जिल्ला',
+      weeks: 'कति हप्ताको गर्भवती हुनुहुन्छ?',
+      dueDate: 'सम्भावित प्रसव मिति',
+      nepali: 'नेपाली',
+      english: 'English',
+      getStarted: 'सुरु गर्नुहोस्',
+      disclaimer: '⚠️ यह एक सलाहकार उपकरण है, चिकित्सा निदान नहीं। हमेशा डॉक्टर से सलाह लें।'
+    },
+    en: {
+      welcome: 'Welcome to AamaSuraksha!',
+      subtitle: 'Your companion through your pregnancy journey',
+      name: 'Your Name',
+      age: 'Age',
+      phone: 'Phone Number (optional)',
+      district: 'District',
+      weeks: 'Weeks Pregnant',
+      dueDate: 'Expected Due Date',
+      nepali: 'नेपाली',
+      english: 'English',
+      getStarted: 'Get Started',
+      disclaimer: '⚠️ This is an advisory tool, not medical diagnosis. Always consult a doctor.'
+    }
+  };
+
+  const t = text[language];
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onComplete({
+      ...formData,
+      age: parseInt(formData.age) || 0,
+      weeks_pregnant: parseInt(formData.weeks_pregnant) || 0,
+      language_preference: language
+    });
+  };
+
+  return (
+    <div className="onboarding-container">
+      <div className="onboarding-gradient"></div>
+      
+      <div className="onboarding-content">
+        {/* Header */}
+        <div className="onboarding-header">
+          <div className="icon" style={{ fontSize: '64px', marginBottom: '20px' }}>🤰</div>
+          <h1 className="title">{t.welcome}</h1>
+          <p className="subtitle">{t.subtitle}</p>
+        </div>
+
+        {/* Language Toggle */}
+        <div className="language-toggle">
+          <button
+            className={`lang-btn ${language === 'ne' ? 'active' : ''}`}
+            onClick={() => setLanguage('ne')}
+          >
+            🇳🇵 {t.nepali}
+          </button>
+          <button
+            className={`lang-btn ${language === 'en' ? 'active' : ''}`}
+            onClick={() => setLanguage('en')}
+          >
+            🇬🇧 {t.english}
+          </button>
+        </div>
+
+        {/* Form Card */}
+        <div className="form-card">
+          <form onSubmit={handleSubmit} className="form">
+            <div className="form-group">
+              <label>{t.name} *</label>
+              <input
+                type="text"
+                placeholder={t.name}
+                value={formData.name}
+                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label>{t.age} *</label>
+              <input
+                type="number"
+                placeholder={t.age}
+                value={formData.age}
+                onChange={(e) => setFormData({...formData, age: e.target.value})}
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label>{t.phone}</label>
+              <input
+                type="tel"
+                placeholder={t.phone}
+                value={formData.phone}
+                onChange={(e) => setFormData({...formData, phone: e.target.value})}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>{t.district}</label>
+              <input
+                type="text"
+                placeholder={t.district}
+                value={formData.district}
+                onChange={(e) => setFormData({...formData, district: e.target.value})}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>{t.weeks}</label>
+              <input
+                type="number"
+                placeholder={t.weeks}
+                value={formData.weeks_pregnant}
+                onChange={(e) => setFormData({...formData, weeks_pregnant: e.target.value})}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>{t.dueDate}</label>
+              <input
+                type="date"
+                value={formData.due_date}
+                onChange={(e) => setFormData({...formData, due_date: e.target.value})}
+              />
+            </div>
+
+            {/* Disclaimer */}
+            <div className="disclaimer-box">
+              <p>{t.disclaimer}</p>
+            </div>
+
+            {/* Submit Button */}
+            <button type="submit" className="submit-btn">
+              {t.getStarted} →
+            </button>
+          </form>
+        </div>
+
+        {/* Footer */}
+        <p className="footer-text">Made with ❤️ for the mothers of Nepal</p>
+      </div>
+    </div>
+  );
+};
+
+export default App;
+export { API };
