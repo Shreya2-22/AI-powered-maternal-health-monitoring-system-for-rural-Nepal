@@ -98,7 +98,7 @@ const Onboarding = ({ onComplete, language, setLanguage }) => {
       nepali: 'नेपाली',
       english: 'English',
       getStarted: 'सुरु गर्नुहोस्',
-      disclaimer: '⚠️ यह एक सलाहकार उपकरण है, चिकित्सा निदान नहीं। हमेशा डॉक्टर से सलाह लें।'
+      disclaimer: '⚠️ यो एक सलाहकार उपकरण हो, चिकित्सा निदान होइन। सधैं डाक्टरसँग परामर्श गर्नुहोस्।'
     },
     en: {
       welcome: 'Welcome to AamaSuraksha!',

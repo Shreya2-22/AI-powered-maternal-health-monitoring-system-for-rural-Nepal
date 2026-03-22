@@ -36,7 +36,7 @@ export default function Emergency({ language }) {
       emergency: '🚨 आपातकालीन - तुरुन्त अस्पताल जानुहोस्!',
       urgent: '⚠️ जरुरी - आज अस्पताल जानुहोस्',
       selfCare: '✅ स्वयं देखभाल - घरमा पर्यवेक्षण गर्नुहोस्',
-      disclaimer: 'यह एक सलाहकार उपकरण है। सदैव चिकित्सक से परामर्श लें।'
+      disclaimer: 'यो एक सलाहकार उपकरण हो। सधैं चिकित्सकसँग परामर्श गर्नुहोस्।'
     },
     en: {
       title: 'Emergency Assessment',
