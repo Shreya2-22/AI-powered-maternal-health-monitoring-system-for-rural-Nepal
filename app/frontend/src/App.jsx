@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import './App.css';
+import { useState, useEffect } from 'react';import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';import './App.css';
 import Dashboard from './components/Dashboard.jsx';
 import ChatBot from './components/ChatBot.jsx';
 import HealthTracker from './components/HealthTracker.jsx';
@@ -44,11 +43,35 @@ function App() {
   }
 
   return (
-    <div className="App">
-      {currentUser && (
-        <Dashboard user={currentUser} language={language} setLanguage={setLanguage} />
-      )}
-    </div>
+    <Router>
+      <Routes>
+        <Route
+          path="/"
+          element={<Dashboard user={currentUser} language={language} setLanguage={setLanguage} />}
+        />
+        <Route
+          path="/chat"
+          element={<ChatBot user={currentUser} language={language} />}
+        />
+        <Route
+          path="/health"
+          element={<HealthTracker user={currentUser} language={language} />}
+        />
+        <Route
+          path="/appointments"
+          element={<Appointments user={currentUser} language={language} />}
+        />
+        <Route
+          path="/education"
+          element={<Education user={currentUser} language={language} />}
+        />
+        <Route
+          path="/emergency"
+          element={<Emergency user={currentUser} language={language} />}
+        />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Router>
   );
 }
 

@@ -1,4 +1,7 @@
+import { useNavigate } from 'react-router-dom';
+
 const Dashboard = ({ user, language, setLanguage }) => {
+  const navigate = useNavigate();
   const text = {
     ne: {
       welcome: 'स्वागत छ',
@@ -68,31 +71,31 @@ const Dashboard = ({ user, language, setLanguage }) => {
         </div>
 
         {/* Emergency Button */}
-        <button className="emergency-button">
+        <button className="emergency-button" onClick={() => navigate('/emergency')}>
           {t.emergency}
         </button>
 
         {/* Menu Grid */}
         <div className="menu-grid">
-          <button className="menu-card">
+          <button className="menu-card" onClick={() => navigate('/chat')}>
             <div className="menu-card-icon">🤖</div>
             <div className="menu-card-title">च्याटबट</div>
             <div className="menu-card-desc">स्वास्थ्य सलाहकार</div>
           </button>
           
-          <button className="menu-card">
+          <button className="menu-card" onClick={() => navigate('/health')}>
             <div className="menu-card-icon">📊</div>
             <div className="menu-card-title">स्वास्थ्य ट्र्याकर</div>
             <div className="menu-card-desc">वजन र रक्तचाप</div>
           </button>
           
-          <button className="menu-card">
+          <button className="menu-card" onClick={() => navigate('/appointments')}>
             <div className="menu-card-icon">📅</div>
             <div className="menu-card-title">नियुक्तिहरू</div>
             <div className="menu-card-desc">जाँच समय सूची</div>
           </button>
           
-          <button className="menu-card">
+          <button className="menu-card" onClick={() => navigate('/education')}>
             <div className="menu-card-icon">📚</div>
             <div className="menu-card-title">शिक्षा</div>
             <div className="menu-card-desc">स्वास्थ्य जानकारी</div>
