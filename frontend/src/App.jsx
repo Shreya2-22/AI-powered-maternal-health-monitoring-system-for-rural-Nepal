@@ -130,27 +130,33 @@ const Onboarding = ({ onComplete, language, setLanguage }) => {
   };
 
   return (
-    <div className="onboarding-container">
-      <div className="onboarding-gradient"></div>
-      
-      <div className="onboarding-content">
+    <div className="min-h-screen bg-gradient-to-br from-pink-400 via-purple-500 to-blue-500 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
         {/* Header */}
-        <div className="onboarding-header">
-          <div className="icon" style={{ fontSize: '64px', marginBottom: '20px' }}>🤰</div>
-          <h1 className="title">{t.welcome}</h1>
-          <p className="subtitle">{t.subtitle}</p>
+        <div className="text-center mb-8">
+          <div className="text-6xl mb-4">🤰</div>
+          <h1 className="text-4xl font-bold text-white mb-2">{t.welcome}</h1>
+          <p className="text-lg text-white/90">{t.subtitle}</p>
         </div>
 
         {/* Language Toggle */}
-        <div className="language-toggle">
+        <div className="flex gap-4 mb-6">
           <button
-            className={`lang-btn ${language === 'ne' ? 'active' : ''}`}
+            className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-all ${
+              language === 'ne'
+                ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg'
+                : 'bg-white/20 text-white hover:bg-white/30'
+            }`}
             onClick={() => setLanguage('ne')}
           >
             🇳🇵 {t.nepali}
           </button>
           <button
-            className={`lang-btn ${language === 'en' ? 'active' : ''}`}
+            className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-all ${
+              language === 'en'
+                ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg'
+                : 'bg-white/20 text-white hover:bg-white/30'
+            }`}
             onClick={() => setLanguage('en')}
           >
             🇬🇧 {t.english}
@@ -158,83 +164,92 @@ const Onboarding = ({ onComplete, language, setLanguage }) => {
         </div>
 
         {/* Form Card */}
-        <div className="form-card">
-          <form onSubmit={handleSubmit} className="form">
-            <div className="form-group">
-              <label>{t.name} *</label>
+        <div className="bg-white rounded-2xl shadow-2xl p-8">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">{t.name} *</label>
               <input
                 type="text"
                 placeholder={t.name}
                 value={formData.name}
                 onChange={(e) => setFormData({...formData, name: e.target.value})}
                 required
+                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-pink-500 focus:ring-2 focus:ring-pink-200 outline-none transition"
               />
             </div>
 
-            <div className="form-group">
-              <label>{t.age} *</label>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">{t.age} *</label>
               <input
                 type="number"
                 placeholder={t.age}
                 value={formData.age}
                 onChange={(e) => setFormData({...formData, age: e.target.value})}
                 required
+                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-pink-500 focus:ring-2 focus:ring-pink-200 outline-none transition"
               />
             </div>
 
-            <div className="form-group">
-              <label>{t.phone}</label>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">{t.phone}</label>
               <input
                 type="tel"
                 placeholder={t.phone}
                 value={formData.phone}
                 onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-pink-500 focus:ring-2 focus:ring-pink-200 outline-none transition"
               />
             </div>
 
-            <div className="form-group">
-              <label>{t.district}</label>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">{t.district}</label>
               <input
                 type="text"
                 placeholder={t.district}
                 value={formData.district}
                 onChange={(e) => setFormData({...formData, district: e.target.value})}
+                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-pink-500 focus:ring-2 focus:ring-pink-200 outline-none transition"
               />
             </div>
 
-            <div className="form-group">
-              <label>{t.weeks}</label>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">{t.weeks}</label>
               <input
                 type="number"
                 placeholder={t.weeks}
                 value={formData.weeks_pregnant}
                 onChange={(e) => setFormData({...formData, weeks_pregnant: e.target.value})}
+                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-pink-500 focus:ring-2 focus:ring-pink-200 outline-none transition"
               />
             </div>
 
-            <div className="form-group">
-              <label>{t.dueDate}</label>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">{t.dueDate}</label>
               <input
                 type="date"
                 value={formData.due_date}
                 onChange={(e) => setFormData({...formData, due_date: e.target.value})}
+                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-pink-500 focus:ring-2 focus:ring-pink-200 outline-none transition"
               />
             </div>
 
             {/* Disclaimer */}
-            <div className="disclaimer-box">
-              <p>{t.disclaimer}</p>
+            <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded mt-6">
+              <p className="text-sm text-gray-700">{t.disclaimer}</p>
             </div>
 
             {/* Submit Button */}
-            <button type="submit" className="submit-btn">
+            <button
+              type="submit"
+              className="w-full mt-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold rounded-lg hover:shadow-lg hover:-translate-y-0.5 transition-all"
+            >
               {t.getStarted} →
             </button>
           </form>
         </div>
 
         {/* Footer */}
-        <p className="footer-text">Made with ❤️ for the mothers of Nepal</p>
+        <p className="text-center text-white/80 mt-6 text-sm">Made with ❤️ for the mothers of Nepal</p>
       </div>
     </div>
   );
