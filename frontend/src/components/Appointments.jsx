@@ -181,58 +181,59 @@ export default function Appointments({ user, language }) {
     return appointmentDateTime <= now;
   });
 
-  const isUpcoming = (appointment) => {
-    const appointmentDateTime = new Date(`${appointment.date}T${appointment.time}`);
-    return appointmentDateTime > now;
-  };
-
   return (
-    <div className="page-container">
-      <div className="page-header">
-        <button className="back-button" onClick={() => navigate('/')}>
-          {t.back}
-        </button>
-        <h1>{t.title}</h1>
-        <div style={{ width: '60px' }}></div>
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <div className="bg-gradient-to-r from-purple-600 to-pink-500 text-white p-4 shadow-lg">
+        <div className="max-w-4xl mx-auto flex justify-between items-center">
+          <button 
+            onClick={() => navigate('/')}
+            className="bg-white/20 hover:bg-white/30 rounded-lg px-3 py-2 font-semibold transition-all"
+          >
+            {t.back}
+          </button>
+          <h1 className="text-2xl font-bold">{t.title}</h1>
+          <div style={{ width: '60px' }}></div>
+        </div>
       </div>
 
-      <div className="page-content appointments-content">
-        {/* Add Appointment Button */}
+      <div className="max-w-4xl mx-auto w-full p-6">
         <button 
-          className="add-appointment-btn"
           onClick={() => setShowForm(!showForm)}
+          className="mb-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-500 text-white font-semibold rounded-lg hover:shadow-lg transition-all"
         >
           {showForm ? t.cancel : t.addAppointment}
         </button>
 
         {/* Form */}
         {showForm && (
-          <form className="appointment-form" onSubmit={handleSubmit}>
-            <div className="form-row">
-              <div className="form-group">
-                <label>{t.date}</label>
+          <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6 mb-6 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">{t.date}</label>
                 <input
                   type="date"
                   name="date"
                   value={formData.date}
                   onChange={handleInputChange}
                   required
+                  className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition"
                 />
               </div>
-              <div className="form-group">
-                <label>{t.time}</label>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">{t.time}</label>
                 <input
                   type="time"
                   name="time"
                   value={formData.time}
                   onChange={handleInputChange}
                   required
+                  className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition"
                 />
               </div>
             </div>
 
-            <div className="form-group">
-              <label>{t.doctorName}</label>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">{t.doctorName}</label>
               <input
                 type="text"
                 name="doctorName"
@@ -240,11 +241,12 @@ export default function Appointments({ user, language }) {
                 value={formData.doctorName}
                 onChange={handleInputChange}
                 required
+                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition"
               />
             </div>
 
-            <div className="form-group">
-              <label>{t.clinic}</label>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">{t.clinic}</label>
               <input
                 type="text"
                 name="clinic"
@@ -252,25 +254,27 @@ export default function Appointments({ user, language }) {
                 value={formData.clinic}
                 onChange={handleInputChange}
                 required
+                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition"
               />
             </div>
 
-            <div className="form-group">
-              <label>{t.reason}</label>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">{t.reason}</label>
               <textarea
                 name="reason"
                 placeholder={language === 'ne' ? 'नियमित जाँच, अल्ट्रासाउन्ड, आदि' : 'E.g., regular checkup, ultrasound, etc.'}
                 value={formData.reason}
                 onChange={handleInputChange}
                 rows="3"
+                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition"
               />
             </div>
 
-            <div className="form-buttons">
-              <button type="submit" className="form-submit-btn">
+            <div className="flex gap-4">
+              <button type="submit" className="flex-1 py-2 bg-gradient-to-r from-purple-600 to-pink-500 text-white font-semibold rounded-lg hover:shadow-lg transition-all">
                 {editingId ? t.update : t.save}
               </button>
-              <button type="button" className="form-cancel-btn" onClick={handleCancel}>
+              <button type="button" onClick={handleCancel} className="flex-1 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold rounded-lg transition-all">
                 {t.cancel}
               </button>
             </div>
@@ -279,54 +283,54 @@ export default function Appointments({ user, language }) {
 
         {/* Appointments List */}
         {appointments.length === 0 ? (
-          <p className="no-appointments">{t.noAppointments}</p>
+          <p className="text-gray-500 text-center py-12">{t.noAppointments}</p>
         ) : (
-          <div className="appointments-sections">
+          <div className="space-y-8">
             {/* Upcoming Appointments */}
-            <div className="appointments-section">
-              <h2>{t.upcomingTitle}</h2>
+            <div>
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">{t.upcomingTitle}</h2>
               {upcomingAppointments.length === 0 ? (
-                <p className="no-section-appointments">{t.noUpcoming}</p>
+                <p className="text-gray-500 text-center py-8">{t.noUpcoming}</p>
               ) : (
-                <div className="appointments-list">
+                <div className="space-y-4">
                   {upcomingAppointments.map(appointment => (
-                    <div key={appointment.id} className="appointment-card upcoming">
-                      <div className="appointment-header">
-                        <div className="appointment-datetime">
-                          <span className="date">📅 {appointment.date}</span>
-                          <span className="time">🕐 {appointment.time}</span>
+                    <div key={appointment.id} className="bg-white rounded-lg shadow-md border-l-4 border-blue-500 p-4">
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          <span className="text-sm font-semibold text-blue-600">📅 {appointment.date}</span>
+                          <span className="ml-4 text-sm font-semibold text-blue-600">🕐 {appointment.time}</span>
                         </div>
-                        <span className="badge upcoming-badge">{t.upcomingBadge}</span>
+                        <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-full">{t.upcomingBadge}</span>
                       </div>
 
-                      <div className="appointment-details">
-                        <div className="detail-item">
-                          <span className="detail-label">{t.doctorLabel}</span>
-                          <span className="detail-value">{appointment.doctorName}</span>
+                      <div className="grid grid-cols-2 gap-4 mb-3 py-2 border-y border-gray-200">
+                        <div>
+                          <span className="text-xs font-semibold text-gray-600">{t.doctorLabel}</span>
+                          <p className="text-gray-800">{appointment.doctorName}</p>
                         </div>
-                        <div className="detail-item">
-                          <span className="detail-label">{t.clinicLabel}</span>
-                          <span className="detail-value">{appointment.clinic}</span>
+                        <div>
+                          <span className="text-xs font-semibold text-gray-600">{t.clinicLabel}</span>
+                          <p className="text-gray-800">{appointment.clinic}</p>
                         </div>
                       </div>
 
                       {appointment.reason && (
-                        <div className="appointment-reason">
-                          <strong>{t.reasonLabel}</strong>
-                          <p>{appointment.reason}</p>
+                        <div className="mb-3">
+                          <strong className="text-xs text-gray-600">{t.reasonLabel}</strong>
+                          <p className="text-sm text-gray-700">{appointment.reason}</p>
                         </div>
                       )}
 
-                      <div className="appointment-actions">
+                      <div className="flex gap-2">
                         <button 
-                          className="edit-btn"
                           onClick={() => handleEdit(appointment)}
+                          className="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-all"
                         >
                           {t.edit}
                         </button>
                         <button 
-                          className="delete-btn"
                           onClick={() => handleDelete(appointment.id)}
+                          className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-all"
                         >
                           {t.delete}
                         </button>
@@ -339,45 +343,43 @@ export default function Appointments({ user, language }) {
 
             {/* Past Appointments */}
             {pastAppointments.length > 0 && (
-              <div className="appointments-section">
-                <h2>{t.pastTitle}</h2>
-                <div className="appointments-list">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-800 mb-4">{t.pastTitle}</h2>
+                <div className="space-y-4">
                   {pastAppointments.map(appointment => (
-                    <div key={appointment.id} className="appointment-card past">
-                      <div className="appointment-header">
-                        <div className="appointment-datetime">
-                          <span className="date">📅 {appointment.date}</span>
-                          <span className="time">🕐 {appointment.time}</span>
+                    <div key={appointment.id} className="bg-gray-100 rounded-lg shadow-md border-l-4 border-gray-400 p-4">
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          <span className="text-sm font-semibold text-gray-600">📅 {appointment.date}</span>
+                          <span className="ml-4 text-sm font-semibold text-gray-600">🕐 {appointment.time}</span>
                         </div>
-                        <span className="badge completed-badge">{t.completedBadge}</span>
+                        <span className="px-3 py-1 bg-gray-300 text-gray-700 text-xs font-bold rounded-full">{t.completedBadge}</span>
                       </div>
 
-                      <div className="appointment-details">
-                        <div className="detail-item">
-                          <span className="detail-label">{t.doctorLabel}</span>
-                          <span className="detail-value">{appointment.doctorName}</span>
+                      <div className="grid grid-cols-2 gap-4 mb-3 py-2 border-y border-gray-300">
+                        <div>
+                          <span className="text-xs font-semibold text-gray-600">{t.doctorLabel}</span>
+                          <p className="text-gray-700">{appointment.doctorName}</p>
                         </div>
-                        <div className="detail-item">
-                          <span className="detail-label">{t.clinicLabel}</span>
-                          <span className="detail-value">{appointment.clinic}</span>
+                        <div>
+                          <span className="text-xs font-semibold text-gray-600">{t.clinicLabel}</span>
+                          <p className="text-gray-700">{appointment.clinic}</p>
                         </div>
                       </div>
 
                       {appointment.reason && (
-                        <div className="appointment-reason">
-                          <strong>{t.reasonLabel}</strong>
-                          <p>{appointment.reason}</p>
+                        <div className="mb-3">
+                          <strong className="text-xs text-gray-600">{t.reasonLabel}</strong>
+                          <p className="text-sm text-gray-700">{appointment.reason}</p>
                         </div>
                       )}
 
-                      <div className="appointment-actions">
-                        <button 
-                          className="delete-btn"
-                          onClick={() => handleDelete(appointment.id)}
-                        >
-                          {t.delete}
-                        </button>
-                      </div>
+                      <button 
+                        onClick={() => handleDelete(appointment.id)}
+                        className="w-full px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-all"
+                      >
+                        {t.delete}
+                      </button>
                     </div>
                   ))}
                 </div>

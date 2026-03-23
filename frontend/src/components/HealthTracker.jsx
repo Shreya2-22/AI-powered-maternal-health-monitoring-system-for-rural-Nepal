@@ -168,40 +168,45 @@ export default function HealthTracker({ user, language }) {
   };
 
   return (
-    <div className="page-container">
-      <div className="page-header">
-        <button className="back-button" onClick={() => navigate('/')}>
-          {t.back}
-        </button>
-        <h1>{t.title}</h1>
-        <div style={{ width: '60px' }}></div>
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <div className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white p-4 shadow-lg">
+        <div className="max-w-4xl mx-auto flex justify-between items-center">
+          <button 
+            onClick={() => navigate('/')}
+            className="bg-white/20 hover:bg-white/30 rounded-lg px-3 py-2 font-semibold transition-all"
+          >
+            {t.back}
+          </button>
+          <h1 className="text-2xl font-bold">{t.title}</h1>
+          <div style={{ width: '60px' }}></div>
+        </div>
       </div>
 
-      <div className="page-content health-tracker-content">
-        {/* Add Record Button */}
+      <div className="max-w-4xl mx-auto w-full p-6">
         <button 
-          className="add-record-btn"
           onClick={() => setShowForm(!showForm)}
+          className="mb-6 px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-600 text-white font-semibold rounded-lg hover:shadow-lg transition-all"
         >
           {showForm ? t.cancel : t.addRecord}
         </button>
 
         {/* Form */}
         {showForm && (
-          <form className="health-form" onSubmit={handleSubmit}>
-            <div className="form-row">
-              <div className="form-group">
-                <label>{t.date}</label>
+          <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6 mb-6 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">{t.date}</label>
                 <input
                   type="date"
                   name="date"
                   value={formData.date}
                   onChange={handleInputChange}
                   required
+                  className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
                 />
               </div>
-              <div className="form-group">
-                <label>{t.weight}</label>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">{t.weight}</label>
                 <input
                   type="number"
                   name="weight"
@@ -210,13 +215,14 @@ export default function HealthTracker({ user, language }) {
                   value={formData.weight}
                   onChange={handleInputChange}
                   required
+                  className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
                 />
               </div>
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label>{t.systolic}</label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">{t.systolic}</label>
                 <input
                   type="number"
                   name="systolic"
@@ -224,10 +230,11 @@ export default function HealthTracker({ user, language }) {
                   value={formData.systolic}
                   onChange={handleInputChange}
                   required
+                  className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
                 />
               </div>
-              <div className="form-group">
-                <label>{t.diastolic}</label>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">{t.diastolic}</label>
                 <input
                   type="number"
                   name="diastolic"
@@ -235,37 +242,40 @@ export default function HealthTracker({ user, language }) {
                   value={formData.diastolic}
                   onChange={handleInputChange}
                   required
+                  className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
                 />
               </div>
             </div>
 
-            <div className="form-group">
-              <label>{t.symptoms}</label>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">{t.symptoms}</label>
               <textarea
                 name="symptoms"
                 placeholder={language === 'ne' ? 'उदा: सिरदर्द, दर्द...' : 'E.g., headache, pain...'}
                 value={formData.symptoms}
                 onChange={handleInputChange}
                 rows="3"
+                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
               />
             </div>
 
-            <div className="form-group">
-              <label>{t.notes}</label>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">{t.notes}</label>
               <textarea
                 name="notes"
                 placeholder={language === 'ne' ? 'अतिरिक्त नोटस्...' : 'Additional notes...'}
                 value={formData.notes}
                 onChange={handleInputChange}
                 rows="3"
+                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
               />
             </div>
 
-            <div className="form-buttons">
-              <button type="submit" className="form-submit-btn">
+            <div className="flex gap-4">
+              <button type="submit" className="flex-1 py-2 bg-gradient-to-r from-blue-500 to-cyan-600 text-white font-semibold rounded-lg hover:shadow-lg transition-all">
                 {editingId ? t.update : t.save}
               </button>
-              <button type="button" className="form-cancel-btn" onClick={handleCancel}>
+              <button type="button" onClick={handleCancel} className="flex-1 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold rounded-lg transition-all">
                 {t.cancel}
               </button>
             </div>
@@ -273,54 +283,56 @@ export default function HealthTracker({ user, language }) {
         )}
 
         {/* Records List */}
-        <div className="records-section">
-          <h2>{t.recordsTitle}</h2>
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">{t.recordsTitle}</h2>
           {records.length === 0 ? (
-            <p className="no-records">{t.noRecords}</p>
+            <p className="text-gray-500 text-center py-12">{t.noRecords}</p>
           ) : (
-            <div className="records-list">
+            <div className="space-y-4">
               {records.map(record => (
-                <div key={record.id} className="record-card">
-                  <div className="record-header">
-                    <div className="record-date">📅 {record.date}</div>
-                    <div className="record-time">{record.timestamp.split(', ')[1]}</div>
+                <div key={record.id} className="bg-white rounded-lg shadow-md border-l-4 border-blue-500 p-4">
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <span className="text-sm font-semibold text-blue-600">📅 {record.date}</span>
+                      <span className="ml-4 text-sm font-semibold text-blue-600">🕐 {record.timestamp.split(', ')[1]}</span>
+                    </div>
                   </div>
 
-                  <div className="record-details">
-                    <div className="detail-item">
-                      <span className="detail-label">{t.weightLabel}</span>
-                      <span className="detail-value">{record.weight} kg</span>
+                  <div className="grid grid-cols-2 gap-4 mb-3 py-2 border-y border-gray-200">
+                    <div>
+                      <span className="text-xs font-semibold text-gray-600">{t.weightLabel}</span>
+                      <p className="text-lg font-bold text-gray-800">{record.weight} kg</p>
                     </div>
-                    <div className="detail-item">
-                      <span className="detail-label">{t.bpLabel}</span>
-                      <span className="detail-value">{record.systolic}/{record.diastolic} mmHg</span>
+                    <div>
+                      <span className="text-xs font-semibold text-gray-600">{t.bpLabel}</span>
+                      <p className="text-lg font-bold text-gray-800">{record.systolic}/{record.diastolic} mmHg</p>
                     </div>
                   </div>
 
                   {record.symptoms && (
-                    <div className="record-section-text">
-                      <strong>{t.symptomsLabel}</strong>
-                      <p>{record.symptoms}</p>
+                    <div className="mb-2">
+                      <strong className="text-xs text-gray-600">{t.symptomsLabel}</strong>
+                      <p className="text-sm text-gray-700">{record.symptoms}</p>
                     </div>
                   )}
 
                   {record.notes && (
-                    <div className="record-section-text">
-                      <strong>{t.notesLabel}</strong>
-                      <p>{record.notes}</p>
+                    <div className="mb-3">
+                      <strong className="text-xs text-gray-600">{t.notesLabel}</strong>
+                      <p className="text-sm text-gray-700">{record.notes}</p>
                     </div>
                   )}
 
-                  <div className="record-actions">
+                  <div className="flex gap-2">
                     <button 
-                      className="edit-btn"
                       onClick={() => handleEdit(record)}
+                      className="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-all"
                     >
                       {t.edit}
                     </button>
                     <button 
-                      className="delete-btn"
                       onClick={() => handleDelete(record.id)}
+                      className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-all"
                     >
                       {t.delete}
                     </button>

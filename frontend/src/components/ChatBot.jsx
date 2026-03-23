@@ -164,65 +164,73 @@ export default function ChatBot({ user, language }) {
   const t = text[language];
 
   return (
-    <div className="page-container">
-      <div className="page-header">
-        <button className="back-button" onClick={() => navigate('/')}>
-          {t.back}
-        </button>
-        <h1>{t.title}</h1>
-        <button 
-          className="back-button"
-          style={{ background: '#EF4444' }}
-          onClick={handleClearChat}
-        >
-          {t.clearBtn}
-        </button>
+    <div className="min-h-screen flex flex-col bg-gray-50">
+      <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-4 shadow-lg">
+        <div className="flex justify-between items-center">
+          <button 
+            onClick={() => navigate('/')}
+            className="bg-white/20 hover:bg-white/30 rounded-lg px-3 py-2 font-semibold transition-all"
+          >
+            {t.back}
+          </button>
+          <h1 className="text-2xl font-bold">{t.title}</h1>
+          <button 
+            onClick={handleClearChat}
+            className="bg-red-500 hover:bg-red-600 rounded-lg px-3 py-2 font-semibold transition-all"
+          >
+            {t.clearBtn}
+          </button>
+        </div>
       </div>
 
-      <div className="page-content chatbot-content">
-        {/* Messages Container */}
-        <div className="chat-messages">
+      <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full p-4">
+        <div className="flex-1 overflow-y-auto bg-white rounded-lg shadow-sm p-4 mb-4 space-y-4">
           {messages.length === 0 ? (
-            <div className="welcome-message">
-              <div className="bot-avatar">🤖</div>
-              <p>{t.welcome}</p>
+            <div className="flex flex-col items-center justify-center h-full text-gray-500 py-12">
+              <div className="text-6xl mb-4">🤖</div>
+              <p className="text-center">{t.welcome}</p>
             </div>
           ) : (
             messages.map(message => (
-              <div key={message.id} className={`message ${message.sender}`}>
-                <div className={`message-bubble ${message.sender}`}>
-                  {message.text}
-                  <span className="message-time">{message.timestamp}</span>
+              <div key={message.id} className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-xs px-4 py-2 rounded-lg ${
+                  message.sender === 'user'
+                    ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white'
+                    : 'bg-gray-200 text-gray-800'
+                }`}>
+                  <p>{message.text}</p>
+                  <span className={`text-xs mt-1 block ${
+                    message.sender === 'user' ? 'text-white/70' : 'text-gray-600'
+                  }`}>{message.timestamp}</span>
                 </div>
               </div>
             ))
           )}
           {isLoading && (
-            <div className="message bot">
-              <div className="message-bubble bot loading">
-                <span className="dot"></span>
-                <span className="dot"></span>
-                <span className="dot"></span>
+            <div className="flex justify-start">
+              <div className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg">
+                <span className="inline-block w-2 h-2 bg-gray-600 rounded-full animate-bounce mr-1"></span>
+                <span className="inline-block w-2 h-2 bg-gray-600 rounded-full animate-bounce mr-1" style={{ animationDelay: '0.2s' }}></span>
+                <span className="inline-block w-2 h-2 bg-gray-600 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></span>
               </div>
             </div>
           )}
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Form */}
-        <form className="chat-input-form" onSubmit={handleSendMessage}>
+        <form className="flex gap-2" onSubmit={handleSendMessage}>
           <input
             type="text"
-            className="chat-input"
             placeholder={t.placeholder}
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             disabled={isLoading}
+            className="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-pink-500 focus:ring-2 focus:ring-pink-200 outline-none transition disabled:opacity-50"
           />
           <button 
-            type="submit" 
-            className="chat-send-btn"
+            type="submit"
             disabled={!inputValue.trim() || isLoading}
+            className="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-semibold rounded-lg hover:shadow-lg disabled:opacity-50 transition-all"
           >
             {t.sendBtn}
           </button>

@@ -53,6 +53,12 @@ export default function Emergency({ language }) {
   const t = text[language];
   const symp = symptoms[language];
 
+  const getResultBgColor = () => {
+    if (result === 'emergency') return 'bg-red-50 border-red-500';
+    if (result === 'urgent') return 'bg-yellow-50 border-yellow-500';
+    return 'bg-green-50 border-green-500';
+  };
+
   const assessRisk = () => {
     const hasCritical = selectedSymptoms.some(s => 
       symp.find(sy => sy.id === s)?.severity === 'critical'
@@ -76,10 +82,10 @@ export default function Emergency({ language }) {
     );
   };
 
-  const getResultColor = () => {
-    if (result === 'emergency') return '#EF4444';
-    if (result === 'urgent') return '#F59E0B';
-    return '#10B981';
+  const getResultTextColor = () => {
+    if (result === 'emergency') return 'text-red-600';
+    if (result === 'urgent') return 'text-yellow-600';
+    return 'text-green-600';
   };
 
   const getResultText = () => {
@@ -89,55 +95,61 @@ export default function Emergency({ language }) {
   };
 
   return (
-    <div className="page-container">
-      <div className="page-header">
-        <button className="back-button" onClick={() => navigate('/')}>
-          {t.back}
-        </button>
-        <h1>{t.title}</h1>
-        <div style={{ width: '60px' }}></div>
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <div className="bg-gradient-to-r from-pink-500 to-purple-500 text-white p-4 shadow-lg">
+        <div className="max-w-4xl mx-auto flex justify-between items-center">
+          <button 
+            onClick={() => navigate('/')}
+            className="bg-white/20 hover:bg-white/30 rounded-lg px-3 py-2 font-semibold transition-all"
+          >
+            {t.back}
+          </button>
+          <h1 className="text-2xl font-bold">{t.title}</h1>
+          <div style={{ width: '60px' }}></div>
+        </div>
       </div>
 
-      <div className="page-content">
-        <p style={{ marginBottom: '20px', fontSize: '16px', color: '#666' }}>
+      <div className="max-w-4xl mx-auto w-full p-6">
+        <p className="text-gray-600 mb-6 text-base">
           {t.instruction}
         </p>
 
-        {/* Symptoms Checkboxes */}
-        <div className="symptoms-grid">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           {symp.map(symptom => (
-            <label key={symptom.id} className="symptom-checkbox">
+            <label key={symptom.id} className="flex items-center p-3 bg-white border-2 border-gray-200 rounded-lg hover:border-pink-300 cursor-pointer transition-all">
               <input
                 type="checkbox"
                 checked={selectedSymptoms.includes(symptom.id)}
                 onChange={() => toggleSymptom(symptom.id)}
+                className="w-5 h-5 rounded accent-pink-500"
               />
-              <span className={`symptom-label severity-${symptom.severity}`}>
+              <span className={`ml-3 font-semibold ${
+                symptom.severity === 'critical'
+                  ? 'text-red-600'
+                  : symptom.severity === 'urgent'
+                  ? 'text-yellow-600'
+                  : 'text-green-600'
+              }`}>
                 {symptom.label}
               </span>
             </label>
           ))}
         </div>
 
-        {/* Assess Button */}
         <button 
-          className="assess-button"
           onClick={assessRisk}
           disabled={selectedSymptoms.length === 0}
+          className="w-full py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold rounded-lg hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all mb-6"
         >
           {t.checkBtn}
         </button>
 
-        {/* Result */}
         {result && (
-          <div 
-            className="result-box"
-            style={{ borderLeftColor: getResultColor() }}
-          >
-            <h2 style={{ color: getResultColor(), marginBottom: '10px' }}>
+          <div className={`border-l-4 p-6 rounded ${getResultBgColor()}`}>
+            <h2 className={`text-xl font-bold mb-2 ${getResultTextColor()}`}>
               {getResultText()}
             </h2>
-            <p style={{ fontSize: '14px', color: '#666' }}>
+            <p className="text-gray-600 text-sm">
               {t.disclaimer}
             </p>
           </div>

@@ -274,20 +274,24 @@ export default function Education({ user, language }) {
   const categoryArticles = articles[selectedCategory][language];
 
   return (
-    <div className="page-container">
-      <div className="page-header">
-        <button className="back-button" onClick={() => navigate('/')}>
-          {t.back}
-        </button>
-        <h1>{t.title}</h1>
-        <div style={{ width: '60px' }}></div>
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <div className="bg-gradient-to-r from-green-500 to-teal-500 text-white p-4 shadow-lg">
+        <div className="max-w-4xl mx-auto flex justify-between items-center">
+          <button 
+            onClick={() => navigate('/')}
+            className="bg-white/20 hover:bg-white/30 rounded-lg px-3 py-2 font-semibold transition-all"
+          >
+            {t.back}
+          </button>
+          <h1 className="text-2xl font-bold">{t.title}</h1>
+          <div style={{ width: '60px' }}></div>
+        </div>
       </div>
 
-      <div className="page-content education-content">
-        {/* This Week's Tip */}
-        <div className="this-week-card">
-          <h2>📅 {t.thisWeek} ({currentWeek} हप्ता)</h2>
-          <p>
+      <div className="max-w-4xl mx-auto w-full p-6">
+        <div className="bg-gradient-to-r from-green-100 to-teal-100 border-2 border-green-500 rounded-lg p-6 mb-6">
+          <h2 className="text-xl font-bold text-green-800 mb-2">📅 {t.thisWeek} ({currentWeek} हप्ता)</h2>
+          <p className="text-green-900">
             {currentWeek <= 16 && (language === 'ne' 
               ? 'यो समयमा आप्नो प्राकृतिक परिवर्तन हुन सुरु गर्छ। पोषक खाना खान्नुहोस् र पर्याप्त विश्राम लिनुहोस्।'
               : 'Your body is experiencing natural changes. Focus on nutrition and rest.'
@@ -303,64 +307,69 @@ export default function Education({ user, language }) {
           </p>
         </div>
 
-        {/* Category Buttons */}
-        <div className="category-buttons">
+        <div className="flex flex-wrap gap-2 mb-6">
           {Object.entries(t.categories).map(([key, label]) => (
             <button
               key={key}
-              className={`category-btn ${selectedCategory === key ? 'active' : ''}`}
               onClick={() => setSelectedCategory(key)}
+              className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+                selectedCategory === key
+                  ? 'bg-gradient-to-r from-green-500 to-teal-600 text-white shadow-lg'
+                  : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+              }`}
             >
               {label}
             </button>
           ))}
         </div>
 
-        {/* Articles List */}
-        <div className="articles-list">
+        <div className="space-y-4 mb-8">
           {categoryArticles.map(article => (
-            <div key={article.id} className="article-card">
-              <div className="article-header">
-                <h3>{article.title}</h3>
+            <div key={article.id} className="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
+              <div className="flex justify-between items-start mb-3">
+                <h3 className="text-xl font-bold text-gray-800 flex-1">{article.title}</h3>
                 <button
-                  className={`save-btn ${isSaved(article.id) ? 'saved' : ''}`}
                   onClick={() => handleSaveArticle(article)}
+                  className={`ml-4 px-4 py-2 rounded-lg font-semibold whitespace-nowrap transition-all ${
+                    isSaved(article.id)
+                      ? 'bg-green-500 text-white'
+                      : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                  }`}
                 >
                   {isSaved(article.id) ? t.saved : t.save}
                 </button>
               </div>
 
-              <p className="article-excerpt">{article.excerpt}</p>
+              <p className="text-gray-600 italic mb-3">{article.excerpt}</p>
 
-              <div className="article-content">
+              <div className="text-gray-700 mb-3">
                 <p>{article.content}</p>
-
-                {article.tips && article.tips.length > 0 && (
-                  <div className="tips-section">
-                    <strong>{language === 'ne' ? 'सुझावहरू:' : 'Tips:'}</strong>
-                    <ul>
-                      {article.tips.map((tip, idx) => (
-                        <li key={idx}>{tip}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
               </div>
+
+              {article.tips && article.tips.length > 0 && (
+                <div className="bg-green-50 p-3 rounded border-l-4 border-green-500">
+                  <strong className="text-green-800">{language === 'ne' ? 'सुझावहरू:' : 'Tips:'}</strong>
+                  <ul className="list-disc list-inside mt-2 space-y-1">
+                    {article.tips.map((tip, idx) => (
+                      <li key={idx} className="text-green-700 text-sm">{tip}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           ))}
         </div>
 
-        {/* Saved Articles Section */}
         {savedArticles.length > 0 && (
-          <div className="saved-articles-section">
-            <h2>{t.savedArticles}</h2>
-            <div className="saved-articles-list">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">{t.savedArticles}</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {savedArticles.map(article => (
-                <div key={article.id} className="saved-article-card">
-                  <h4>{article.title}</h4>
+                <div key={article.id} className="bg-gradient-to-br from-green-100 to-teal-100 rounded-lg shadow-md p-4 border-2 border-green-500">
+                  <h4 className="font-bold text-gray-800 mb-3">{article.title}</h4>
                   <button
-                    className="remove-save-btn"
                     onClick={() => handleSaveArticle(article)}
+                    className="w-full px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-all"
                   >
                     {t.unsave}
                   </button>
