@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import Dashboard from './components/Dashboard.jsx';
 import ChatBot from './components/ChatBot.jsx';
 import HealthTracker from './components/HealthTracker.jsx';
@@ -17,8 +17,11 @@ function App() {
   useEffect(() => {
     const savedUser = localStorage.getItem('aamasuraksha_user');
     if (savedUser) {
-      setCurrentUser(JSON.parse(savedUser));
-      setShowOnboarding(false);
+      const parsed = JSON.parse(savedUser);
+      setTimeout(() => {
+        setCurrentUser(parsed);
+        setShowOnboarding(false);
+      }, 0);
     }
   }, []);
 
