@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from pymongo import MongoClient
+from bson import ObjectId
 from dotenv import load_dotenv
 import os
 from datetime import datetime
@@ -65,9 +66,10 @@ async def root():
 @app.post("/api/users")
 async def create_user(user: User):
     try:
-        # Check if user exists
+        # Check if user exists by name
         existing = users_collection.find_one({"name": user.name})
         if existing:
+            existing["id"] = str(existing.pop("_id"))
             return existing
         
         user_data = user.dict()
@@ -141,11 +143,10 @@ async def get_appointments(user_id: str):
 @app.delete("/api/appointments/{appointment_id}")
 async def delete_appointment(appointment_id: str):
     try:
-        from bson import ObjectId
         result = appointments_collection.delete_one({"_id": ObjectId(appointment_id)})
         if result.deleted_count == 0:
             raise HTTPException(status_code=404, detail="Appointment not found")
-        return {"status": "deleted"}
+        return {"status": "deleted", "message": "Appointment deleted successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
