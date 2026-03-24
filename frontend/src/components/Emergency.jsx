@@ -96,7 +96,7 @@ export default function Emergency({ language }) {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <div className="bg-gradient-to-r from-pink-500 to-purple-500 text-white p-4 shadow-lg">
+      <div className="bg-linear-to-r from-pink-500 to-purple-500 text-white p-4 shadow-lg">
         <div className="max-w-4xl mx-auto flex justify-between items-center">
           <button 
             onClick={() => navigate('/')}
@@ -139,7 +139,7 @@ export default function Emergency({ language }) {
         <button 
           onClick={assessRisk}
           disabled={selectedSymptoms.length === 0}
-          className="w-full py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold rounded-lg hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all mb-6"
+          className="w-full py-3 bg-linear-to-r from-pink-500 to-purple-600 text-white font-bold rounded-lg hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all mb-6"
         >
           {t.checkBtn}
         </button>

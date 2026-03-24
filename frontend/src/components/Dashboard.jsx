@@ -45,7 +45,7 @@ const Dashboard = ({ user, language, setLanguage }) => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 text-white p-6 shadow-lg">
+      <div className="bg-linear-to-r from-pink-500 via-purple-500 to-blue-500 text-white p-6 shadow-lg">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <h1 className="text-3xl font-bold">आमा सुरक्षा 🏥</h1>
           <div className="flex gap-4">

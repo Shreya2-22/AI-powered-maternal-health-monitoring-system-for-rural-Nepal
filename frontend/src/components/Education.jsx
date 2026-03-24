@@ -275,7 +275,7 @@ export default function Education({ user, language }) {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <div className="bg-gradient-to-r from-green-500 to-teal-500 text-white p-4 shadow-lg">
+      <div className="bg-linear-to-r from-green-500 to-teal-500 text-white p-4 shadow-lg">
         <div className="max-w-4xl mx-auto flex justify-between items-center">
           <button 
             onClick={() => navigate('/')}
@@ -289,7 +289,7 @@ export default function Education({ user, language }) {
       </div>
 
       <div className="max-w-4xl mx-auto w-full p-6">
-        <div className="bg-gradient-to-r from-green-100 to-teal-100 border-2 border-green-500 rounded-lg p-6 mb-6">
+        <div className="bg-linear-to-r from-green-100 to-teal-100 border-2 border-green-500 rounded-lg p-6 mb-6">
           <h2 className="text-xl font-bold text-green-800 mb-2">📅 {t.thisWeek} ({currentWeek} हप्ता)</h2>
           <p className="text-green-900">
             {currentWeek <= 16 && (language === 'ne' 
@@ -314,7 +314,7 @@ export default function Education({ user, language }) {
               onClick={() => setSelectedCategory(key)}
               className={`px-4 py-2 rounded-lg font-semibold transition-all ${
                 selectedCategory === key
-                  ? 'bg-gradient-to-r from-green-500 to-teal-600 text-white shadow-lg'
+                  ? 'bg-linear-to-r from-green-500 to-teal-600 text-white shadow-lg'
                   : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
               }`}
             >
@@ -365,7 +365,7 @@ export default function Education({ user, language }) {
             <h2 className="text-2xl font-bold text-gray-800 mb-4">{t.savedArticles}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {savedArticles.map(article => (
-                <div key={article.id} className="bg-gradient-to-br from-green-100 to-teal-100 rounded-lg shadow-md p-4 border-2 border-green-500">
+                <div key={article.id} className="bg-linear-to-br from-green-100 to-teal-100 rounded-lg shadow-md p-4 border-2 border-green-500">
                   <h4 className="font-bold text-gray-800 mb-3">{article.title}</h4>
                   <button
                     onClick={() => handleSaveArticle(article)}

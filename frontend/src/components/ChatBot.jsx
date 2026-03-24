@@ -165,7 +165,7 @@ export default function ChatBot({ user, language }) {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-4 shadow-lg">
+      <div className="bg-linear-to-r from-purple-500 to-pink-500 text-white p-4 shadow-lg">
         <div className="flex justify-between items-center">
           <button 
             onClick={() => navigate('/')}
@@ -195,7 +195,7 @@ export default function ChatBot({ user, language }) {
               <div key={message.id} className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className={`max-w-xs px-4 py-2 rounded-lg ${
                   message.sender === 'user'
-                    ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white'
+                    ? 'bg-linear-to-r from-pink-500 to-purple-600 text-white'
                     : 'bg-gray-200 text-gray-800'
                 }`}>
                   <p>{message.text}</p>
@@ -230,7 +230,7 @@ export default function ChatBot({ user, language }) {
           <button 
             type="submit"
             disabled={!inputValue.trim() || isLoading}
-            className="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-semibold rounded-lg hover:shadow-lg disabled:opacity-50 transition-all"
+            className="px-6 py-3 bg-linear-to-r from-pink-500 to-purple-600 text-white font-semibold rounded-lg hover:shadow-lg disabled:opacity-50 transition-all"
           >
             {t.sendBtn}
           </button>

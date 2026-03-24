@@ -133,7 +133,7 @@ const Onboarding = ({ onComplete, language, setLanguage }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-400 via-purple-500 to-blue-500 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-linear-to-br from-pink-400 via-purple-500 to-blue-500 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
@@ -147,7 +147,7 @@ const Onboarding = ({ onComplete, language, setLanguage }) => {
           <button
             className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-all ${
               language === 'ne'
-                ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg'
+                ? 'bg-linear-to-r from-pink-500 to-purple-600 text-white shadow-lg'
                 : 'bg-white/20 text-white hover:bg-white/30'
             }`}
             onClick={() => setLanguage('ne')}
@@ -157,7 +157,7 @@ const Onboarding = ({ onComplete, language, setLanguage }) => {
           <button
             className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-all ${
               language === 'en'
-                ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg'
+                ? 'bg-linear-to-r from-pink-500 to-purple-600 text-white shadow-lg'
                 : 'bg-white/20 text-white hover:bg-white/30'
             }`}
             onClick={() => setLanguage('en')}
@@ -244,7 +244,7 @@ const Onboarding = ({ onComplete, language, setLanguage }) => {
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full mt-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold rounded-lg hover:shadow-lg hover:-translate-y-0.5 transition-all"
+              className="w-full mt-6 py-3 bg-linear-to-r from-pink-500 to-purple-600 text-white font-bold rounded-lg hover:shadow-lg hover:-translate-y-0.5 transition-all"
             >
               {t.getStarted} →
             </button>

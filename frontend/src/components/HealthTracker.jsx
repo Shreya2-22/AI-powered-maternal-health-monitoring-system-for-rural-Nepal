@@ -169,7 +169,7 @@ export default function HealthTracker({ user, language }) {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <div className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white p-4 shadow-lg">
+      <div className="bg-linear-to-r from-blue-500 to-cyan-500 text-white p-4 shadow-lg">
         <div className="max-w-4xl mx-auto flex justify-between items-center">
           <button 
             onClick={() => navigate('/')}
@@ -185,7 +185,7 @@ export default function HealthTracker({ user, language }) {
       <div className="max-w-4xl mx-auto w-full p-6">
         <button 
           onClick={() => setShowForm(!showForm)}
-          className="mb-6 px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-600 text-white font-semibold rounded-lg hover:shadow-lg transition-all"
+          className="mb-6 px-6 py-3 bg-linear-to-r from-blue-500 to-cyan-600 text-white font-semibold rounded-lg hover:shadow-lg transition-all"
         >
           {showForm ? t.cancel : t.addRecord}
         </button>
@@ -272,7 +272,7 @@ export default function HealthTracker({ user, language }) {
             </div>
 
             <div className="flex gap-4">
-              <button type="submit" className="flex-1 py-2 bg-gradient-to-r from-blue-500 to-cyan-600 text-white font-semibold rounded-lg hover:shadow-lg transition-all">
+              <button type="submit" className="flex-1 py-2 bg-linear-to-r from-blue-500 to-cyan-600 text-white font-semibold rounded-lg hover:shadow-lg transition-all">
                 {editingId ? t.update : t.save}
               </button>
               <button type="button" onClick={handleCancel} className="flex-1 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold rounded-lg transition-all">
