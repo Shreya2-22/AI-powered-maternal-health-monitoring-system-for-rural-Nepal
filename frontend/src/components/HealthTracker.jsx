@@ -14,6 +14,10 @@ export default function HealthTracker({ user, language }) {
   });
   const [editingId, setEditingId] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
   const text = {
     ne: {
@@ -66,6 +70,69 @@ export default function HealthTracker({ user, language }) {
 
   const t = text[language];
 
+  // Toast notification handler
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 3000);
+  };
+
+  // Validation functions
+  const validateDate = (date) => {
+    if (!date) return language === 'ne' ? 'मिति आवश्यक छ' : 'Date is required';
+    const selectedDate = new Date(date);
+    const today = new Date();
+    if (selectedDate > today) return language === 'ne' ? 'मिति आज भन्दा अगाडि हुनुपर्छ' : 'Date cannot be in the future';
+    return '';
+  };
+
+  const validateWeight = (weight) => {
+    if (!weight) return language === 'ne' ? 'वजन आवश्यक छ' : 'Weight is required';
+    const w = parseFloat(weight);
+    if (w < 30 || w > 200) return language === 'ne' ? 'वजन ३०-२०० किलो बीच हुनुपर्छ' : 'Weight should be between 30-200 kg';
+    return '';
+  };
+
+  const validateSystolic = (systolic) => {
+    if (!systolic) return language === 'ne' ? 'सिस्टोलिक आवश्यक छ' : 'Systolic is required';
+    const s = parseInt(systolic);
+    if (s < 70 || s > 180) return language === 'ne' ? 'सिस्टोलिक ७०-१८० बीच हुनुपर्छ' : 'Systolic should be between 70-180';
+    return '';
+  };
+
+  const validateDiastolic = (diastolic, systolic) => {
+    if (!diastolic) return language === 'ne' ? 'डायस्टोलिक आवश्यक छ' : 'Diastolic is required';
+    const d = parseInt(diastolic);
+    const s = parseInt(systolic);
+    if (d < 40 || d > 110) return language === 'ne' ? 'डायस्टोलिक ४०-११० बीच हुनुपर्छ' : 'Diastolic should be between 40-110';
+    if (d >= s) return language === 'ne' ? 'डायस्टोलिक सिस्टोलिक भन्दा कम हुनुपर्छ' : 'Diastolic must be less than Systolic';
+    return '';
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    newErrors.date = validateDate(formData.date);
+    newErrors.weight = validateWeight(formData.weight);
+    newErrors.systolic = validateSystolic(formData.systolic);
+    newErrors.diastolic = validateDiastolic(formData.diastolic, formData.systolic);
+    return newErrors;
+  };
+
+  const handleBlur = (field) => {
+    setTouched({...touched, [field]: true});
+    const fieldValidator = {
+      date: () => validateDate(formData.date),
+      weight: () => validateWeight(formData.weight),
+      systolic: () => validateSystolic(formData.systolic),
+      diastolic: () => validateDiastolic(formData.diastolic, formData.systolic)
+    };
+    const fieldError = fieldValidator[field]?.();
+    if (fieldError) {
+      setErrors({...errors, [field]: fieldError});
+    } else {
+      setErrors({...errors, [field]: ''});
+    }
+  };
+
   // Load records from localStorage
   useEffect(() => {
     const savedRecords = localStorage.getItem(`health_records_${user.name}`);
@@ -90,47 +157,59 @@ export default function HealthTracker({ user, language }) {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    const newErrors = validateForm();
+    setErrors(newErrors);
+    setTouched({date: true, weight: true, systolic: true, diastolic: true});
+    
+    // Check if any errors exist
+    if (Object.values(newErrors).some(err => err)) return;
+    
+    setIsSubmitting(true);
 
-    // Validation
-    if (!formData.date || !formData.weight || !formData.systolic || !formData.diastolic) {
-      alert(language === 'ne' ? 'कृपया सबै आवश्यक क्षेत्रहरू भरनुहोस्।' : 'Please fill all required fields.');
-      return;
+    try {
+      if (editingId) {
+        // Update existing record
+        const updatedRecords = records.map(r =>
+          r.id === editingId
+            ? { ...formData, id: editingId, timestamp: r.timestamp }
+            : r
+        );
+        setRecords(updatedRecords);
+        saveToLocalStorage(updatedRecords);
+        setEditingId(null);
+        showToast(language === 'ne' ? '✅ रेकर्ड अपडेट भयो!' : '✅ Record updated!', 'success');
+      } else {
+        // Add new record
+        const newRecord = {
+          id: Date.now(),
+          ...formData,
+          timestamp: new Date().toLocaleString(language === 'ne' ? 'ne-NP' : 'en-US')
+        };
+        const updatedRecords = [newRecord, ...records];
+        setRecords(updatedRecords);
+        saveToLocalStorage(updatedRecords);
+        showToast(language === 'ne' ? '✅ नयाँ रेकर्ड सेभ भयो!' : '✅ Record saved!', 'success');
+      }
+
+      // Reset form
+      setFormData({
+        date: new Date().toISOString().split('T')[0],
+        weight: '',
+        systolic: '',
+        diastolic: '',
+        symptoms: '',
+        notes: ''
+      });
+      setTouched({});
+      setErrors({});
+      setShowForm(false);
+    } catch (error) {
+      showToast(language === 'ne' ? '❌ त्रुटि भयो' : '❌ An error occurred', 'error');
     }
-
-    if (editingId) {
-      // Update existing record
-      const updatedRecords = records.map(r =>
-        r.id === editingId
-          ? { ...formData, id: editingId, timestamp: r.timestamp }
-          : r
-      );
-      setRecords(updatedRecords);
-      saveToLocalStorage(updatedRecords);
-      setEditingId(null);
-    } else {
-      // Add new record
-      const newRecord = {
-        id: Date.now(),
-        ...formData,
-        timestamp: new Date().toLocaleString(language === 'ne' ? 'ne-NP' : 'en-US')
-      };
-      const updatedRecords = [newRecord, ...records];
-      setRecords(updatedRecords);
-      saveToLocalStorage(updatedRecords);
-    }
-
-    // Reset form
-    setFormData({
-      date: new Date().toISOString().split('T')[0],
-      weight: '',
-      systolic: '',
-      diastolic: '',
-      symptoms: '',
-      notes: ''
-    });
-    setShowForm(false);
+    setIsSubmitting(false);
   };
 
   const handleEdit = (record) => {
@@ -165,10 +244,20 @@ export default function HealthTracker({ user, language }) {
       symptoms: '',
       notes: ''
     });
+    setTouched({});
+    setErrors({});
   };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
+      {/* Toast Notification */}
+      {toast.show && (
+        <div className={`fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white font-semibold animate-slide-in ${
+          toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'
+        }`}>
+          {toast.message}
+        </div>
+      )}
       <div className="bg-linear-to-r from-blue-500 to-cyan-500 text-white p-4 shadow-lg">
         <div className="max-w-4xl mx-auto flex justify-between items-center">
           <button 
@@ -195,18 +284,22 @@ export default function HealthTracker({ user, language }) {
           <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6 mb-6 space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">{t.date}</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">{t.date} <span className="text-red-500">*</span></label>
                 <input
                   type="date"
                   name="date"
                   value={formData.date}
                   onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
+                  onBlur={() => handleBlur('date')}
+                  className={`w-full px-4 py-2 border-2 rounded-lg outline-none transition ${
+                    touched.date && errors.date ? 'border-red-500 focus:ring-2 focus:ring-red-200' : 'border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
+                  }`}
                 />
+                {touched.date && errors.date && <p className="text-red-500 text-xs mt-1">❌ {errors.date}</p>}
+                {touched.date && !errors.date && <p className="text-green-500 text-xs mt-1">✅ {language === 'ne' ? 'ठीक छ' : 'Valid'}</p>}
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">{t.weight}</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">⚖️ {t.weight} <span className="text-red-500">*</span></label>
                 <input
                   type="number"
                   name="weight"
@@ -214,36 +307,48 @@ export default function HealthTracker({ user, language }) {
                   step="0.1"
                   value={formData.weight}
                   onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
+                  onBlur={() => handleBlur('weight')}
+                  className={`w-full px-4 py-2 border-2 rounded-lg outline-none transition ${
+                    touched.weight && errors.weight ? 'border-red-500 focus:ring-2 focus:ring-red-200' : 'border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
+                  }`}
                 />
+                {touched.weight && errors.weight && <p className="text-red-500 text-xs mt-1">❌ {errors.weight}</p>}
+                {touched.weight && !errors.weight && <p className="text-green-500 text-xs mt-1">✅ {language === 'ne' ? 'ठीक छ' : 'Valid'}</p>}
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">{t.systolic}</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">💓 {t.systolic} <span className="text-red-500">*</span></label>
                 <input
                   type="number"
                   name="systolic"
                   placeholder="120"
                   value={formData.systolic}
                   onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
+                  onBlur={() => handleBlur('systolic')}
+                  className={`w-full px-4 py-2 border-2 rounded-lg outline-none transition ${
+                    touched.systolic && errors.systolic ? 'border-red-500 focus:ring-2 focus:ring-red-200' : 'border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
+                  }`}
                 />
+                {touched.systolic && errors.systolic && <p className="text-red-500 text-xs mt-1">❌ {errors.systolic}</p>}
+                {touched.systolic && !errors.systolic && <p className="text-green-500 text-xs mt-1">✅ {language === 'ne' ? 'ठीक छ' : 'Valid'}</p>}
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">{t.diastolic}</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">💓 {t.diastolic} <span className="text-red-500">*</span></label>
                 <input
                   type="number"
                   name="diastolic"
                   placeholder="80"
                   value={formData.diastolic}
                   onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
+                  onBlur={() => handleBlur('diastolic')}
+                  className={`w-full px-4 py-2 border-2 rounded-lg outline-none transition ${
+                    touched.diastolic && errors.diastolic ? 'border-red-500 focus:ring-2 focus:ring-red-200' : 'border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
+                  }`}
                 />
+                {touched.diastolic && errors.diastolic && <p className="text-red-500 text-xs mt-1">❌ {errors.diastolic}</p>}
+                {touched.diastolic && !errors.diastolic && <p className="text-green-500 text-xs mt-1">✅ {language === 'ne' ? 'ठीक छ' : 'Valid'}</p>}
               </div>
             </div>
 
@@ -272,10 +377,26 @@ export default function HealthTracker({ user, language }) {
             </div>
 
             <div className="flex gap-4">
-              <button type="submit" className="flex-1 py-2 bg-linear-to-r from-blue-500 to-cyan-600 text-white font-semibold rounded-lg hover:shadow-lg transition-all">
-                {editingId ? t.update : t.save}
+              <button 
+                type="submit" 
+                disabled={isSubmitting}
+                className="flex-1 py-2 bg-linear-to-r from-blue-500 to-cyan-600 text-white font-semibold rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isSubmitting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    {language === 'ne' ? 'प्रक्रियामा...' : 'Processing...'}
+                  </>
+                ) : (
+                  <>{editingId ? t.update : t.save} ✅</>
+                )}
               </button>
-              <button type="button" onClick={handleCancel} className="flex-1 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold rounded-lg transition-all">
+              <button 
+                type="button" 
+                onClick={handleCancel} 
+                disabled={isSubmitting}
+                className="flex-1 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
                 {t.cancel}
               </button>
             </div>
