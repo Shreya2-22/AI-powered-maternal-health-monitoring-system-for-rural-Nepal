@@ -11,8 +11,14 @@ export default function Appointments({ user, language }) {
     clinic: '',
     reason: ''
   });
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [toast, setToast] = useState({ show: false, message: '', type: '' });
 
   const text = {
     ne: {
@@ -39,7 +45,26 @@ export default function Appointments({ user, language }) {
       clinicLabel: 'क्लिनिक:',
       reasonLabel: 'कारण:',
       noUpcoming: 'कुनै आसन्न नियुक्ति छैन',
-      noPast: 'कुनै गएको नियुक्ति छैन'
+      noPast: 'कुनै गएको नियुक्ति छैन',
+      errors: {
+        dateRequired: 'मिति आवश्यक छ',
+        dateFuture: 'मिति भविष्यमा हुनु पर्छ',
+        dateMax: 'मिति ६ महिना भित्र हुनु पर्छ',
+        timeRequired: 'समय आवश्यक छ',
+        timeValid: 'समय सकाल ७ बजे र साँझ ७ बजे बीच हुनु पर्छ',
+        doctorRequired: 'डाक्टरको नाम आवश्यक छ',
+        doctorLength: 'डाक्टरको नाम कम्तिमा २ वर्ण हुनु पर्छ',
+        clinicRequired: 'क्लिनिक/अस्पताल आवश्यक छ',
+        clinicLength: 'क्लिनिक नाम कम्तिमा २ वर्ण हुनु पर्छ'
+      },
+      success: {
+        created: 'नियुक्ति सफलतापूर्वक बनाइयो',
+        updated: 'नियुक्ति सफलतापूर्वक अपडेट गरियो',
+        deleted: 'नियुक्ति सफलतापूर्वक हटाइयो'
+      },
+      error: {
+        failed: 'नियुक्ति प्रक्रिया विफल भयो। कृपया पुनः प्रयास गर्नुहोस्'
+      }
     },
     en: {
       title: 'Appointments',
@@ -65,108 +90,235 @@ export default function Appointments({ user, language }) {
       clinicLabel: 'Clinic:',
       reasonLabel: 'Reason:',
       noUpcoming: 'No upcoming appointments',
-      noPast: 'No past appointments'
+      noPast: 'No past appointments',
+      errors: {
+        dateRequired: 'Date is required',
+        dateFuture: 'Date must be in the future',
+        dateMax: 'Date must be within 6 months',
+        timeRequired: 'Time is required',
+        timeValid: 'Time must be between 7 AM and 7 PM',
+        doctorRequired: 'Doctor\'s name is required',
+        doctorLength: 'Doctor\'s name must be at least 2 characters',
+        clinicRequired: 'Clinic/Hospital is required',
+        clinicLength: 'Clinic name must be at least 2 characters'
+      },
+      success: {
+        created: 'Appointment created successfully',
+        updated: 'Appointment updated successfully',
+        deleted: 'Appointment deleted successfully'
+      },
+      error: {
+        failed: 'Appointment process failed. Please try again'
+      }
     }
   };
 
   const t = text[language];
 
-  // Load appointments from localStorage
-  useEffect(() => {
-    const savedAppointments = localStorage.getItem(`appointments_${user.name}`);
-    if (savedAppointments) {
-      setAppointments(JSON.parse(savedAppointments));
+  // Validation functions
+  const validateDate = (date) => {
+    if (!date) return t.errors.dateRequired;
+    const selectedDate = new Date(date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (selectedDate <= today) return t.errors.dateFuture;
+    const maxDate = new Date();
+    maxDate.setMonth(maxDate.getMonth() + 6);
+    if (selectedDate > maxDate) return t.errors.dateMax;
+    return '';
+  };
+
+  const validateTime = (time) => {
+    if (!time) return t.errors.timeRequired;
+    const [hours] = time.split(':').map(Number);
+    if (hours < 7 || hours >= 19) return t.errors.timeValid;
+    return '';
+  };
+
+  const validateDoctorName = (name) => {
+    if (!name.trim()) return t.errors.doctorRequired;
+    if (name.trim().length < 2) return t.errors.doctorLength;
+    return '';
+  };
+
+  const validateClinic = (clinic) => {
+    if (!clinic.trim()) return t.errors.clinicRequired;
+    if (clinic.trim().length < 2) return t.errors.clinicLength;
+    return '';
+  };
+
+  // Toast notification helper
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast({ show: false, message: '', type: '' }), 3000);
+  };
+
+  // API Functions
+  const fetchAppointments = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`http://localhost:8001/api/appointments/${user.name}`);
+      if (response.ok) {
+        const data = await response.json();
+        setAppointments(Array.isArray(data) ? data : data.appointments || []);
+      }
+    } catch (error) {
+      console.error('Error fetching appointments:', error);
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  const saveAppointment = async (appointmentData) => {
+    try {
+      const url = editingId 
+        ? `http://localhost:8001/api/appointments/${editingId}` 
+        : 'http://localhost:8001/api/appointments';
+      
+      const method = editingId ? 'PUT' : 'POST';
+      
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...appointmentData,
+          user_id: user.name
+        })
+      });
+
+      if (!response.ok) throw new Error('Save failed');
+      
+      const data = await response.json();
+      showToast(
+        editingId ? t.success.updated : t.success.created,
+        'success'
+      );
+      await fetchAppointments();
+      return true;
+    } catch (error) {
+      console.error('Error saving appointment:', error);
+      showToast(t.error.failed, 'error');
+      return false;
+    }
+  };
+
+  const deleteAppointment = async (appointmentId) => {
+    if (!window.confirm(t.deleteConfirm)) return;
+    
+    setDeleteLoading(appointmentId);
+    try {
+      const response = await fetch(
+        `http://localhost:8001/api/appointments/${appointmentId}`,
+        { method: 'DELETE' }
+      );
+
+      if (!response.ok) throw new Error('Delete failed');
+      
+      showToast(t.success.deleted, 'success');
+      await fetchAppointments();
+    } catch (error) {
+      console.error('Error deleting appointment:', error);
+      showToast(t.error.failed, 'error');
+    } finally {
+      setDeleteLoading(null);
+    }
+  };
+
+  // Load appointments on component mount
+  useEffect(() => {
+    fetchAppointments();
   }, [user.name]);
 
-  // Save appointments to localStorage
-  const saveToLocalStorage = (updatedAppointments) => {
-    localStorage.setItem(
-      `appointments_${user.name}`,
-      JSON.stringify(updatedAppointments)
-    );
-  };
-
+  // Handle input change with validation
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Clear error when user changes the field
+    if (touched[name]) {
+      let error = '';
+      if (name === 'date') error = validateDate(value);
+      else if (name === 'time') error = validateTime(value);
+      else if (name === 'doctorName') error = validateDoctorName(value);
+      else if (name === 'clinic') error = validateClinic(value);
+      
+      setErrors(prev => ({ ...prev, [name]: error }));
+    }
   };
 
-  const handleSubmit = (e) => {
+  // Handle field blur for validation
+  const handleBlur = (e) => {
+    const { name } = e.target;
+    setTouched(prev => ({ ...prev, [name]: true }));
+    
+    let error = '';
+    if (name === 'date') error = validateDate(formData.date);
+    else if (name === 'time') error = validateTime(formData.time);
+    else if (name === 'doctorName') error = validateDoctorName(formData.doctorName);
+    else if (name === 'clinic') error = validateClinic(formData.clinic);
+    
+    setErrors(prev => ({ ...prev, [name]: error }));
+  };
+
+  // Handle form submission
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate all fields
+    const newErrors = {
+      date: validateDate(formData.date),
+      time: validateTime(formData.time),
+      doctorName: validateDoctorName(formData.doctorName),
+      clinic: validateClinic(formData.clinic)
+    };
 
-    // Validation
-    if (!formData.date || !formData.time || !formData.doctorName || !formData.clinic) {
-      alert(language === 'ne' ? 'कृपया सबै आवश्यक क्षेत्रहरू भरनुहोस्।' : 'Please fill all required fields.');
-      return;
-    }
+    setErrors(newErrors);
+    setTouched({ date: true, time: true, doctorName: true, clinic: true });
 
-    if (editingId) {
-      // Update existing appointment
-      const updatedAppointments = appointments.map(a =>
-        a.id === editingId
-          ? { ...formData, id: editingId, createdAt: a.createdAt }
-          : a
-      );
-      setAppointments(updatedAppointments);
-      saveToLocalStorage(updatedAppointments);
-      setEditingId(null);
-    } else {
-      // Add new appointment
-      const newAppointment = {
-        id: Date.now(),
-        ...formData,
-        createdAt: new Date().toISOString()
-      };
-      const updatedAppointments = [newAppointment, ...appointments];
-      setAppointments(updatedAppointments);
-      saveToLocalStorage(updatedAppointments);
-    }
+    // Check if there are any errors
+    if (Object.values(newErrors).some(error => error)) return;
 
-    // Reset form
-    setFormData({
-      date: '',
-      time: '',
-      doctorName: '',
-      clinic: '',
-      reason: ''
+    setIsSubmitting(true);
+    const success = await saveAppointment({
+      date: formData.date,
+      time: formData.time,
+      doctor_name: formData.doctorName,
+      clinic: formData.clinic,
+      reason: formData.reason
     });
-    setShowForm(false);
+
+    if (success) {
+      setFormData({ date: '', time: '', doctorName: '', clinic: '', reason: '' });
+      setErrors({});
+      setTouched({});
+      setEditingId(null);
+      setShowForm(false);
+    }
+    setIsSubmitting(false);
   };
 
+  // Handle edit
   const handleEdit = (appointment) => {
     setFormData({
       date: appointment.date,
       time: appointment.time,
-      doctorName: appointment.doctorName,
+      doctorName: appointment.doctor_name,
       clinic: appointment.clinic,
-      reason: appointment.reason
+      reason: appointment.reason || ''
     });
     setEditingId(appointment.id);
     setShowForm(true);
+    setErrors({});
+    setTouched({});
   };
 
-  const handleDelete = (id) => {
-    if (window.confirm(t.deleteConfirm)) {
-      const updatedAppointments = appointments.filter(a => a.id !== id);
-      setAppointments(updatedAppointments);
-      saveToLocalStorage(updatedAppointments);
-    }
-  };
-
-  const handleCancel = () => {
-    setShowForm(false);
+  // Reset form
+  const resetForm = () => {
+    setFormData({ date: '', time: '', doctorName: '', clinic: '', reason: '' });
+    setErrors({});
+    setTouched({});
     setEditingId(null);
-    setFormData({
-      date: '',
-      time: '',
-      doctorName: '',
-      clinic: '',
-      reason: ''
-    });
+    setShowForm(false);
   };
 
   // Separate upcoming and past appointments
@@ -183,6 +335,7 @@ export default function Appointments({ user, language }) {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
+      {/* Header */}
       <div className="bg-linear-to-r from-purple-600 to-pink-500 text-white p-4 shadow-lg">
         <div className="max-w-4xl mx-auto flex justify-between items-center">
           <button 
@@ -196,10 +349,21 @@ export default function Appointments({ user, language }) {
         </div>
       </div>
 
+      {/* Toast Notification */}
+      {toast.show && (
+        <div className={`fixed top-4 right-4 px-6 py-3 rounded-lg text-white font-semibold shadow-lg animate-slide-in ${
+          toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'
+        }`}>
+          {toast.message}
+        </div>
+      )}
+
       <div className="max-w-4xl mx-auto w-full p-6">
+        {/* Add Appointment Button */}
         <button 
           onClick={() => setShowForm(!showForm)}
-          className="mb-6 px-6 py-3 bg-linear-to-r from-purple-600 to-pink-500 text-white font-semibold rounded-lg hover:shadow-lg transition-all"
+          disabled={isLoading}
+          className="mb-6 px-6 py-3 bg-linear-to-r from-purple-600 to-pink-500 text-white font-semibold rounded-lg hover:shadow-lg transition-all disabled:opacity-50"
         >
           {showForm ? t.cancel : t.addAppointment}
         </button>
@@ -215,9 +379,16 @@ export default function Appointments({ user, language }) {
                   name="date"
                   value={formData.date}
                   onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition"
+                  onBlur={handleBlur}
+                  className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 outline-none transition ${
+                    touched.date && errors.date
+                      ? 'border-red-500 focus:border-red-500 focus:ring-red-200'
+                      : 'border-gray-300 focus:border-purple-500 focus:ring-purple-200'
+                  }`}
                 />
+                {touched.date && errors.date && (
+                  <p className="text-red-500 text-sm mt-1">{errors.date}</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">{t.time}</label>
@@ -226,9 +397,16 @@ export default function Appointments({ user, language }) {
                   name="time"
                   value={formData.time}
                   onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition"
+                  onBlur={handleBlur}
+                  className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 outline-none transition ${
+                    touched.time && errors.time
+                      ? 'border-red-500 focus:border-red-500 focus:ring-red-200'
+                      : 'border-gray-300 focus:border-purple-500 focus:ring-purple-200'
+                  }`}
                 />
+                {touched.time && errors.time && (
+                  <p className="text-red-500 text-sm mt-1">{errors.time}</p>
+                )}
               </div>
             </div>
 
@@ -240,9 +418,16 @@ export default function Appointments({ user, language }) {
                 placeholder={language === 'ne' ? 'डाक्टरको नाम' : 'Enter doctor\'s name'}
                 value={formData.doctorName}
                 onChange={handleInputChange}
-                required
-                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition"
+                onBlur={handleBlur}
+                className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 outline-none transition ${
+                  touched.doctorName && errors.doctorName
+                    ? 'border-red-500 focus:border-red-500 focus:ring-red-200'
+                    : 'border-gray-300 focus:border-purple-500 focus:ring-purple-200'
+                }`}
               />
+              {touched.doctorName && errors.doctorName && (
+                <p className="text-red-500 text-sm mt-1">{errors.doctorName}</p>
+              )}
             </div>
 
             <div>
@@ -253,9 +438,16 @@ export default function Appointments({ user, language }) {
                 placeholder={language === 'ne' ? 'क्लिनिक/अस्पताल' : 'Enter clinic/hospital name'}
                 value={formData.clinic}
                 onChange={handleInputChange}
-                required
-                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition"
+                onBlur={handleBlur}
+                className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 outline-none transition ${
+                  touched.clinic && errors.clinic
+                    ? 'border-red-500 focus:border-red-500 focus:ring-red-200'
+                    : 'border-gray-300 focus:border-purple-500 focus:ring-purple-200'
+                }`}
               />
+              {touched.clinic && errors.clinic && (
+                <p className="text-red-500 text-sm mt-1">{errors.clinic}</p>
+              )}
             </div>
 
             <div>
@@ -271,20 +463,37 @@ export default function Appointments({ user, language }) {
             </div>
 
             <div className="flex gap-4">
-              <button type="submit" className="flex-1 py-2 bg-linear-to-r from-purple-600 to-pink-500 text-white font-semibold rounded-lg hover:shadow-lg transition-all">
+              <button 
+                type="submit" 
+                disabled={isSubmitting}
+                className="flex-1 py-2 bg-linear-to-r from-purple-600 to-pink-500 text-white font-semibold rounded-lg hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isSubmitting && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
                 {editingId ? t.update : t.save}
               </button>
-              <button type="button" onClick={handleCancel} className="flex-1 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold rounded-lg transition-all">
+              <button 
+                type="button" 
+                onClick={resetForm}
+                disabled={isSubmitting}
+                className="flex-1 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold rounded-lg transition-all disabled:opacity-50"
+              >
                 {t.cancel}
               </button>
             </div>
           </form>
         )}
 
+        {/* Loading State */}
+        {isLoading && (
+          <div className="flex justify-center items-center py-12">
+            <div className="w-8 h-8 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin"></div>
+          </div>
+        )}
+
         {/* Appointments List */}
-        {appointments.length === 0 ? (
+        {!isLoading && appointments.length === 0 ? (
           <p className="text-gray-500 text-center py-12">{t.noAppointments}</p>
-        ) : (
+        ) : !isLoading && (
           <div className="space-y-8">
             {/* Upcoming Appointments */}
             <div>
@@ -306,7 +515,7 @@ export default function Appointments({ user, language }) {
                       <div className="grid grid-cols-2 gap-4 mb-3 py-2 border-y border-gray-200">
                         <div>
                           <span className="text-xs font-semibold text-gray-600">{t.doctorLabel}</span>
-                          <p className="text-gray-800">{appointment.doctorName}</p>
+                          <p className="text-gray-800">{appointment.doctor_name}</p>
                         </div>
                         <div>
                           <span className="text-xs font-semibold text-gray-600">{t.clinicLabel}</span>
@@ -329,9 +538,11 @@ export default function Appointments({ user, language }) {
                           {t.edit}
                         </button>
                         <button 
-                          onClick={() => handleDelete(appointment.id)}
-                          className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-all"
+                          onClick={() => deleteAppointment(appointment.id)}
+                          disabled={deleteLoading === appointment.id}
+                          className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                         >
+                          {deleteLoading === appointment.id && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
                           {t.delete}
                         </button>
                       </div>
@@ -359,7 +570,7 @@ export default function Appointments({ user, language }) {
                       <div className="grid grid-cols-2 gap-4 mb-3 py-2 border-y border-gray-300">
                         <div>
                           <span className="text-xs font-semibold text-gray-600">{t.doctorLabel}</span>
-                          <p className="text-gray-700">{appointment.doctorName}</p>
+                          <p className="text-gray-700">{appointment.doctor_name}</p>
                         </div>
                         <div>
                           <span className="text-xs font-semibold text-gray-600">{t.clinicLabel}</span>
@@ -375,9 +586,11 @@ export default function Appointments({ user, language }) {
                       )}
 
                       <button 
-                        onClick={() => handleDelete(appointment.id)}
-                        className="w-full px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-all"
+                        onClick={() => deleteAppointment(appointment.id)}
+                        disabled={deleteLoading === appointment.id}
+                        className="w-full px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                       >
+                        {deleteLoading === appointment.id && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
                         {t.delete}
                       </button>
                     </div>

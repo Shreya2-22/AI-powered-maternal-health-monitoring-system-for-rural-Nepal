@@ -140,6 +140,26 @@ async def get_appointments(user_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.put("/api/appointments/{appointment_id}")
+async def update_appointment(appointment_id: str, appointment: Appointment):
+    try:
+        appt_data = appointment.dict()
+        appt_data["updated_at"] = datetime.now().isoformat()
+        
+        result = appointments_collection.update_one(
+            {"_id": ObjectId(appointment_id)},
+            {"$set": appt_data}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Appointment not found")
+        
+        updated_appt = appointments_collection.find_one({"_id": ObjectId(appointment_id)})
+        updated_appt["id"] = str(updated_appt.pop("_id"))
+        return updated_appt
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.delete("/api/appointments/{appointment_id}")
 async def delete_appointment(appointment_id: str):
     try:
