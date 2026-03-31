@@ -6,6 +6,7 @@ import HealthTracker from './components/HealthTracker.jsx';
 import Appointments from './components/Appointments.jsx';
 import Education from './components/Education.jsx';
 import Emergency from './components/Emergency.jsx';
+import RiskAssessment from './components/RiskAssessment.jsx';
 
 const API = 'http://localhost:8001/api';
 
@@ -72,6 +73,10 @@ function App() {
         <Route
           path="/emergency"
           element={<Emergency user={currentUser} language={language} />}
+        />
+        <Route
+          path="/risk"
+          element={<RiskAssessment user={currentUser} language={language} />}
         />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

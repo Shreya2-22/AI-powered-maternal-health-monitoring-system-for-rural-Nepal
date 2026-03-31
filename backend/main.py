@@ -6,6 +6,7 @@ from bson import ObjectId
 from dotenv import load_dotenv
 import os
 from datetime import datetime
+from risk_assessment import PregnancyRiskAssessment
 
 load_dotenv()
 
@@ -167,6 +168,38 @@ async def delete_appointment(appointment_id: str):
         if result.deleted_count == 0:
             raise HTTPException(status_code=404, detail="Appointment not found")
         return {"status": "deleted", "message": "Appointment deleted successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Initialize risk assessment model
+risk_assessment = PregnancyRiskAssessment()
+
+@app.post("/api/risk-assessment")
+async def get_risk_assessment(user_id: str):
+    """Calculate pregnancy risk based on health records"""
+    try:
+        # Fetch user data
+        user = users_collection.find_one({"_id": ObjectId(user_id)})
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Fetch health records
+        health_records = list(health_records_collection.find({
+            "user_id": user_id
+        }).sort("date", -1))
+        
+        # Convert ObjectId to string for processing
+        for record in health_records:
+            record['_id'] = str(record['_id'])
+        
+        # Calculate risk
+        result = risk_assessment.calculate_risk(
+            health_records=health_records,
+            user_age=user.get('age', 25),
+            weeks_pregnant=user.get('weeks_pregnant', 20)
+        )
+        
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

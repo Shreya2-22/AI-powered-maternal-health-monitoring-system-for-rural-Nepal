@@ -16,6 +16,8 @@ const Dashboard = ({ user, language, setLanguage }) => {
       appointmentsDesc: 'जाँच समय सूची',
       education: '📚 शिक्षा',
       educationDesc: 'स्वास्थ्य जानकारी',
+      riskAssessment: '⚖️ जोखिम मूल्यांकन',
+      riskAssessmentDesc: 'स्वास्थ्य विश्लेषण',
       logout: 'लग आउट'
     },
     en: {
@@ -31,6 +33,8 @@ const Dashboard = ({ user, language, setLanguage }) => {
       appointmentsDesc: 'Checkup schedule',
       education: '📚 Education',
       educationDesc: 'Health information',
+      riskAssessment: '⚖️ Risk Assessment',
+      riskAssessmentDesc: 'Health Analysis',
       logout: 'Logout'
     }
   };
@@ -123,6 +127,15 @@ const Dashboard = ({ user, language, setLanguage }) => {
             <div className="text-5xl mb-4 group-hover:scale-110 transition-transform">📚</div>
             <h3 className="text-2xl font-bold text-gray-800 mb-2">शिक्षा</h3>
             <p className="text-gray-600">स्वास्थ्य जानकारी</p>
+          </button>
+
+          <button
+            onClick={() => navigate('/risk')}
+            className="bg-white border-2 border-gray-200 hover:border-pink-500 rounded-xl p-6 shadow-md hover:shadow-lg hover:-translate-y-1 transition-all group"
+          >
+            <div className="text-5xl mb-4 group-hover:scale-110 transition-transform">⚖️</div>
+            <h3 className="text-2xl font-bold text-gray-800 mb-2">{t.riskAssessment}</h3>
+            <p className="text-gray-600">{t.riskAssessmentDesc}</p>
           </button>
         </div>
       </div>
