@@ -88,6 +88,9 @@ const Onboarding = ({ onComplete, language, setLanguage }) => {
     weeks_pregnant: '',
     due_date: ''
   });
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const text = {
     ne: {
@@ -122,14 +125,100 @@ const Onboarding = ({ onComplete, language, setLanguage }) => {
 
   const t = text[language];
 
-  const handleSubmit = (e) => {
+  // Validation functions
+  const validateName = (name) => {
+    if (!name.trim()) return language === 'ne' ? 'नाम आवश्यक छ' : 'Name is required';
+    if (name.trim().length < 2) return language === 'ne' ? 'नाम कम्तिमा २ वर्ण हुनुपर्छ' : 'Name must be at least 2 characters';
+    return '';
+  };
+
+  const validateAge = (age) => {
+    if (!age) return language === 'ne' ? 'उमेर आवश्यक छ' : 'Age is required';
+    const ageNum = parseInt(age);
+    if (ageNum < 13 || ageNum > 60) return language === 'ne' ? 'उमेर १३-६० बीच हुनुपर्छ' : 'Age should be between 13-60';
+    return '';
+  };
+
+  const validatePhone = (phone) => {
+    if (!phone) return ''; // optional
+    const phoneRegex = /^[0-9]{7,15}$/;
+    if (!phoneRegex.test(phone.replace(/[\s-]/g, ''))) {
+      return language === 'ne' ? 'मान्य फोन नम्बर राख्नुहोस्' : 'Please enter a valid phone number';
+    }
+    return '';
+  };
+
+  const validateDistrict = (district) => {
+    if (!district.trim()) return language === 'ne' ? 'जिल्ला आवश्यक छ' : 'District is required';
+    return '';
+  };
+
+  const validateWeeks = (weeks) => {
+    if (!weeks) return language === 'ne' ? 'गर्भावस्थाको हप्ता आवश्यक छ' : 'Weeks pregnant is required';
+    const weeksNum = parseInt(weeks);
+    if (weeksNum < 1 || weeksNum > 42) return language === 'ne' ? 'हप्ता १-४२ बीच हुनुपर्छ' : 'Weeks should be between 1-42';
+    return '';
+  };
+
+  const validateDueDate = (dueDate) => {
+    if (!dueDate) return language === 'ne' ? 'सम्भावित मिति आवश्यक छ' : 'Due date is required';
+    const selectedDate = new Date(dueDate);
+    const today = new Date();
+    if (selectedDate < today) return language === 'ne' ? 'मिति आज भन्दा अगाडि हुनुपर्छ' : 'Due date should be in the future';
+    return '';
+  };
+
+  // Validate all fields
+  const validateForm = () => {
+    const newErrors = {};
+    newErrors.name = validateName(formData.name);
+    newErrors.age = validateAge(formData.age);
+    newErrors.phone = validatePhone(formData.phone);
+    newErrors.district = validateDistrict(formData.district);
+    newErrors.weeks_pregnant = validateWeeks(formData.weeks_pregnant);
+    newErrors.due_date = validateDueDate(formData.due_date);
+    return newErrors;
+  };
+
+  const handleBlur = (field) => {
+    setTouched({...touched, [field]: true});
+    const fieldValidator = {
+      name: () => validateName(formData.name),
+      age: () => validateAge(formData.age),
+      phone: () => validatePhone(formData.phone),
+      district: () => validateDistrict(formData.district),
+      weeks_pregnant: () => validateWeeks(formData.weeks_pregnant),
+      due_date: () => validateDueDate(formData.due_date)
+    };
+    const fieldError = fieldValidator[field]?.();
+    if (fieldError) {
+      setErrors({...errors, [field]: fieldError});
+    } else {
+      setErrors({...errors, [field]: ''});
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onComplete({
-      ...formData,
-      age: parseInt(formData.age) || 0,
-      weeks_pregnant: parseInt(formData.weeks_pregnant) || 0,
-      language_preference: language
-    });
+    const newErrors = validateForm();
+    setErrors(newErrors);
+    setTouched({name: true, age: true, phone: true, district: true, weeks_pregnant: true, due_date: true});
+
+    // Check if any errors exist
+    if (Object.values(newErrors).some(err => err)) return;
+
+    setIsSubmitting(true);
+    try {
+      onComplete({
+        ...formData,
+        age: parseInt(formData.age) || 0,
+        weeks_pregnant: parseInt(formData.weeks_pregnant) || 0,
+        language_preference: language
+      });
+    } catch (error) {
+      alert(language === 'ne' ? 'त्रुटि भयो। पुनः प्रयास गर्नुहोस्।' : 'An error occurred. Please try again.');
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -169,71 +258,114 @@ const Onboarding = ({ onComplete, language, setLanguage }) => {
         {/* Form Card */}
         <div className="bg-white rounded-2xl shadow-2xl p-8">
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Name Field */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">{t.name} *</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                {t.name} <span className="text-red-500">*</span>
+              </label>
               <input
                 type="text"
                 placeholder={t.name}
                 value={formData.name}
                 onChange={(e) => setFormData({...formData, name: e.target.value})}
-                required
-                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-pink-500 focus:ring-2 focus:ring-pink-200 outline-none transition"
+                onBlur={() => handleBlur('name')}
+                className={`w-full px-4 py-2 border-2 rounded-lg outline-none transition ${
+                  touched.name && errors.name ? 'border-red-500 focus:ring-2 focus:ring-red-200' : 'border-gray-300 focus:border-pink-500 focus:ring-2 focus:ring-pink-200'
+                }`}
               />
+              {touched.name && errors.name && <p className="text-red-500 text-xs mt-1">❌ {errors.name}</p>}
             </div>
 
+            {/* Age Field */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">{t.age} *</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                {t.age} <span className="text-red-500">*</span>
+              </label>
               <input
                 type="number"
-                placeholder={t.age}
+                placeholder="e.g., 25"
                 value={formData.age}
                 onChange={(e) => setFormData({...formData, age: e.target.value})}
-                required
-                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-pink-500 focus:ring-2 focus:ring-pink-200 outline-none transition"
+                onBlur={() => handleBlur('age')}
+                className={`w-full px-4 py-2 border-2 rounded-lg outline-none transition ${
+                  touched.age && errors.age ? 'border-red-500 focus:ring-2 focus:ring-red-200' : 'border-gray-300 focus:border-pink-500 focus:ring-2 focus:ring-pink-200'
+                }`}
               />
+              {touched.age && errors.age && <p className="text-red-500 text-xs mt-1">❌ {errors.age}</p>}
+              {touched.age && !errors.age && <p className="text-green-500 text-xs mt-1">✅ {language === 'ne' ? 'ठीक छ' : 'Valid'}</p>}
             </div>
 
+            {/* Phone Field */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">{t.phone}</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">📱 {t.phone}</label>
               <input
                 type="tel"
-                placeholder={t.phone}
+                placeholder="e.g., 9841234567"
                 value={formData.phone}
                 onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-pink-500 focus:ring-2 focus:ring-pink-200 outline-none transition"
+                onBlur={() => handleBlur('phone')}
+                className={`w-full px-4 py-2 border-2 rounded-lg outline-none transition ${
+                  touched.phone && errors.phone ? 'border-red-500 focus:ring-2 focus:ring-red-200' : 'border-gray-300 focus:border-pink-500 focus:ring-2 focus:ring-pink-200'
+                }`}
               />
+              {touched.phone && errors.phone && <p className="text-red-500 text-xs mt-1">❌ {errors.phone}</p>}
+              {touched.phone && !errors.phone && formData.phone && <p className="text-green-500 text-xs mt-1">✅ {language === 'ne' ? 'ठीक छ' : 'Valid'}</p>}
+              {!formData.phone && <p className="text-gray-500 text-xs mt-1">{language === 'ne' ? '(वैकल्पिक)' : '(Optional)'}</p>}
             </div>
 
+            {/* District Field */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">{t.district}</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                {t.district} <span className="text-red-500">*</span>
+              </label>
               <input
                 type="text"
                 placeholder={t.district}
                 value={formData.district}
                 onChange={(e) => setFormData({...formData, district: e.target.value})}
-                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-pink-500 focus:ring-2 focus:ring-pink-200 outline-none transition"
+                onBlur={() => handleBlur('district')}
+                className={`w-full px-4 py-2 border-2 rounded-lg outline-none transition ${
+                  touched.district && errors.district ? 'border-red-500 focus:ring-2 focus:ring-red-200' : 'border-gray-300 focus:border-pink-500 focus:ring-2 focus:ring-pink-200'
+                }`}
               />
+              {touched.district && errors.district && <p className="text-red-500 text-xs mt-1">❌ {errors.district}</p>}
             </div>
 
+            {/* Weeks Pregnant Field */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">{t.weeks}</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                {t.weeks} <span className="text-red-500">*</span>
+              </label>
               <input
                 type="number"
-                placeholder={t.weeks}
+                placeholder="e.g., 20"
                 value={formData.weeks_pregnant}
                 onChange={(e) => setFormData({...formData, weeks_pregnant: e.target.value})}
-                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-pink-500 focus:ring-2 focus:ring-pink-200 outline-none transition"
+                onBlur={() => handleBlur('weeks_pregnant')}
+                className={`w-full px-4 py-2 border-2 rounded-lg outline-none transition ${
+                  touched.weeks_pregnant && errors.weeks_pregnant ? 'border-red-500 focus:ring-2 focus:ring-red-200' : 'border-gray-300 focus:border-pink-500 focus:ring-2 focus:ring-pink-200'
+                }`}
               />
+              {touched.weeks_pregnant && errors.weeks_pregnant && <p className="text-red-500 text-xs mt-1">❌ {errors.weeks_pregnant}</p>}
+              {touched.weeks_pregnant && !errors.weeks_pregnant && <p className="text-green-500 text-xs mt-1">✅ {language === 'ne' ? 'ठीक छ' : 'Valid'}</p>}
             </div>
 
+            {/* Due Date Field */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">{t.dueDate}</label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                📅 {t.dueDate} <span className="text-red-500">*</span>
+              </label>
               <input
                 type="date"
                 value={formData.due_date}
                 onChange={(e) => setFormData({...formData, due_date: e.target.value})}
-                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-pink-500 focus:ring-2 focus:ring-pink-200 outline-none transition"
+                onBlur={() => handleBlur('due_date')}
+                className={`w-full px-4 py-2 border-2 rounded-lg outline-none transition ${
+                  touched.due_date && errors.due_date ? 'border-red-500 focus:ring-2 focus:ring-red-200' : 'border-gray-300 focus:border-pink-500 focus:ring-2 focus:ring-pink-200'
+                }`}
               />
+              {touched.due_date && errors.due_date && <p className="text-red-500 text-xs mt-1">❌ {errors.due_date}</p>}
+              {touched.due_date && !errors.due_date && <p className="text-green-500 text-xs mt-1">✅ {language === 'ne' ? 'ठीक छ' : 'Valid'}</p>}
             </div>
 
             {/* Disclaimer */}
@@ -244,9 +376,10 @@ const Onboarding = ({ onComplete, language, setLanguage }) => {
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full mt-6 py-3 bg-linear-to-r from-pink-500 to-purple-600 text-white font-bold rounded-lg hover:shadow-lg hover:-translate-y-0.5 transition-all"
+              disabled={isSubmitting}
+              className="w-full mt-6 py-3 bg-linear-to-r from-pink-500 to-purple-600 text-white font-bold rounded-lg hover:shadow-lg hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {t.getStarted} →
+              {isSubmitting ? '⏳ ' + (language === 'ne' ? 'प्रक्रियामा...' : 'Processing...') : t.getStarted + ' →'}
             </button>
           </form>
         </div>
