@@ -68,6 +68,13 @@ class Appointment(BaseModel):
     clinic: str
     reason: str = ""
 
+class SavedArticle(BaseModel):
+    user_id: str
+    title: str
+    category: str
+    content: str
+    week: int = 0
+
 # Routes
 @app.get("/")
 async def root():
@@ -253,6 +260,74 @@ async def train_model():
             }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Training error: {str(e)}")
+
+# Health Records UPDATE endpoint
+@app.put("/api/health-records/{record_id}")
+async def update_health_record(record_id: str, record: HealthRecord):
+    try:
+        record_data = record.dict()
+        record_data["updated_at"] = datetime.now().isoformat()
+        
+        result = health_records_collection.update_one(
+            {"_id": ObjectId(record_id)},
+            {"$set": record_data}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Record not found")
+        
+        updated_record = health_records_collection.find_one({"_id": ObjectId(record_id)})
+        updated_record["id"] = str(updated_record.pop("_id"))
+        return updated_record
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Health Records DELETE endpoint
+@app.delete("/api/health-records/{record_id}")
+async def delete_health_record(record_id: str):
+    try:
+        result = health_records_collection.delete_one({"_id": ObjectId(record_id)})
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Record not found")
+        return {"status": "deleted", "message": "Health record deleted successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Save Article endpoint
+@app.post("/api/saved-articles")
+async def save_article(article: SavedArticle):
+    try:
+        article_data = article.dict()
+        article_data["created_at"] = datetime.now().isoformat()
+        result = saved_articles_collection.insert_one(article_data)
+        
+        created_article = saved_articles_collection.find_one({"_id": result.inserted_id})
+        created_article["id"] = str(created_article.pop("_id"))
+        return created_article
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Get Saved Articles for user
+@app.get("/api/saved-articles/{user_id}")
+async def get_saved_articles(user_id: str):
+    try:
+        articles = list(saved_articles_collection.find({"user_id": user_id}).sort("created_at", -1))
+        for article in articles:
+            article["id"] = str(article.pop("_id"))
+        return articles
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Delete Saved Article
+@app.delete("/api/saved-articles/{article_id}")
+async def delete_saved_article(article_id: str):
+    try:
+        result = saved_articles_collection.delete_one({"_id": ObjectId(article_id)})
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Article not found")
+        return {"status": "deleted", "message": "Article removed from saved"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     import uvicorn
