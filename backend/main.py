@@ -111,6 +111,26 @@ async def get_user(user_name: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/api/users/login")
+async def login_user(login_data: dict):
+    try:
+        name = login_data.get("name", "").strip()
+        phone = login_data.get("phone", "").strip()
+        
+        if not name or not phone:
+            raise HTTPException(status_code=400, detail="Name and phone are required")
+        
+        user = users_collection.find_one({"name": name, "phone": phone})
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        user["id"] = str(user.pop("_id"))
+        return user
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/api/health-records")
 async def create_health_record(record: HealthRecord):
     try:

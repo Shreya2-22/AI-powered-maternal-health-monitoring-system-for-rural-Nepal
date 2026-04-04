@@ -135,7 +135,7 @@ const Onboarding = ({ onComplete, onSwitchToLogin, language, setLanguage }) => {
       subtitle: 'तपाईंको गर्भावस्था यात्रामा हामी तपाईंसँग छौं',
       name: 'तपाईंको नाम',
       age: 'उमेर',
-      phone: 'फोन नम्बर (वैकल्पिक)',
+      phone: 'फोन नम्बर',
       district: 'जिल्ला',
       weeks: 'कति हप्ताको गर्भवती हुनुहुन्छ?',
       dueDate: 'सम्भावित प्रसव मिति',
@@ -151,7 +151,7 @@ const Onboarding = ({ onComplete, onSwitchToLogin, language, setLanguage }) => {
       subtitle: 'Your companion through your pregnancy journey',
       name: 'Your Name',
       age: 'Age',
-      phone: 'Phone Number (optional)',
+      phone: 'Phone Number',
       district: 'District',
       weeks: 'Weeks Pregnant',
       dueDate: 'Expected Due Date',
@@ -181,7 +181,7 @@ const Onboarding = ({ onComplete, onSwitchToLogin, language, setLanguage }) => {
   };
 
   const validatePhone = (phone) => {
-    if (!phone) return ''; // optional
+    if (!phone) return language === 'ne' ? 'फोन नम्बर आवश्यक छ' : 'Phone number is required';
     const phoneRegex = /^[0-9]{7,15}$/;
     if (!phoneRegex.test(phone.replace(/[\s-]/g, ''))) {
       return language === 'ne' ? 'मान्य फोन नम्बर राख्नुहोस्' : 'Please enter a valid phone number';
@@ -263,12 +263,13 @@ const Onboarding = ({ onComplete, onSwitchToLogin, language, setLanguage }) => {
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-pink-400 via-purple-500 to-blue-500 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-teal-900 to-blue-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="text-6xl mb-4">🤰</div>
+          <div className="text-6xl mb-4 animate-bounce">🤰</div>
           <h1 className="text-4xl font-bold text-white mb-2">{t.welcome}</h1>
+          <h2 className="text-2xl font-black text-white/100 mb-3">आमा सुरक्षा</h2>
           <p className="text-lg text-white/90">{t.subtitle}</p>
         </div>
 
@@ -277,7 +278,7 @@ const Onboarding = ({ onComplete, onSwitchToLogin, language, setLanguage }) => {
           <button
             className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-all ${
               language === 'ne'
-                ? 'bg-linear-to-r from-pink-500 to-purple-600 text-white shadow-lg'
+                ? 'bg-gradient-to-r from-teal-500 to-blue-600 text-white shadow-lg'
                 : 'bg-white/20 text-white hover:bg-white/30'
             }`}
             onClick={() => setLanguage('ne')}
@@ -287,7 +288,7 @@ const Onboarding = ({ onComplete, onSwitchToLogin, language, setLanguage }) => {
           <button
             className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-all ${
               language === 'en'
-                ? 'bg-linear-to-r from-pink-500 to-purple-600 text-white shadow-lg'
+                ? 'bg-gradient-to-r from-teal-500 to-blue-600 text-white shadow-lg'
                 : 'bg-white/20 text-white hover:bg-white/30'
             }`}
             onClick={() => setLanguage('en')}

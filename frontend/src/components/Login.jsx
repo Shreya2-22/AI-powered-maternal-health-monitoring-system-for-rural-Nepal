@@ -3,6 +3,7 @@ import { API } from '../App';
 
 export default function Login({ onComplete, onSwitchToOnboarding, language, setLanguage }) {
   const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -12,12 +13,14 @@ export default function Login({ onComplete, onSwitchToOnboarding, language, setL
       subtitle: 'तपाईंको गर्भावस्था यात्रामा हामी तपाईंसँग छौं',
       loginTitle: 'लगइन गर्नुहोस्',
       name: 'तपाईंको नाम प्रविष्ट गर्नुहोस्',
+      phone: 'फोन नम्बर',
       login: 'लगइन गर्नुहोस्',
       noAccount: 'खाता छैन?',
       createAccount: 'नयाँ खाता बनाउनुहोस्',
       language: '🇳🇵 नेपाली',
       englishBtn: '🇬🇧 English',
       enterName: 'कृपया नाम प्रविष्ट गर्नुहोस्',
+      enterPhone: 'कृपया फोन नम्बर प्रविष्ट गर्नुहोस्',
       userNotFound: 'प्रयोगकर्ता भेटिएन। नयाँ खाता बनाउनुहोस्।',
       disclaimer: '⚠️ यो एक सलाहकार उपकरण हो, चिकित्सा निदान होइन। सधैं डाक्टरसँग परामर्श गर्नुहोस्।'
     },
@@ -26,12 +29,14 @@ export default function Login({ onComplete, onSwitchToOnboarding, language, setL
       subtitle: 'Your companion through your pregnancy journey',
       loginTitle: 'Login',
       name: 'Enter your name',
+      phone: 'Phone Number',
       login: 'Login',
       noAccount: "Don't have an account?",
       createAccount: 'Create a new account',
       language: '🇳🇵 नेपाली',
       englishBtn: '🇬🇧 English',
       enterName: 'Please enter your name',
+      enterPhone: 'Please enter your phone number',
       userNotFound: 'User not found. Create a new account.',
       disclaimer: '⚠️ This is an advisory tool, not medical diagnosis. Always consult a doctor.'
     }
@@ -47,12 +52,18 @@ export default function Login({ onComplete, onSwitchToOnboarding, language, setL
       return;
     }
 
+    if (!phone.trim()) {
+      setError(language === 'ne' ? 'कृपया फोन नम्बर प्रविष्ट गर्नुहोस्' : 'Please enter your phone number');
+      return;
+    }
+
     try {
       setIsLoading(true);
       setError('');
-      const response = await fetch(`${API}/users/${name.trim()}`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
+      const response = await fetch(`${API}/users/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name.trim(), phone: phone.trim() })
       });
 
       if (!response.ok) {
@@ -69,7 +80,7 @@ export default function Login({ onComplete, onSwitchToOnboarding, language, setL
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-400 via-purple-400 to-blue-500 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-teal-900 to-blue-900 flex items-center justify-center p-4">
       {/* Top Language Toggle */}
       <button
         onClick={() => setLanguage(language === 'en' ? 'ne' : 'en')}
@@ -82,7 +93,7 @@ export default function Login({ onComplete, onSwitchToOnboarding, language, setL
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8 text-white">
-          <h1 className="text-5xl font-black mb-2">♥️ आमा सुरक्षा</h1>
+          <h1 className="text-6xl font-black mb-2">🤰 आमा सुरक्षा</h1>
           <p className="text-xl font-semibold opacity-90">{t.subtitle}</p>
         </div>
 
@@ -111,14 +122,27 @@ export default function Login({ onComplete, onSwitchToOnboarding, language, setL
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder={language === 'ne' ? 'नाम लेख्नुहोस्' : 'Enter name'}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-200 text-gray-800 font-semibold"
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-200 text-gray-800 font-semibold"
+              />
+            </div>
+
+            <div>
+              <label className="block text-gray-700 font-semibold mb-3">
+                {t.phone}
+              </label>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder={language === 'ne' ? 'फोन नम्बर' : 'Enter phone number'}
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-200 text-gray-800 font-semibold"
               />
             </div>
 
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 disabled:opacity-50 text-white font-bold py-3 rounded-lg transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+              className="w-full bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 disabled:opacity-50 text-white font-bold py-3 rounded-lg transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
             >
               {isLoading ? (language === 'ne' ? 'लोड हो रहेको...' : 'Loading...') : t.login}
             </button>
@@ -135,7 +159,7 @@ export default function Login({ onComplete, onSwitchToOnboarding, language, setL
           <button
             type="button"
             onClick={onSwitchToOnboarding}
-            className="w-full border-2 border-gray-300 hover:border-pink-500 text-gray-700 hover:text-pink-600 font-bold py-3 rounded-lg transition-all"
+            className="w-full border-2 border-gray-300 hover:border-teal-600 text-gray-700 hover:text-teal-600 font-bold py-3 rounded-lg transition-all"
           >
             {t.noAccount} {t.createAccount}
           </button>
