@@ -26,8 +26,17 @@ MONGODB_URL = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
 client = MongoClient(MONGODB_URL)
 db = client["aama_suraksha"]
 
-# Collections
-users_collection = db["users"]
+# Create models directory if it doesn't exist
+os.makedirs("models", exist_ok=True)
+
+# Initialize Risk Assessment (loads trained model if exists)
+risk_assessment = PregnancyRiskAssessment()
+
+print("✅ Backend initialized")
+if risk_assessment.is_trained:
+    print("🤖 ML Model loaded successfully!")
+else:
+    print("⚠️ Using rule-based risk assessment (no trained model found)")
 health_records_collection = db["health_records"]
 appointments_collection = db["appointments"]
 saved_articles_collection = db["saved_articles"]
@@ -208,6 +217,42 @@ async def get_risk_assessment(request: RiskAssessmentRequest):
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/train-model")
+async def train_model():
+    """
+    Train the ML model on accumulated health data
+    Returns: {success, accuracy, samples_used, message}
+    """
+    try:
+        from train_model import ModelTrainer
+        
+        # Create trainer
+        trainer = ModelTrainer(db)
+        
+        # Train the model
+        success, metrics = trainer.train(risk_assessment.rf_model)
+        
+        if success:
+            # Model is now trained
+            risk_assessment.is_trained = True
+            risk_assessment.use_ml = True
+            
+            return {
+                'status': 'success',
+                'accuracy': metrics['accuracy'],
+                'samples_used': metrics['samples'],
+                'message': f"✅ Model trained successfully on {metrics['samples']} samples with {metrics['accuracy']}% accuracy",
+                'model_used': 'ml'
+            }
+        else:
+            return {
+                'status': 'error',
+                'message': 'Insufficient data for training. Need at least 2+ records per user.',
+                'model_used': 'rules'
+            }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Training error: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn

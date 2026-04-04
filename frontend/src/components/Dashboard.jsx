@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import ModelTraining from './ModelTraining';
 
 const Dashboard = ({ user, language, setLanguage }) => {
   const navigate = useNavigate();
@@ -199,6 +200,11 @@ const Dashboard = ({ user, language, setLanguage }) => {
         >
           🚨 {language === 'ne' ? 'आपातकालीन मूल्यांकन' : 'Emergency Assessment'}
         </button>
+
+        {/* AI Model Training Section */}
+        <div className="mb-8">
+          <ModelTraining language={language} />
+        </div>
 
         {/* Menu Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
