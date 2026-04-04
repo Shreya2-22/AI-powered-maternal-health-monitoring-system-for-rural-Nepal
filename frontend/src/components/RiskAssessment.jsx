@@ -57,10 +57,13 @@ export default function RiskAssessment({ user, language }) {
       const response = await fetch(`${API}/risk-assessment`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: user._id })
+        body: JSON.stringify({ user_id: user.id })
       });
 
-      if (!response.ok) throw new Error('Failed to calculate risk');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to calculate risk');
+      }
       
       const data = await response.json();
       setRiskData(data);

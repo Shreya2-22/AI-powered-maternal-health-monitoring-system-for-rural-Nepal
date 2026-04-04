@@ -171,13 +171,19 @@ async def delete_appointment(appointment_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# Risk Assessment Request Model
+class RiskAssessmentRequest(BaseModel):
+    user_id: str
+
 # Initialize risk assessment model
 risk_assessment = PregnancyRiskAssessment()
 
 @app.post("/api/risk-assessment")
-async def get_risk_assessment(user_id: str):
+async def get_risk_assessment(request: RiskAssessmentRequest):
     """Calculate pregnancy risk based on health records"""
     try:
+        user_id = request.user_id
+        
         # Fetch user data
         user = users_collection.find_one({"_id": ObjectId(user_id)})
         if not user:

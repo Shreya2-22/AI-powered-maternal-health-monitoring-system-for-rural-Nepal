@@ -7,13 +7,15 @@ import Appointments from './components/Appointments.jsx';
 import Education from './components/Education.jsx';
 import Emergency from './components/Emergency.jsx';
 import RiskAssessment from './components/RiskAssessment.jsx';
+import Login from './components/Login.jsx';
 
 const API = 'http://localhost:8001/api';
 
 function App() {
   const [language, setLanguage] = useState('ne');
   const [currentUser, setCurrentUser] = useState(null);
-  const [showOnboarding, setShowOnboarding] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showLogin, setShowLogin] = useState(true);
 
   useEffect(() => {
     const savedUser = localStorage.getItem('aamasuraksha_user');
@@ -21,6 +23,7 @@ function App() {
       const parsed = JSON.parse(savedUser);
       setTimeout(() => {
         setCurrentUser(parsed);
+        setShowLogin(false);
         setShowOnboarding(false);
       }, 0);
     }
@@ -37,14 +40,43 @@ function App() {
       setCurrentUser(data);
       localStorage.setItem('aamasuraksha_user', JSON.stringify(data));
       setShowOnboarding(false);
+      setShowLogin(false);
     } catch (error) {
       console.error('Error:', error);
       alert('Error creating user');
     }
   };
 
+  const handleLogin = (userData) => {
+    setCurrentUser(userData);
+    localStorage.setItem('aamasuraksha_user', JSON.stringify(userData));
+    setShowLogin(false);
+  };
+
+  if (showLogin) {
+    return (
+      <Login 
+        onComplete={handleLogin} 
+        onSwitchToOnboarding={() => {
+          setShowLogin(false);
+          setShowOnboarding(true);
+        }}
+        language={language} 
+        setLanguage={setLanguage} 
+      />
+    );
+  }
+
   if (showOnboarding) {
-    return <Onboarding onComplete={handleUserCreation} language={language} setLanguage={setLanguage} />;
+    return <Onboarding 
+      onComplete={handleUserCreation} 
+      onSwitchToLogin={() => {
+        setShowOnboarding(false);
+        setShowLogin(true);
+      }}
+      language={language} 
+      setLanguage={setLanguage} 
+    />;
   }
 
   return (
@@ -84,7 +116,7 @@ function App() {
   );
 }
 
-const Onboarding = ({ onComplete, language, setLanguage }) => {
+const Onboarding = ({ onComplete, onSwitchToLogin, language, setLanguage }) => {
   const [formData, setFormData] = useState({
     name: '',
     age: '',
@@ -110,7 +142,9 @@ const Onboarding = ({ onComplete, language, setLanguage }) => {
       nepali: 'नेपाली',
       english: 'English',
       getStarted: 'सुरु गर्नुहोस्',
-      disclaimer: '⚠️ यो एक सलाहकार उपकरण हो, चिकित्सा निदान होइन। सधैं डाक्टरसँग परामर्श गर्नुहोस्।'
+      disclaimer: '⚠️ यो एक सलाहकार उपकरण हो, चिकित्सा निदान होइन। सधैं डाक्टरसँग परामर्श गर्नुहोस्।',
+      haveAccount: 'पहिल्यै खाता छ?',
+      backToLogin: 'लगइन गर्नुहोस्'
     },
     en: {
       welcome: 'Welcome to AamaSuraksha!',
@@ -124,7 +158,9 @@ const Onboarding = ({ onComplete, language, setLanguage }) => {
       nepali: 'नेपाली',
       english: 'English',
       getStarted: 'Get Started',
-      disclaimer: '⚠️ This is an advisory tool, not medical diagnosis. Always consult a doctor.'
+      disclaimer: '⚠️ This is an advisory tool, not medical diagnosis. Always consult a doctor.',
+      haveAccount: 'Already have an account?',
+      backToLogin: 'Login'
     }
   };
 
@@ -391,6 +427,18 @@ const Onboarding = ({ onComplete, language, setLanguage }) => {
 
         {/* Footer */}
         <p className="text-center text-white/80 mt-6 text-sm">Made with ❤️ for the mothers of Nepal</p>
+        
+        {/* Switch to Login */}
+        <div className="flex gap-2 justify-center mt-6 px-4">
+          <p className="text-white text-sm font-semibold">{t.haveAccount}</p>
+          <button
+            type="button"
+            onClick={onSwitchToLogin}
+            className="text-white font-bold underline hover:text-yellow-200 transition-colors"
+          >
+            {t.backToLogin}
+          </button>
+        </div>
       </div>
     </div>
   );
