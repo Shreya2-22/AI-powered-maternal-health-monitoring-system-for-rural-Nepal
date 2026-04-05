@@ -318,7 +318,7 @@ const Onboarding = ({ onComplete, onSwitchToLogin, language, setLanguage }) => {
               {touched.name && errors.name && <p className="text-red-500 text-xs mt-1">❌ {errors.name}</p>}
             </div>
 
-            {/* Age Field */}
+            {/* Age Field */} 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 {t.age} <span className="text-red-500">*</span>
