@@ -28,7 +28,7 @@ export default function ChatBot({ user, language }) {
       placeholder: 'तपाईंको प्रश्न लेख्नुहोस्...',
       sendBtn: 'पठाउनुहोस्',
       clearBtn: 'साफ गर्नुहोस्',
-      welcome: 'नमस्ते! मैं आपकी गर्भावस्था से संबंधित प्रश्नों का उत्तर देने के लिए यहाँ हूँ। कृपया अपनी समस्या के बारे में बताएं।'
+      welcome: 'नमस्ते! 👋 गर्भावस्था सम्बन्धि कुनै पनि प्रश्न गर्नुहोस्। मैले तपाईंलाई मदत गर्न खुसी छु।'
     },
     en: {
       title: 'Chatbot',
@@ -59,6 +59,19 @@ export default function ChatBot({ user, language }) {
         exercise: ['व्यायाम', 'कसरत', 'हिँड्ने', 'योग'],
         diet: ['खाना', 'भोजन', 'पोषण', 'दाल', 'सब्जी'],
         delivery: ['प्रसव', 'जन्म', 'लेबर', 'बच्चा'],
+        swelling: ['सूजन', 'सूजेको', 'पैर', 'हात'],
+        heartburn: ['एसिड', 'जलन', 'गर्दु', 'पेट'],
+        sleep: ['सुत्ने', 'नींद', 'निद्रा', 'सुत्न'],
+        monitor: ['जाँच', 'परीक्षण', 'ट्र्याकिङ', 'अनुगमन'],
+        backpain: ['पीठ', 'पीठ दर्द', 'कमर', 'पेठ'],
+        craving: ['खोज', 'खाना खोज', 'मन', 'खान मन'],
+        breathing: ['सास', 'सासफेरन', 'दुष्कर', 'सांस'],
+        constipation: ['कोष्ठ', 'कब्ज', 'पचन', 'पोप'],
+        skin: ['छाला', 'र्याश', 'खुजली', 'दाग'],
+        mood: ['मुड', 'मानसिक', 'उदास', 'चिन्ता'],
+        sexual: ['यौन', 'सम्भोग', 'संबंध', 'साथी'],
+        travel: ['यात्रा', 'उडान', 'गाडी', 'बस'],
+        work: ['काम', 'अफिस', 'काम गर्ने', 'नोकरी'],
         trimester1: ['पहिलो', 'तिनमास', '3', 'महिना'],
         trimester3: ['तेस्रो', '9', '8', '7', 'महिना', 'अन्तिम'],
         labor: ['प्रसवपीडा', 'संकुचन', 'पानी टुट्यो', 'लेबर'],
@@ -77,13 +90,10 @@ export default function ChatBot({ user, language }) {
         exercise: ['exercise', 'workout', 'walk', 'yoga'],
         diet: ['diet', 'food', 'eat', 'nutrition'],
         delivery: ['delivery', 'birth', 'labor', 'pregnant', 'baby', 'childbirth'],
-        trimester1: ['first', 'trimester', '1st', 'early', 'beginning'],
-        trimester3: ['third', 'trimester', '3rd', '8 months', '9 months', '7 months', 'final', 'last', 'eight', 'nine'],
-        labor: ['labor', 'contractions', 'water broke', 'labor pain', 'signs'],
-        preparation: ['prepare', 'do', 'should', 'ready', 'plan'],
-        breastfeeding: ['breast', 'nursing', 'breastfeed', 'milk', 'nipple']
-      }
-    };
+        swelling: ['swelling', 'swollen', 'puffy', 'edema', 'puffiness'],
+        heartburn: ['heartburn', 'acid', 'indigestion', 'reflux', 'burning'],
+        sleep: ['sleep', 'sleeping', 'insomnia', 'rest', 'tired'],
+        monitor: ['monitor', 'check', 'tracking', 'observation', 'checkup'],
         backpain: ['back pain', 'backache', 'lower back', 'spine', 'back ache', 'back hurt'],
         craving: ['craving', 'want', 'desire', 'craving for', 'crave', 'unusual eating'],
         breathing: ['breathing', 'shortness of breath', 'breathless', 'breath', 'breathing difficulty'],
@@ -92,7 +102,12 @@ export default function ChatBot({ user, language }) {
         mood: ['mood', 'depression', 'anxiety', 'sad', 'emotional', 'crying', 'stressed', 'hormones'],
         sexual: ['sex', 'sexual', 'intercourse', 'intimacy', 'contraception'],
         travel: ['travel', 'flying', 'journey', 'driving', 'car ride', 'plane'],
-        work: ['work', 'job', 'workplace', 'leave', 'maternity', 'tired at work']
+        work: ['work', 'job', 'workplace', 'leave', 'maternity', 'tired at work'],
+        trimester1: ['first', 'trimester', '1st', 'early', 'beginning'],
+        trimester3: ['third', 'trimester', '3rd', '8 months', '9 months', '7 months', 'final', 'last', 'eight', 'nine'],
+        labor: ['labor', 'contractions', 'water broke', 'labor pain', 'signs'],
+        preparation: ['prepare', 'do', 'should', 'ready', 'plan'],
+        breastfeeding: ['breast', 'nursing', 'breastfeed', 'milk', 'nipple']
       }
     };
 
@@ -238,16 +253,28 @@ export default function ChatBot({ user, language }) {
 
     // Return appropriate response - aggressiv matching for pregnancy questions
     if (bestMatch.score > 0.5 || (input.includes('pregnant') || input.includes('months') || input.includes('trimester'))) {
-      // If they mention pregnancy keywords, return relevant guidance
-      if ((input.includes('8') || input.includes('9') || input.includes('7')) && (input.includes('month') || input.includes('months'))) {
+      // EARLY PREGNANCY: 1-6 months → First Trimester
+      if ((input.includes('1') || input.includes('2') || input.includes('3') || 
+           input.includes('4') || input.includes('5') || input.includes('6')) && 
+          (input.includes('month') || input.includes('months'))) {
+        return answers.trimester1;
+      }
+      
+      // LATE PREGNANCY: 7-9 months → Third Trimester
+      if ((input.includes('8') || input.includes('9') || input.includes('7')) && 
+          (input.includes('month') || input.includes('months'))) {
         return answers.trimester3;
       }
+      
+      // Explicit trimester keywords
       if (input.includes('first') && input.includes('trimester')) {
         return answers.trimester1;
       }
-      if ((input.includes('should') || input.includes('do')) && (input.includes('pregnant') || input.includes('months'))) {
+      if ((input.includes('third') || input.includes('final') || input.includes('last')) && input.includes('trimester')) {
         return answers.trimester3;
       }
+      
+      // Backup: check category scoring
       if (bestMatch.score > 0.5) {
         return answers[bestMatch.category];
       }
@@ -267,10 +294,13 @@ export default function ChatBot({ user, language }) {
     e.preventDefault();
     if (!inputValue.trim()) return;
 
+    // Save input before clearing
+    const originalInput = inputValue;
+
     // Add user message
     const userMessage = {
       id: Date.now(),
-      text: inputValue,
+      text: originalInput,
       sender: 'user',
       timestamp: new Date().toLocaleTimeString(language === 'ne' ? 'ne-NP' : 'en-US', {
         hour: '2-digit',
@@ -285,7 +315,7 @@ export default function ChatBot({ user, language }) {
     // Simulate bot thinking
     setIsLoading(true);
     setTimeout(() => {
-      const botResponse = getResponse(inputValue);
+      const botResponse = getResponse(originalInput);
       const botMessage = {
         id: Date.now() + 1,
         text: botResponse,
@@ -303,7 +333,7 @@ export default function ChatBot({ user, language }) {
   };
 
   const handleClearChat = () => {
-    if (confirm(language === 'ne' ? 'क्या आप चैट साफ करना चाहते हैं?' : 'Clear all messages?')) {
+    if (confirm(language === 'ne' ? 'क्या तपाई चैट साफ गर्न चाहनुहुन्छ?' : 'Clear all messages?')) {
       setMessages([]);
       localStorage.removeItem(`chat_${user.name}`);
     }
@@ -312,9 +342,9 @@ export default function ChatBot({ user, language }) {
   const t = text[language];
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="min-h-screen flex flex-col bg-linear-to-br from-slate-900 via-slate-800 to-slate-900">
       {/* Header */}
-      <div className="bg-gradient-to-r from-teal-700 via-blue-700 to-slate-800 text-white p-6 shadow-lg">
+      <div className="bg-linear-to-r from-teal-700 via-blue-700 to-slate-800 text-white p-6 shadow-lg">
         <div className="flex justify-between items-center max-w-4xl mx-auto w-full">
           <button 
             onClick={() => navigate('/')}
@@ -345,7 +375,7 @@ export default function ChatBot({ user, language }) {
               <div key={message.id} className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className={`max-w-xs px-5 py-3 rounded-2xl ${
                   message.sender === 'user'
-                    ? 'bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-lg'
+                    ? 'bg-linear-to-r from-teal-600 to-cyan-600 text-white shadow-lg'
                     : 'bg-slate-700/70 text-teal-100 border border-slate-600/50'
                 }`}>
                   <p className="text-sm leading-relaxed">{message.text}</p>
@@ -381,7 +411,7 @@ export default function ChatBot({ user, language }) {
           <button 
             type="submit"
             disabled={!inputValue.trim() || isLoading}
-            className="px-8 py-3 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white font-bold rounded-xl hover:shadow-xl disabled:opacity-50 transition-all transform hover:scale-105"
+            className="px-8 py-3 bg-linear-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white font-bold rounded-xl hover:shadow-xl disabled:opacity-50 transition-all transform hover:scale-105"
           >
             {t.sendBtn}
           </button>
