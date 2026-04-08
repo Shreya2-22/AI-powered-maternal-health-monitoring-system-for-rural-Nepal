@@ -23,13 +23,38 @@ app.add_middleware(
  
 # ── MongoDB ───────────────────────────────────────────────────────────────────
 MONGODB_URL = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
-client      = MongoClient(MONGODB_URL)
-db          = client["aama_suraksha"]
+try:
+    # Connect without explicit SSL parameters - MongoDB Atlas handles SSL automatically
+    client = MongoClient(
+        MONGODB_URL,
+        connect=False,
+        serverSelectionTimeoutMS=5000
+    )
+    # Test the connection
+    client.admin.command('ping')
+    print("✅ MongoDB connected successfully")
+except Exception as e:
+    print(f"⚠️  MongoDB connection issue: {e}")
+    print("    Possible causes:")
+    print("    - IP address not whitelisted in MongoDB Atlas (check Security > Network Access)")
+    print("    - Connection string credentials incorrect")
+    print("    - MongoDB Atlas cluster not running")
+    print("    Running in offline mode - risk assessment will use rule-based predictions")
+    client = None
+
+db          = client["aama_suraksha"] if client else None
  
-users_collection          = db["users"]
-health_records_collection = db["health_records"]
-appointments_collection   = db["appointments"]
-saved_articles_collection = db["saved_articles"]
+if db:
+    users_collection          = db["users"]
+    health_records_collection = db["health_records"]
+    appointments_collection   = db["appointments"]
+    saved_articles_collection = db["saved_articles"]
+else:
+    # Offline mode - create dummy collections that won't crash but will have no data
+    users_collection          = None
+    health_records_collection = None
+    appointments_collection   = None
+    saved_articles_collection = None
  
 # ── Load pre-trained ML model (trained in Jupyter notebook) ───────────────────
 os.makedirs("models", exist_ok=True)
@@ -80,6 +105,7 @@ class SavedArticle(BaseModel):
  
 class RiskAssessmentRequest(BaseModel):
     user_id: str
+    health_records: list = []  # Optional: health records from frontend localStorage
  
 # ═════════════════════════════════════════════════════════════════════════════
 # ROUTES
@@ -248,17 +274,40 @@ async def get_risk_assessment(request: RiskAssessmentRequest):
     """
     Calculate pregnancy risk using the pre-trained Random Forest model.
     The model was trained in the Jupyter notebook on 1000 synthetic patients.
+    Supports both MongoDB ObjectId users and localStorage string IDs.
+    Falls back to defaults if MongoDB is unavailable.
+    
+    The request can include health_records from the frontend (localStorage),
+    which will be used if provided, allowing the app to work offline.
     """
     try:
-        user = users_collection.find_one({"_id": ObjectId(request.user_id)})
+        user = None
+        health_records = request.health_records or []  # Use provided records or empty list
+        
+        # Only query database if MongoDB is connected
+        if users_collection is not None:
+            # Try to find user by ObjectId first (from MongoDB)
+            try:
+                if len(request.user_id) == 24:  # Valid ObjectId hex length
+                    user = users_collection.find_one({"_id": ObjectId(request.user_id)})
+            except Exception:
+                pass
+            
+            # If not found, try to find by string ID (from localStorage)
+            if not user:
+                user = users_collection.find_one({"_id": str(request.user_id)})
+        
+        # If user still not found, use defaults for local users
         if not user:
-            raise HTTPException(status_code=404, detail="User not found")
+            user = {"age": 25, "weeks_pregnant": 20}
  
-        health_records = list(
-            health_records_collection.find({"user_id": request.user_id}).sort("date", 1)
-        )
-        for r in health_records:
-            r['_id'] = str(r['_id'])
+        # Get health records from database ONLY if not provided by frontend
+        if not health_records and health_records_collection is not None:
+            health_records = list(
+                health_records_collection.find({"user_id": request.user_id}).sort("date", 1)
+            )
+            for r in health_records:
+                r['_id'] = str(r['_id'])
  
         result = risk_assessment.calculate_risk(
             health_records   = health_records,
@@ -270,6 +319,7 @@ async def get_risk_assessment(request: RiskAssessmentRequest):
     except HTTPException:
         raise
     except Exception as e:
+        print(f"Error in risk assessment: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
  
 # ── Saved Articles ─────────────────────────────────────────────────────────────

@@ -64,10 +64,27 @@ export default function RiskAssessment({ user, language }) {
     try {
       setIsLoading(true);
       setError('');
+      
+      // Handle both user.id (from backend) and user._id (from localStorage)
+      const userId = user.id || user._id;
+      
+      if (!userId) {
+        setError('User ID not found');
+        setIsLoading(false);
+        return;
+      }
+      
+      // Get health records from localStorage (user can have multiple records)
+      const storedRecords = localStorage.getItem(`health_records_${user.name}`);
+      const healthRecords = storedRecords ? JSON.parse(storedRecords) : [];
+      
       const res = await fetch(`${API}/risk-assessment`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ user_id: user.id }),
+        body:    JSON.stringify({ 
+          user_id: userId,
+          health_records: healthRecords  // Send records from localStorage
+        }),
       });
       if (!res.ok) {
         const err = await res.json();
