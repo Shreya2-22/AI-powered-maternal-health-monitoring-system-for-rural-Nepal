@@ -1,188 +1,238 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { API } from '../App';
-
+ 
 export default function RiskAssessment({ user, language }) {
   const navigate = useNavigate();
-  const [riskData, setRiskData] = useState(null);
+  const [riskData, setRiskData]   = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-
+  const [error, setError]         = useState('');
+ 
   const text = {
     ne: {
-      title: 'जोखिम मूल्यांकन',
-      back: '⬅️ फिर्ता',
-      yourRisk: 'तपाईंको गर्भावस्था जोखिम',
-      low: 'कम जोखिम',
-      medium: 'मध्यम जोखिम',
-      high: 'उच्च जोखिम',
-      noData: 'जोखिम गणना गर्न स्वास्थ्य डेटा आवश्यक छ',
-      factors: 'जोखिम कारकहरू',
+      title:         'जोखिम मूल्यांकन',
+      back:          '⬅️ फिर्ता',
+      yourRisk:      'तपाईंको गर्भावस्था जोखिम',
+      low:           'कम जोखिम',
+      medium:        'मध्यम जोखिम',
+      high:          'उच्च जोखिम',
+      noData:        'जोखिम गणना गर्न स्वास्थ्य डेटा आवश्यक छ। पहिले स्वास्थ्य रेकर्ड थप्नुहोस्।',
+      factors:       'जोखिम कारकहरू',
       bloodPressure: 'रक्तचाप',
-      weightGain: 'वजन वृद्धि',
-      age: 'उमेर',
-      trackingFreq: 'ट्र्याकिङ आवृत्ति',
+      weightGain:    'वजन वृद्धि',
+      age:           'उमेर',
+      trackingFreq:  'ट्र्याकिङ आवृत्ति',
+      lowProb:       'कम जोखिम सम्भावना',
+      medProb:       'मध्यम जोखिम सम्भावना',
+      highProb:      'उच्च जोखिम सम्भावना',
       recommendations: 'सिफारिसहरू',
-      recalculate: 'पुनः गणना गर्नुहोस्',
-      loading: 'लोड हो रहेको...'
+      recalculate:   'पुनः गणना गर्नुहोस्',
+      loading:       'लोड हो रहेको...',
+      mlBadge:       '🤖 ML मोडल (Random Forest)',
+      rulesBadge:    '📋 नियम-आधारित',
+      confidence:    'आत्मविश्वास स्कोर',
     },
     en: {
-      title: 'Risk Assessment',
-      back: '⬅️ Back',
-      yourRisk: 'Your Pregnancy Risk',
-      low: 'Low Risk',
-      medium: 'Medium Risk',
-      high: 'High Risk',
-      noData: 'Health data needed to calculate risk',
-      factors: 'Risk Factors',
+      title:         'Risk Assessment',
+      back:          '⬅️ Back',
+      yourRisk:      'Your Pregnancy Risk Level',
+      low:           'Low Risk',
+      medium:        'Medium Risk',
+      high:          'High Risk',
+      noData:        'Please add health records first so the model can calculate your risk.',
+      factors:       'Risk Factors',
       bloodPressure: 'Blood Pressure',
-      weightGain: 'Weight Gain',
-      age: 'Age',
-      trackingFreq: 'Tracking Frequency',
+      weightGain:    'Weight Gain',
+      age:           'Age',
+      trackingFreq:  'Tracking Frequency',
+      lowProb:       'Low Risk Probability',
+      medProb:       'Medium Risk Probability',
+      highProb:      'High Risk Probability',
       recommendations: 'Recommendations',
-      recalculate: 'Recalculate',
-      loading: 'Loading...'
+      recalculate:   'Recalculate',
+      loading:       'Calculating risk...',
+      mlBadge:       '🤖 ML Model (Random Forest)',
+      rulesBadge:    '📋 Rule-based',
+      confidence:    'Confidence Score',
     }
   };
-
-  const t = text[language];
-
-  useEffect(() => {
-    fetchRiskAssessment();
-  }, [user]);
-
-  const fetchRiskAssessment = async () => {
+ 
+  const t = text[language] || text['en'];
+ 
+  // ── Fetch risk from backend ────────────────────────────────────────────────
+  const fetchRisk = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`${API}/risk-assessment`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: user.id })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Failed to calculate risk');
-      }
-      
-      const data = await response.json();
-      setRiskData(data);
       setError('');
+      const res = await fetch(`${API}/risk-assessment`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ user_id: user.id }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.detail || 'Failed to calculate risk');
+      }
+      const data = await res.json();
+      setRiskData(data);
     } catch (err) {
       setError(err.message);
     } finally {
       setIsLoading(false);
     }
   };
-
-  const getRiskColor = (level) => {
-    return level === 'low' ? 'bg-green-100 border-green-400' :
-           level === 'medium' ? 'bg-yellow-100 border-yellow-400' :
-           'bg-red-100 border-red-400';
+ 
+  useEffect(() => { fetchRisk(); }, [user]);
+ 
+  // ── Colours ────────────────────────────────────────────────────────────────
+  const riskBg   = (lvl) => lvl === 'low' ? 'bg-green-50 border-green-400'
+                          : lvl === 'medium' ? 'bg-yellow-50 border-yellow-400'
+                          : 'bg-red-50 border-red-400';
+ 
+  const riskText = (lvl) => lvl === 'low' ? 'text-green-700'
+                          : lvl === 'medium' ? 'text-yellow-700'
+                          : 'text-red-700';
+ 
+  const barColor = (v) => v < 35 ? 'bg-green-500' : v < 65 ? 'bg-yellow-500' : 'bg-red-500';
+ 
+  // ── Label for a factor key ─────────────────────────────────────────────────
+  const factorLabel = (key) => {
+    const map = {
+      blood_pressure:     t.bloodPressure,
+      weight_gain:        t.weightGain,
+      age:                t.age,
+      tracking_frequency: t.trackingFreq,
+      low:                t.lowProb,
+      medium:             t.medProb,
+      high:               t.highProb,
+    };
+    return map[key] || key;
   };
-
-  const getRiskTextColor = (level) => {
-    return level === 'low' ? 'text-green-700' :
-           level === 'medium' ? 'text-yellow-700' :
-           'text-red-700';
-  };
-
+ 
+  // ── Risk level label ───────────────────────────────────────────────────────
+  const riskLabel = (lvl) =>
+    lvl === 'low' ? t.low : lvl === 'medium' ? t.medium : t.high;
+ 
+  // ══════════════════════════════════════════════════════════════════════════
   return (
     <div className="min-h-screen bg-gradient-to-b from-pink-50 to-white p-4">
+ 
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <button
-          onClick={() => navigate('/')}
-          className="text-2xl font-bold text-pink-600"
-        >
+        <button onClick={() => navigate('/')} className="text-2xl font-bold text-pink-600">
           {t.back}
         </button>
         <h1 className="text-2xl font-bold text-gray-800">{t.title}</h1>
-        <div className="w-8"></div>
+        <div className="w-8" />
       </div>
-
-      {isLoading ? (
-        <div className="flex justify-center items-center h-64">
+ 
+      {/* Loading */}
+      {isLoading && (
+        <div className="flex flex-col justify-center items-center h-64 gap-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-pink-500 border-t-transparent" />
           <p className="text-gray-600 text-lg">{t.loading}</p>
         </div>
-      ) : error ? (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+      )}
+ 
+      {/* Error */}
+      {!isLoading && error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
           {error}
         </div>
-      ) : !riskData ? (
-        <div className="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded text-center">
-          {t.noData}
+      )}
+ 
+      {/* No data yet */}
+      {!isLoading && !error && riskData?.model_used === 'no_data' && (
+        <div className="bg-blue-50 border border-blue-300 text-blue-800 px-4 py-6 rounded-lg text-center">
+          <p className="text-4xl mb-3">📋</p>
+          <p className="text-lg font-semibold">{t.noData}</p>
         </div>
-      ) : (
-        <div className="max-w-2xl mx-auto space-y-6">
+      )}
+ 
+      {/* Main result */}
+      {!isLoading && !error && riskData && riskData.model_used !== 'no_data' && (
+        <div className="max-w-2xl mx-auto space-y-5">
+ 
+          {/* Model badge */}
+          <div className="flex justify-end">
+            <span className={`text-xs font-semibold px-3 py-1 rounded-full ${
+              riskData.model_used === 'ml'
+                ? 'bg-purple-100 text-purple-700'
+                : 'bg-gray-100 text-gray-600'
+            }`}>
+              {riskData.model_used === 'ml' ? t.mlBadge : t.rulesBadge}
+            </span>
+          </div>
+ 
           {/* Risk Score Card */}
-          <div className={`${getRiskColor(riskData.risk_level)} border-2 rounded-lg p-6`}>
-            <h2 className="text-lg font-semibold text-gray-700 mb-4">{t.yourRisk}</h2>
+          <div className={`${riskBg(riskData.risk_level)} border-2 rounded-2xl p-6`}>
+            <h2 className="text-base font-semibold text-gray-600 mb-4">{t.yourRisk}</h2>
             <div className="flex items-center justify-between">
               <div>
-                <p className={`text-4xl font-bold ${getRiskTextColor(riskData.risk_level)}`}>
-                  {riskData.score}
+                <p className={`text-5xl font-extrabold ${riskText(riskData.risk_level)}`}>
+                  {riskLabel(riskData.risk_level).toUpperCase()}
                 </p>
-                <p className={`text-lg font-semibold ${getRiskTextColor(riskData.risk_level)}`}>
-                  {riskData.risk_level === 'low' ? t.low :
-                   riskData.risk_level === 'medium' ? t.medium : t.high}
+                <p className="text-sm text-gray-500 mt-1">
+                  {t.confidence}: <strong>{riskData.score}%</strong>
                 </p>
               </div>
-              <div className="w-24 h-24 rounded-full border-4 border-current flex items-center justify-center">
-                <span className={`text-3xl font-bold ${getRiskTextColor(riskData.risk_level)}`}>
+ 
+              {/* Circle gauge */}
+              <div className={`w-24 h-24 rounded-full border-4 flex items-center justify-center
+                ${riskData.risk_level === 'low'    ? 'border-green-500'
+                : riskData.risk_level === 'medium' ? 'border-yellow-500'
+                : 'border-red-500'}`}>
+                <span className={`text-2xl font-bold ${riskText(riskData.risk_level)}`}>
                   {riskData.score}%
                 </span>
               </div>
             </div>
           </div>
-
+ 
           {/* Risk Factors */}
-          <div className="bg-white border border-gray-200 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">{t.factors}</h3>
-            <div className="space-y-4">
-              {Object.entries(riskData.factors).map(([key, value]) => (
-                <div key={key}>
-                  <div className="flex justify-between mb-2">
-                    <span className="text-gray-700">
-                      {key === 'blood_pressure' ? t.bloodPressure :
-                       key === 'weight_gain' ? t.weightGain :
-                       key === 'age' ? t.age : t.trackingFreq}
-                    </span>
-                    <span className="font-semibold text-gray-800">{value}%</span>
+          {riskData.factors && Object.keys(riskData.factors).length > 0 && (
+            <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">{t.factors}</h3>
+              <div className="space-y-4">
+                {Object.entries(riskData.factors).map(([key, value]) => (
+                  <div key={key}>
+                    <div className="flex justify-between mb-1">
+                      <span className="text-sm text-gray-700">{factorLabel(key)}</span>
+                      <span className="text-sm font-semibold text-gray-800">{value}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2.5">
+                      <div
+                        className={`h-2.5 rounded-full transition-all ${barColor(value)}`}
+                        style={{ width: `${Math.min(value, 100)}%` }}
+                      />
+                    </div>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className={`h-2 rounded-full ${
-                        value < 35 ? 'bg-green-500' :
-                        value < 65 ? 'bg-yellow-500' : 'bg-red-500'
-                      }`}
-                      style={{ width: `${value}%` }}
-                    ></div>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-
+          )}
+ 
           {/* Recommendations */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">{t.recommendations}</h3>
-            <ul className="space-y-2">
-              {riskData.recommendations.map((rec, idx) => (
-                <li key={idx} className="flex items-start">
-                  <span className="text-blue-600 font-bold mr-3">•</span>
-                  <span className="text-gray-700">{rec}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Recalculate Button */}
+          {riskData.recommendations?.length > 0 && (
+            <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6 shadow-sm">
+              <h3 className="text-lg font-semibold text-gray-800 mb-3">{t.recommendations}</h3>
+              <ul className="space-y-2">
+                {riskData.recommendations.map((rec, i) => (
+                  <li key={i} className="flex items-start gap-2">
+                    <span className="text-blue-500 font-bold mt-0.5">•</span>
+                    <span className="text-gray-700 text-sm">{rec}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+ 
+          {/* Recalculate */}
           <button
-            onClick={fetchRiskAssessment}
-            className="w-full bg-pink-600 hover:bg-pink-700 text-white font-semibold py-3 rounded-lg transition"
+            onClick={fetchRisk}
+            className="w-full bg-pink-600 hover:bg-pink-700 active:scale-95 text-white font-semibold py-3 rounded-xl transition-all"
           >
-            {t.recalculate}
+            🔄 {t.recalculate}
           </button>
         </div>
       )}

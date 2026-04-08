@@ -3,7 +3,13 @@ import { useNavigate } from 'react-router-dom';
 
 export default function HealthTracker({ user, language }) {
   const navigate = useNavigate();
-  const [records, setRecords] = useState([]);
+  const [records, setRecords] = useState(() => {
+    if (user?.name) {
+      const saved = localStorage.getItem(`health_records_${user.name}`);
+      return saved ? JSON.parse(saved) : [];
+    }
+    return [];
+  });
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     weight: '',
@@ -132,14 +138,6 @@ export default function HealthTracker({ user, language }) {
       setErrors({...errors, [field]: ''});
     }
   };
-
-  // Load records from localStorage
-  useEffect(() => {
-    const savedRecords = localStorage.getItem(`health_records_${user.name}`);
-    if (savedRecords) {
-      setRecords(JSON.parse(savedRecords));
-    }
-  }, [user.name]);
 
   // Save records to localStorage
   const saveToLocalStorage = (updatedRecords) => {

@@ -60,18 +60,28 @@ export default function Login({ onComplete, onSwitchToOnboarding, language, setL
     try {
       setIsLoading(true);
       setError('');
-      const response = await fetch(`${API}/users/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), phone: phone.trim() })
-      });
-
-      if (!response.ok) {
-        throw new Error(language === 'ne' ? 'प्रयोगकर्ता भेटिएन' : 'User not found');
+      
+      // Check all stored users in localStorage
+      let allUsers = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key?.startsWith('aamasuraksha_user_')) {
+          const userStr = localStorage.getItem(key);
+          if (userStr) {
+            allUsers.push(JSON.parse(userStr));
+          }
+        }
       }
-
-      const userData = await response.json();
-      onComplete(userData);
+      
+      // Look for existing user
+      const existingUser = allUsers.find(u => u.name.toLowerCase() === name.trim().toLowerCase() && u.phone === phone.trim());
+      
+      if (existingUser) {
+        onComplete(existingUser);
+      } else {
+        // User not found - show message to create account
+        throw new Error(language === 'ne' ? 'प्रयोगकर्ता भेटिएन। नयाँ खाता बनाउनुहोस्।' : 'User not found. Create a new account.');
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -80,7 +90,7 @@ export default function Login({ onComplete, onSwitchToOnboarding, language, setL
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-teal-900 to-blue-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-linear-to-br from-slate-900 via-teal-900 to-blue-900 flex items-center justify-center p-4">
       {/* Top Language Toggle */}
       <button
         onClick={() => setLanguage(language === 'en' ? 'ne' : 'en')}
@@ -142,7 +152,7 @@ export default function Login({ onComplete, onSwitchToOnboarding, language, setL
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-gradient-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 disabled:opacity-50 text-white font-bold py-3 rounded-lg transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+              className="w-full bg-linear-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 disabled:opacity-50 text-white font-bold py-3 rounded-lg transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
             >
               {isLoading ? (language === 'ne' ? 'लोड हो रहेको...' : 'Loading...') : t.login}
             </button>

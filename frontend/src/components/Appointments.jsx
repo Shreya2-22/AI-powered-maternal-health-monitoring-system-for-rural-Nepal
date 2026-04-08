@@ -153,14 +153,13 @@ export default function Appointments({ user, language }) {
     setTimeout(() => setToast({ show: false, message: '', type: '' }), 3000);
   };
 
-  // API Functions
+  // localStorage Functions (Works offline without backend)
   const fetchAppointments = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`http://localhost:8001/api/appointments/${user.name}`);
-      if (response.ok) {
-        const data = await response.json();
-        setAppointments(Array.isArray(data) ? data : data.appointments || []);
+      const saved = localStorage.getItem(`appointments_${user.name}`);
+      if (saved) {
+        setAppointments(JSON.parse(saved));
       }
     } catch (error) {
       console.error('Error fetching appointments:', error);
@@ -169,26 +168,37 @@ export default function Appointments({ user, language }) {
     }
   };
 
+  const saveToLocalStorage = (appointmentsList) => {
+    localStorage.setItem(`appointments_${user.name}`, JSON.stringify(appointmentsList));
+  };
+
   const saveAppointment = async (appointmentData) => {
     try {
-      const url = editingId 
-        ? `http://localhost:8001/api/appointments/${editingId}` 
-        : 'http://localhost:8001/api/appointments';
+      const saved = localStorage.getItem(`appointments_${user.name}`);
+      let appointmentsList = saved ? JSON.parse(saved) : [];
       
-      const method = editingId ? 'PUT' : 'POST';
-      
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      if (editingId) {
+        // Update existing
+        const index = appointmentsList.findIndex(a => a.id === editingId);
+        if (index >= 0) {
+          appointmentsList[index] = {
+            ...appointmentsList[index],
+            ...appointmentData,
+            updated_at: new Date().toISOString()
+          };
+        }
+      } else {
+        // Create new
+        const newAppointment = {
+          id: `apt_${Date.now()}`,
           ...appointmentData,
-          user_id: user.name
-        })
-      });
-
-      if (!response.ok) throw new Error('Save failed');
+          user_name: user.name,
+          created_at: new Date().toISOString()
+        };
+        appointmentsList.push(newAppointment);
+      }
       
-      const data = await response.json();
+      saveToLocalStorage(appointmentsList);
       showToast(
         editingId ? t.success.updated : t.success.created,
         'success'
@@ -207,12 +217,12 @@ export default function Appointments({ user, language }) {
     
     setDeleteLoading(appointmentId);
     try {
-      const response = await fetch(
-        `http://localhost:8001/api/appointments/${appointmentId}`,
-        { method: 'DELETE' }
-      );
-
-      if (!response.ok) throw new Error('Delete failed');
+      const saved = localStorage.getItem(`appointments_${user.name}`);
+      if (saved) {
+        let appointmentsList = JSON.parse(saved);
+        appointmentsList = appointmentsList.filter(a => a.id !== appointmentId);
+        saveToLocalStorage(appointmentsList);
+      }
       
       showToast(t.success.deleted, 'success');
       await fetchAppointments();
@@ -227,6 +237,7 @@ export default function Appointments({ user, language }) {
   // Load appointments on component mount
   useEffect(() => {
     fetchAppointments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user.name]);
 
   // Handle input change with validation
@@ -302,7 +313,7 @@ export default function Appointments({ user, language }) {
     setFormData({
       date: appointment.date,
       time: appointment.time,
-      doctorName: appointment.doctor_name,
+      doctorName: appointment.doctor_name || appointment.doctorName,
       clinic: appointment.clinic,
       reason: appointment.reason || ''
     });

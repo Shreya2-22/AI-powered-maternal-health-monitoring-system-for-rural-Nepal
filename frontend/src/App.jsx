@@ -31,19 +31,26 @@ function App() {
 
   const handleUserCreation = async (userData) => {
     try {
-      const response = await fetch(`${API}/users`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userData)
-      });
-      const data = await response.json();
-      setCurrentUser(data);
-      localStorage.setItem('aamasuraksha_user', JSON.stringify(data));
+      // For now, save locally in localStorage (works without backend)
+      // Generate unique ID
+      const userId = `user_${Date.now()}`;
+      const userWithId = {
+        ...userData,
+        _id: userId,
+        created_at: new Date().toISOString()
+      };
+      
+      // Save to localStorage with unique key
+      localStorage.setItem(`aamasuraksha_user_${userWithId._id}`, JSON.stringify(userWithId));
+      
+      // Set as current user
+      setCurrentUser(userWithId);
+      localStorage.setItem('aamasuraksha_user', JSON.stringify(userWithId));
       setShowOnboarding(false);
       setShowLogin(false);
     } catch (error) {
-      console.error('Error:', error);
-      alert('Error creating user');
+      console.error('Error creating user:', error);
+      alert(error.message || 'Error creating user');
     }
   };
 
