@@ -44,6 +44,13 @@ export default function Login({ onComplete, onSwitchToOnboarding, language, setL
 
   const t = text[language];
 
+  // ── Validate Nepal phone number (97/98 prefix, 10 digits) ────────────────
+  const validateNepaliPhone = (phone) => {
+    const cleaned = phone.replace(/[\s-]/g, '');
+    if (!/^(97|98)[0-9]{8}$/.test(cleaned)) return false;
+    return true;
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault();
     
@@ -54,6 +61,11 @@ export default function Login({ onComplete, onSwitchToOnboarding, language, setL
 
     if (!phone.trim()) {
       setError(language === 'ne' ? 'कृपया फोन नम्बर प्रविष्ट गर्नुहोस्' : 'Please enter your phone number');
+      return;
+    }
+
+    if (!validateNepaliPhone(phone)) {
+      setError(language === 'ne' ? 'नेपाली फोन (97/98 ले शुरु, 10 अंक)' : 'Nepal phone: 97/98 prefix, 10 digits');
       return;
     }
 

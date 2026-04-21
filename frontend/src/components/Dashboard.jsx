@@ -1,8 +1,9 @@
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 
-const Dashboard = ({ user, language, setLanguage }) => {
+const Dashboard = ({ user, language, setLanguage, onLogout }) => {
   const [hoveredCard, setHoveredCard] = useState(null);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const navigate = useNavigate();
 
   const text = {
@@ -60,9 +61,40 @@ const Dashboard = ({ user, language, setLanguage }) => {
 
   const t = text[language];
 
+  // ── Calculate health summary from localStorage records ────────────────────
+  const getHealthSummary = () => {
+    const records = localStorage.getItem(`health_records_${user.name}`);
+    if (!records) return { count: 0, latestWeight: null, latestBP: null };
+    
+    try {
+      const parsed = JSON.parse(records);
+      if (!parsed.length) return { count: 0, latestWeight: null, latestBP: null };
+      
+      const latest = parsed[parsed.length - 1];
+      return {
+        count: parsed.length,
+        latestWeight: latest.weight || null,
+        latestBP: `${latest.systolic}/${latest.diastolic}` || null,
+        avgWeight: (parsed.reduce((sum, r) => sum + (parseFloat(r.weight) || 0), 0) / parsed.length).toFixed(1)
+      };
+    } catch {
+      return { count: 0, latestWeight: null, latestBP: null };
+    }
+  };
+
+  const healthSummary = getHealthSummary();
+
   const handleLogout = () => {
-    localStorage.removeItem('aamasuraksha_user');
-    window.location.reload();
+    setShowLogoutConfirm(true);
+  };
+
+  const confirmLogout = () => {
+    if (onLogout) {
+      onLogout();
+    } else {
+      localStorage.removeItem('aamasuraksha_user');
+      window.location.reload();
+    }
   };
 
   // Calculate days until due date
@@ -176,7 +208,33 @@ const Dashboard = ({ user, language, setLanguage }) => {
             </div>
           </div>
         </div>
-      </header>
+        {/* Logout Confirmation Dialog */}
+        {showLogoutConfirm && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-sm">
+              <p className="text-lg font-bold text-slate-900 mb-2">
+                {language === 'ne' ? 'लग आउट गर्न निश्चित हुनुहुन्छ?' : 'Are you sure you want to logout?'}
+              </p>
+              <p className="text-sm text-slate-600 mb-6">
+                {language === 'ne' ? 'तपाईंको सब डेटा सुरक्षित रहनेछ।' : 'All your data will be saved.'}
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowLogoutConfirm(false)}
+                  className="flex-1 px-4 py-2 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold transition"
+                >
+                  {language === 'ne' ? 'रद्द गर्नुहोस्' : 'Cancel'}
+                </button>
+                <button
+                  onClick={confirmLogout}
+                  className="flex-1 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold transition"
+                >
+                  {language === 'ne' ? 'लग आउट गर्नुहोस्' : 'Logout'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}      </header>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -214,6 +272,32 @@ const Dashboard = ({ user, language, setLanguage }) => {
                   <p className="text-4xl font-bold">{Math.round(percentComplete)}%</p>
                   <p className="text-teal-50 text-xs mt-1">complete</p>
                 </div>
+              </div>
+
+              {/* Health Summary Stats */}
+              <div className="grid grid-cols-3 gap-4 mt-6">
+                {(() => {
+                  const health = getHealthSummary();
+                  return (
+                    <>
+                      <div className="bg-blue-500/20 backdrop-blur-md rounded-xl p-4 border border-blue-300/30">
+                        <p className="text-blue-100 text-sm font-semibold mb-1">{language === 'ne' ? 'स्वास्थ्य रेकर्ड' : 'Health Records'}</p>
+                        <p className="text-3xl font-bold">{health.count}</p>
+                        <p className="text-blue-50 text-xs mt-1">{language === 'ne' ? 'दर्ता किए गएे' : 'logged'}</p>
+                      </div>
+                      <div className="bg-amber-500/20 backdrop-blur-md rounded-xl p-4 border border-amber-300/30">
+                        <p className="text-amber-100 text-sm font-semibold mb-1">{language === 'ne' ? 'तजुरा वजन' : 'Latest Weight'}</p>
+                        <p className="text-3xl font-bold">{health.latestWeight || '--'}</p>
+                        <p className="text-amber-50 text-xs mt-1">kg</p>
+                      </div>
+                      <div className="bg-rose-500/20 backdrop-blur-md rounded-xl p-4 border border-rose-300/30">
+                        <p className="text-rose-100 text-sm font-semibold mb-1">{language === 'ne' ? 'रक्तचाप' : 'Blood Pressure'}</p>
+                        <p className="text-3xl font-bold">{health.latestBP || '--'}</p>
+                        <p className="text-rose-50 text-xs mt-1">mmHg</p>
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
 
               {/* Progress Bar */}

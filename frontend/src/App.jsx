@@ -1,448 +1,331 @@
 import React, { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import Dashboard from './components/Dashboard.jsx';
-import ChatBot from './components/ChatBot.jsx';
+import Dashboard    from './components/Dashboard.jsx';
+import ChatBot      from './components/ChatBot.jsx';
 import HealthTracker from './components/HealthTracker.jsx';
 import Appointments from './components/Appointments.jsx';
-import Education from './components/Education.jsx';
-import Emergency from './components/Emergency.jsx';
+import Education    from './components/Education.jsx';
+import Emergency    from './components/Emergency.jsx';
 import RiskAssessment from './components/RiskAssessment.jsx';
-import Login from './components/Login.jsx';
-
-const API = 'http://localhost:8001/api';
-
+import Login        from './components/Login.jsx';
+ 
+export const API = 'http://localhost:8001/api';
+ 
 function App() {
-  const [language, setLanguage] = useState('ne');
-  const [currentUser, setCurrentUser] = useState(null);
+  const [language, setLanguage]           = useState('ne');
+  const [currentUser, setCurrentUser]     = useState(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [showLogin, setShowLogin] = useState(true);
-
+  const [showLogin, setShowLogin]         = useState(true);
+ 
+  // ── Restore session from localStorage on page load ──────────────────────
   useEffect(() => {
     const savedUser = localStorage.getItem('aamasuraksha_user');
     if (savedUser) {
-      const parsed = JSON.parse(savedUser);
-      setTimeout(() => {
+      try {
+        const parsed = JSON.parse(savedUser);
         setCurrentUser(parsed);
         setShowLogin(false);
         setShowOnboarding(false);
-      }, 0);
+      } catch {
+        localStorage.removeItem('aamasuraksha_user');
+      }
     }
   }, []);
-
+ 
+  // ── Register new user ─────────────────────────────────────────────────────
+  // Tries backend first, falls back to localStorage-only if backend is offline
   const handleUserCreation = async (userData) => {
     try {
-      // For now, save locally in localStorage (works without backend)
-      // Generate unique ID
-      const userId = `user_${Date.now()}`;
+      // Attempt to save to MongoDB via backend
+      const response = await fetch(`${API}/users`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(userData),
+      });
+ 
+      if (response.ok) {
+        // ✅ Backend is online — use the MongoDB _id
+        const savedUser = await response.json();
+        setCurrentUser(savedUser);
+        localStorage.setItem('aamasuraksha_user', JSON.stringify(savedUser));
+        // Also keep a copy keyed by ID for login lookup
+        localStorage.setItem(`aamasuraksha_user_${savedUser.id}`, JSON.stringify(savedUser));
+        setShowOnboarding(false);
+        setShowLogin(false);
+      } else {
+        throw new Error('Backend returned error');
+      }
+    } catch {
+      // ⚠️  Backend offline — save to localStorage only
+      console.warn('Backend offline — saving user locally.');
+      const userId     = `local_${Date.now()}`;
       const userWithId = {
         ...userData,
-        _id: userId,
-        created_at: new Date().toISOString()
+        id:         userId,
+        _id:        userId,
+        created_at: new Date().toISOString(),
       };
-      
-      // Save to localStorage with unique key
-      localStorage.setItem(`aamasuraksha_user_${userWithId._id}`, JSON.stringify(userWithId));
-      
-      // Set as current user
-      setCurrentUser(userWithId);
       localStorage.setItem('aamasuraksha_user', JSON.stringify(userWithId));
+      localStorage.setItem(`aamasuraksha_user_${userId}`, JSON.stringify(userWithId));
+      setCurrentUser(userWithId);
       setShowOnboarding(false);
       setShowLogin(false);
-    } catch (error) {
-      console.error('Error creating user:', error);
-      alert(error.message || 'Error creating user');
     }
   };
-
+ 
+  // ── Login existing user ───────────────────────────────────────────────────
   const handleLogin = (userData) => {
     setCurrentUser(userData);
     localStorage.setItem('aamasuraksha_user', JSON.stringify(userData));
     setShowLogin(false);
   };
 
+  // ── Logout function ────────────────────────────────────────────────────────
+  const handleLogout = () => {
+    setCurrentUser(null);
+    localStorage.removeItem('aamasuraksha_user');
+    setShowLogin(true);
+  };
+ 
+  // ── Routing ───────────────────────────────────────────────────────────────
   if (showLogin) {
     return (
-      <Login 
-        onComplete={handleLogin} 
-        onSwitchToOnboarding={() => {
-          setShowLogin(false);
-          setShowOnboarding(true);
-        }}
-        language={language} 
-        setLanguage={setLanguage} 
+      <Login
+        onComplete={handleLogin}
+        onSwitchToOnboarding={() => { setShowLogin(false); setShowOnboarding(true); }}
+        language={language}
+        setLanguage={setLanguage}
       />
     );
   }
-
+ 
   if (showOnboarding) {
-    return <Onboarding 
-      onComplete={handleUserCreation} 
-      onSwitchToLogin={() => {
-        setShowOnboarding(false);
-        setShowLogin(true);
-      }}
-      language={language} 
-      setLanguage={setLanguage} 
-    />;
+    return (
+      <Onboarding
+        onComplete={handleUserCreation}
+        onSwitchToLogin={() => { setShowOnboarding(false); setShowLogin(true); }}
+        language={language}
+        setLanguage={setLanguage}
+      />
+    );
   }
-
+ 
   return (
     <Router>
       <Routes>
-        <Route
-          path="/"
-          element={<Dashboard user={currentUser} language={language} setLanguage={setLanguage} />}
-        />
-        <Route
-          path="/chat"
-          element={<ChatBot user={currentUser} language={language} />}
-        />
-        <Route
-          path="/health"
-          element={<HealthTracker user={currentUser} language={language} />}
-        />
-        <Route
-          path="/appointments"
-          element={<Appointments user={currentUser} language={language} />}
-        />
-        <Route
-          path="/education"
-          element={<Education user={currentUser} language={language} />}
-        />
-        <Route
-          path="/emergency"
-          element={<Emergency user={currentUser} language={language} />}
-        />
-        <Route
-          path="/risk"
-          element={<RiskAssessment user={currentUser} language={language} />}
-        />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="/"            element={<Dashboard     user={currentUser} language={language} setLanguage={setLanguage} onLogout={handleLogout} />} />
+        <Route path="/chat"        element={<ChatBot        user={currentUser} language={language} />} />
+        <Route path="/health"      element={<HealthTracker  user={currentUser} language={language} />} />
+        <Route path="/appointments" element={<Appointments  user={currentUser} language={language} />} />
+        <Route path="/education"   element={<Education      user={currentUser} language={language} />} />
+        <Route path="/emergency"   element={<Emergency      user={currentUser} language={language} />} />
+        <Route path="/risk"        element={<RiskAssessment user={currentUser} language={language} />} />
+        <Route path="*"            element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );
 }
-
+ 
+// ═══════════════════════════════════════════════════════════════════════════
+// ONBOARDING FORM
+// ═══════════════════════════════════════════════════════════════════════════
 const Onboarding = ({ onComplete, onSwitchToLogin, language, setLanguage }) => {
   const [formData, setFormData] = useState({
-    name: '',
-    age: '',
-    phone: '',
-    district: '',
-    weeks_pregnant: '',
-    due_date: ''
+    name: '', age: '', phone: '', district: '', weeks_pregnant: '', due_date: ''
   });
-  const [errors, setErrors] = useState({});
-  const [touched, setTouched] = useState({});
+  const [errors, setErrors]       = useState({});
+  const [touched, setTouched]     = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+ 
   const text = {
     ne: {
       welcome: 'आमा सुरक्षामा स्वागत छ!',
       subtitle: 'तपाईंको गर्भावस्था यात्रामा हामी तपाईंसँग छौं',
-      name: 'तपाईंको नाम',
-      age: 'उमेर',
-      phone: 'फोन नम्बर',
-      district: 'जिल्ला',
-      weeks: 'कति हप्ताको गर्भवती हुनुहुन्छ?',
-      dueDate: 'सम्भावित प्रसव मिति',
-      nepali: 'नेपाली',
-      english: 'English',
-      getStarted: 'सुरु गर्नुहोस्',
-      disclaimer: '⚠️ यो एक सलाहकार उपकरण हो, चिकित्सा निदान होइन। सधैं डाक्टरसँग परामर्श गर्नुहोस्।',
-      haveAccount: 'पहिल्यै खाता छ?',
-      backToLogin: 'लगइन गर्नुहोस्'
+      name: 'तपाईंको नाम', age: 'उमेर', phone: 'फोन नम्बर',
+      district: 'जिल्ला', weeks: 'कति हप्ताको गर्भवती हुनुहुन्छ?',
+      dueDate: 'सम्भावित प्रसव मिति', getStarted: 'सुरु गर्नुहोस्',
+      disclaimer: '⚠️ यो एक सलाहकार उपकरण हो, चिकित्सा निदान होइन।',
+      haveAccount: 'पहिल्यै खाता छ?', backToLogin: 'लगइन गर्नुहोस्',
+      nepali: 'नेपाली', english: 'English',
     },
     en: {
       welcome: 'Welcome to AamaSuraksha!',
       subtitle: 'Your companion through your pregnancy journey',
-      name: 'Your Name',
-      age: 'Age',
-      phone: 'Phone Number',
-      district: 'District',
-      weeks: 'Weeks Pregnant',
-      dueDate: 'Expected Due Date',
-      nepali: 'नेपाली',
-      english: 'English',
-      getStarted: 'Get Started',
+      name: 'Your Name', age: 'Age', phone: 'Phone Number',
+      district: 'District', weeks: 'Weeks Pregnant',
+      dueDate: 'Expected Due Date', getStarted: 'Get Started',
       disclaimer: '⚠️ This is an advisory tool, not medical diagnosis. Always consult a doctor.',
-      haveAccount: 'Already have an account?',
-      backToLogin: 'Login'
+      haveAccount: 'Already have an account?', backToLogin: 'Login',
+      nepali: 'नेपाली', english: 'English',
     }
   };
-
   const t = text[language];
-
-  // Validation functions
-  const validateName = (name) => {
-    if (!name.trim()) return language === 'ne' ? 'नाम आवश्यक छ' : 'Name is required';
-    if (name.trim().length < 2) return language === 'ne' ? 'नाम कम्तिमा २ वर्ण हुनुपर्छ' : 'Name must be at least 2 characters';
-    return '';
+ 
+  // ── Helper: Calculate due date from weeks pregnant ──────────────────────
+  const calculateDueDate = (weeksPregn) => {
+    if (!weeksPregn || weeksPregn < 1) return '';
+    const daysRemaining = (40 - parseInt(weeksPregn)) * 7;
+    const dueDate = new Date();
+    dueDate.setDate(dueDate.getDate() + daysRemaining);
+    return dueDate.toISOString().split('T')[0];
   };
 
-  const validateAge = (age) => {
-    if (!age) return language === 'ne' ? 'उमेर आवश्यक छ' : 'Age is required';
-    const ageNum = parseInt(age);
-    if (ageNum < 13 || ageNum > 60) return language === 'ne' ? 'उमेर १३-६० बीच हुनुपर्छ' : 'Age should be between 13-60';
-    return '';
+  // ── Helper: Validate Nepal phone number (97/98 prefix, 10 digits) ────────
+  const validateNepaliPhone = (phone) => {
+    const cleaned = phone.replace(/[\s-]/g, '');
+    if (!/^(97|98)[0-9]{8}$/.test(cleaned)) return false;
+    return true;
   };
 
-  const validatePhone = (phone) => {
-    if (!phone) return language === 'ne' ? 'फोन नम्बर आवश्यक छ' : 'Phone number is required';
-    const phoneRegex = /^[0-9]{7,15}$/;
-    if (!phoneRegex.test(phone.replace(/[\s-]/g, ''))) {
-      return language === 'ne' ? 'मान्य फोन नम्बर राख्नुहोस्' : 'Please enter a valid phone number';
-    }
-    return '';
+  const validate = {
+    name:            (v) => !v.trim() ? 'नाम आवश्यक छ / Name is required' : v.trim().length < 2 ? 'कम्तिमा २ वर्ण / Min 2 chars' : '',
+    age:             (v) => !v ? 'उमेर आवश्यक छ / Age is required' : (parseInt(v) < 13 || parseInt(v) > 60) ? 'उमेर १३-६० हुनुपर्छ / Age 13-60' : '',
+    phone:           (v) => !v ? 'फोन आवश्यक छ / Phone is required' : !validateNepaliPhone(v) ? 'नेपाल फोन (९७/९८ ले शुरु) / Nepal phone (97/98, 10 digits)' : '',
+    district:        (v) => !v.trim() ? 'जिल्ला आवश्यक छ / District is required' : '',
+    weeks_pregnant:  (v) => !v ? 'हप्ता आवश्यक छ / Required' : (parseInt(v) < 1 || parseInt(v) > 42) ? 'कम्तिमा १-४२ / Must be 1-42' : '',
   };
 
-  const validateDistrict = (district) => {
-    if (!district.trim()) return language === 'ne' ? 'जिल्ला आवश्यक छ' : 'District is required';
-    return '';
+  // Auto-calculate due_date when weeks_pregnant changes
+  const handleWeeksChange = (val) => {
+    setFormData(p => ({
+      ...p,
+      weeks_pregnant: val,
+      due_date: calculateDueDate(val)
+    }));
   };
-
-  const validateWeeks = (weeks) => {
-    if (!weeks) return language === 'ne' ? 'गर्भावस्थाको हप्ता आवश्यक छ' : 'Weeks pregnant is required';
-    const weeksNum = parseInt(weeks);
-    if (weeksNum < 1 || weeksNum > 42) return language === 'ne' ? 'हप्ता १-४२ बीच हुनुपर्छ' : 'Weeks should be between 1-42';
-    return '';
-  };
-
-  const validateDueDate = (dueDate) => {
-    if (!dueDate) return language === 'ne' ? 'सम्भावित मिति आवश्यक छ' : 'Due date is required';
-    const selectedDate = new Date(dueDate);
-    const today = new Date();
-    if (selectedDate < today) return language === 'ne' ? 'मिति आज भन्दा अगाडि हुनुपर्छ' : 'Due date should be in the future';
-    return '';
-  };
-
-  // Validate all fields
-  const validateForm = () => {
-    const newErrors = {};
-    newErrors.name = validateName(formData.name);
-    newErrors.age = validateAge(formData.age);
-    newErrors.phone = validatePhone(formData.phone);
-    newErrors.district = validateDistrict(formData.district);
-    newErrors.weeks_pregnant = validateWeeks(formData.weeks_pregnant);
-    newErrors.due_date = validateDueDate(formData.due_date);
-    return newErrors;
-  };
-
+ 
   const handleBlur = (field) => {
-    setTouched({...touched, [field]: true});
-    const fieldValidator = {
-      name: () => validateName(formData.name),
-      age: () => validateAge(formData.age),
-      phone: () => validatePhone(formData.phone),
-      district: () => validateDistrict(formData.district),
-      weeks_pregnant: () => validateWeeks(formData.weeks_pregnant),
-      due_date: () => validateDueDate(formData.due_date)
-    };
-    const fieldError = fieldValidator[field]?.();
-    if (fieldError) {
-      setErrors({...errors, [field]: fieldError});
-    } else {
-      setErrors({...errors, [field]: ''});
-    }
+    setTouched(p => ({ ...p, [field]: true }));
+    setErrors(p => ({ ...p, [field]: validate[field](formData[field]) }));
   };
-
+ 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const newErrors = validateForm();
+    const newErrors = Object.fromEntries(
+      Object.keys(validate).map(k => [k, validate[k](formData[k])])
+    );
     setErrors(newErrors);
-    setTouched({name: true, age: true, phone: true, district: true, weeks_pregnant: true, due_date: true});
-
-    // Check if any errors exist
-    if (Object.values(newErrors).some(err => err)) return;
-
+    setTouched(Object.fromEntries(Object.keys(validate).map(k => [k, true])));
+    if (Object.values(newErrors).some(Boolean)) return;
+ 
     setIsSubmitting(true);
     try {
-      onComplete({
+      await onComplete({
         ...formData,
-        age: parseInt(formData.age) || 0,
+        age:            parseInt(formData.age)            || 0,
         weeks_pregnant: parseInt(formData.weeks_pregnant) || 0,
-        language_preference: language
+        language_preference: language,
       });
-    } catch (error) {
-      alert(language === 'ne' ? 'त्रुटि भयो। पुनः प्रयास गर्नुहोस्।' : 'An error occurred. Please try again.');
+    } catch {
+      alert('An error occurred. Please try again.');
+    } finally {
       setIsSubmitting(false);
     }
   };
-
+ 
+  const field = (key, label, type = 'text', placeholder = '') => (
+    <div key={key}>
+      <label className="block text-sm font-semibold text-gray-700 mb-2">
+        {label} <span className="text-red-500">*</span>
+      </label>
+      <input
+        type={type}
+        placeholder={placeholder || label}
+        value={formData[key]}
+        onChange={e => setFormData(p => ({ ...p, [key]: e.target.value }))}
+        onBlur={() => handleBlur(key)}
+        className={`w-full px-4 py-2 border-2 rounded-lg outline-none transition ${
+          touched[key] && errors[key]
+            ? 'border-red-500 focus:ring-2 focus:ring-red-200'
+            : 'border-gray-300 focus:border-pink-500 focus:ring-2 focus:ring-pink-200'
+        }`}
+      />
+      {touched[key] && errors[key] && <p className="text-red-500 text-xs mt-1">❌ {errors[key]}</p>}
+    </div>
+  );
+ 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-teal-900 to-blue-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Header */}
         <div className="text-center mb-8">
           <div className="text-6xl mb-4 animate-bounce">🤰</div>
           <h1 className="text-4xl font-bold text-white mb-2">{t.welcome}</h1>
-          <h2 className="text-2xl font-black text-white/100 mb-3">आमा सुरक्षा</h2>
           <p className="text-lg text-white/90">{t.subtitle}</p>
         </div>
-
-        {/* Language Toggle */}
+ 
         <div className="flex gap-4 mb-6">
-          <button
-            className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-all ${
-              language === 'ne'
-                ? 'bg-gradient-to-r from-teal-500 to-blue-600 text-white shadow-lg'
-                : 'bg-white/20 text-white hover:bg-white/30'
-            }`}
-            onClick={() => setLanguage('ne')}
-          >
-            🇳🇵 {t.nepali}
-          </button>
-          <button
-            className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-all ${
-              language === 'en'
-                ? 'bg-gradient-to-r from-teal-500 to-blue-600 text-white shadow-lg'
-                : 'bg-white/20 text-white hover:bg-white/30'
-            }`}
-            onClick={() => setLanguage('en')}
-          >
-            🇬🇧 {t.english}
-          </button>
+          {['ne','en'].map(lang => (
+            <button key={lang}
+              className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-all ${
+                language === lang
+                  ? 'bg-gradient-to-r from-teal-500 to-blue-600 text-white shadow-lg'
+                  : 'bg-white/20 text-white hover:bg-white/30'
+              }`}
+              onClick={() => setLanguage(lang)}
+            >
+              {lang === 'ne' ? `🇳🇵 ${t.nepali}` : `🇬🇧 ${t.english}`}
+            </button>
+          ))}
         </div>
-
-        {/* Form Card */}
+ 
         <div className="bg-white rounded-2xl shadow-2xl p-8">
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Name Field */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                {t.name} <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                placeholder={t.name}
-                value={formData.name}
-                onChange={(e) => setFormData({...formData, name: e.target.value})}
-                onBlur={() => handleBlur('name')}
-                className={`w-full px-4 py-2 border-2 rounded-lg outline-none transition ${
-                  touched.name && errors.name ? 'border-red-500 focus:ring-2 focus:ring-red-200' : 'border-gray-300 focus:border-pink-500 focus:ring-2 focus:ring-pink-200'
-                }`}
-              />
-              {touched.name && errors.name && <p className="text-red-500 text-xs mt-1">❌ {errors.name}</p>}
-            </div>
-
-            {/* Age Field */} 
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                {t.age} <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="number"
-                placeholder="e.g., 25"
-                value={formData.age}
-                onChange={(e) => setFormData({...formData, age: e.target.value})}
-                onBlur={() => handleBlur('age')}
-                className={`w-full px-4 py-2 border-2 rounded-lg outline-none transition ${
-                  touched.age && errors.age ? 'border-red-500 focus:ring-2 focus:ring-red-200' : 'border-gray-300 focus:border-pink-500 focus:ring-2 focus:ring-pink-200'
-                }`}
-              />
-              {touched.age && errors.age && <p className="text-red-500 text-xs mt-1">❌ {errors.age}</p>}
-              {touched.age && !errors.age && <p className="text-green-500 text-xs mt-1">✅ {language === 'ne' ? 'ठीक छ' : 'Valid'}</p>}
-            </div>
-
-            {/* Phone Field */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">📱 {t.phone}</label>
-              <input
-                type="tel"
-                placeholder="e.g., 9841234567"
-                value={formData.phone}
-                onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                onBlur={() => handleBlur('phone')}
-                className={`w-full px-4 py-2 border-2 rounded-lg outline-none transition ${
-                  touched.phone && errors.phone ? 'border-red-500 focus:ring-2 focus:ring-red-200' : 'border-gray-300 focus:border-pink-500 focus:ring-2 focus:ring-pink-200'
-                }`}
-              />
-              {touched.phone && errors.phone && <p className="text-red-500 text-xs mt-1">❌ {errors.phone}</p>}
-              {touched.phone && !errors.phone && formData.phone && <p className="text-green-500 text-xs mt-1">✅ {language === 'ne' ? 'ठीक छ' : 'Valid'}</p>}
-              {!formData.phone && <p className="text-gray-500 text-xs mt-1">{language === 'ne' ? '(वैकल्पिक)' : '(Optional)'}</p>}
-            </div>
-
-            {/* District Field */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                {t.district} <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                placeholder={t.district}
-                value={formData.district}
-                onChange={(e) => setFormData({...formData, district: e.target.value})}
-                onBlur={() => handleBlur('district')}
-                className={`w-full px-4 py-2 border-2 rounded-lg outline-none transition ${
-                  touched.district && errors.district ? 'border-red-500 focus:ring-2 focus:ring-red-200' : 'border-gray-300 focus:border-pink-500 focus:ring-2 focus:ring-pink-200'
-                }`}
-              />
-              {touched.district && errors.district && <p className="text-red-500 text-xs mt-1">❌ {errors.district}</p>}
-            </div>
-
-            {/* Weeks Pregnant Field */}
+            {field('name',           t.name,    'text',   t.name)}
+            {field('age',            t.age,     'number', 'e.g. 25')}
+            {field('phone',          t.phone,   'tel',    'e.g. 9841234567')}
+            {field('district',       t.district,'text',   t.district)}
+            
+            {/* Weeks Pregnant */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 {t.weeks} <span className="text-red-500">*</span>
               </label>
               <input
                 type="number"
-                placeholder="e.g., 20"
+                placeholder="e.g. 20"
                 value={formData.weeks_pregnant}
-                onChange={(e) => setFormData({...formData, weeks_pregnant: e.target.value})}
+                onChange={e => handleWeeksChange(e.target.value)}
                 onBlur={() => handleBlur('weeks_pregnant')}
                 className={`w-full px-4 py-2 border-2 rounded-lg outline-none transition ${
-                  touched.weeks_pregnant && errors.weeks_pregnant ? 'border-red-500 focus:ring-2 focus:ring-red-200' : 'border-gray-300 focus:border-pink-500 focus:ring-2 focus:ring-pink-200'
+                  touched.weeks_pregnant && errors.weeks_pregnant
+                    ? 'border-red-500 focus:ring-2 focus:ring-red-200'
+                    : 'border-gray-300 focus:border-pink-500 focus:ring-2 focus:ring-pink-200'
                 }`}
               />
               {touched.weeks_pregnant && errors.weeks_pregnant && <p className="text-red-500 text-xs mt-1">❌ {errors.weeks_pregnant}</p>}
-              {touched.weeks_pregnant && !errors.weeks_pregnant && <p className="text-green-500 text-xs mt-1">✅ {language === 'ne' ? 'ठीक छ' : 'Valid'}</p>}
             </div>
-
-            {/* Due Date Field */}
+            
+            {/* Due Date (Auto-calculated) */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                📅 {t.dueDate} <span className="text-red-500">*</span>
+                {t.dueDate} <span className="text-green-600 text-xs">(auto-calculated)</span>
               </label>
               <input
                 type="date"
                 value={formData.due_date}
-                onChange={(e) => setFormData({...formData, due_date: e.target.value})}
-                onBlur={() => handleBlur('due_date')}
-                className={`w-full px-4 py-2 border-2 rounded-lg outline-none transition ${
-                  touched.due_date && errors.due_date ? 'border-red-500 focus:ring-2 focus:ring-red-200' : 'border-gray-300 focus:border-pink-500 focus:ring-2 focus:ring-pink-200'
-                }`}
+                disabled
+                className="w-full px-4 py-2 border-2 border-green-300 rounded-lg bg-green-50 text-gray-600"
               />
-              {touched.due_date && errors.due_date && <p className="text-red-500 text-xs mt-1">❌ {errors.due_date}</p>}
-              {touched.due_date && !errors.due_date && <p className="text-green-500 text-xs mt-1">✅ {language === 'ne' ? 'ठीक छ' : 'Valid'}</p>}
+              <p className="text-xs text-green-600 mt-1">✅ Automatically calculated from weeks</p>
             </div>
-
-            {/* Disclaimer */}
+ 
             <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded mt-6">
               <p className="text-sm text-gray-700">{t.disclaimer}</p>
             </div>
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full mt-6 py-3 bg-linear-to-r from-pink-500 to-purple-600 text-white font-bold rounded-lg hover:shadow-lg hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+ 
+            <button type="submit" disabled={isSubmitting}
+              className="w-full mt-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold rounded-lg hover:shadow-lg hover:-translate-y-0.5 transition-all disabled:opacity-50"
             >
-              {isSubmitting ? '⏳ ' + (language === 'ne' ? 'प्रक्रियामा...' : 'Processing...') : t.getStarted + ' →'}
+              {isSubmitting ? '⏳ Processing...' : `${t.getStarted} →`}
             </button>
           </form>
         </div>
-
-        {/* Footer */}
+ 
         <p className="text-center text-white/80 mt-6 text-sm">Made with ❤️ for the mothers of Nepal</p>
-        
-        {/* Switch to Login */}
-        <div className="flex gap-2 justify-center mt-6 px-4">
+        <div className="flex gap-2 justify-center mt-4">
           <p className="text-white text-sm font-semibold">{t.haveAccount}</p>
-          <button
-            type="button"
-            onClick={onSwitchToLogin}
-            className="text-white font-bold underline hover:text-yellow-200 transition-colors"
+          <button onClick={onSwitchToLogin}
+            className="text-white font-bold underline hover:text-yellow-200 transition-colors text-sm"
           >
             {t.backToLogin}
           </button>
@@ -451,6 +334,5 @@ const Onboarding = ({ onComplete, onSwitchToLogin, language, setLanguage }) => {
     </div>
   );
 };
-
+ 
 export default App;
-export { API };
