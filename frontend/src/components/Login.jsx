@@ -38,7 +38,7 @@ export default function Login({ onComplete, onSwitchToOnboarding, language, setL
       enterName: 'Please enter your name',
       enterPhone: 'Please enter your phone number',
       userNotFound: 'User not found. Create a new account.',
-      disclaimer: '⚠️ This is an advisory tool, not medical diagnosis. Always consult a doctor.'
+      disclaimer: 'Advisory tool only. Always consult a doctor.'
     }
   };
 
@@ -102,95 +102,138 @@ export default function Login({ onComplete, onSwitchToOnboarding, language, setL
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-900 via-teal-900 to-blue-900 flex items-center justify-center p-4">
-      {/* Top Language Toggle */}
-      <button
-        onClick={() => setLanguage(language === 'en' ? 'ne' : 'en')}
-        className="absolute top-6 right-6 bg-white/20 backdrop-blur-md hover:bg-white/30 text-white rounded-lg px-4 py-2 font-semibold transition-all border border-white/30"
-      >
-        {language === 'en' ? '🇳🇵 नेपाली' : '🇬🇧 English'}
-      </button>
+    <div className="min-h-screen bg-white flex flex-col">
+      {/* Language Toggle - Hover based */}
+      <div className="absolute top-8 right-8 flex gap-3 z-10">
+        <button
+          onMouseEnter={() => setLanguage('en')}
+          className={`px-3 py-1.5 text-sm font-medium transition ${
+            language === 'en'
+              ? 'text-teal-600 border-b-2 border-teal-600'
+              : 'text-slate-400 hover:text-slate-600'
+          }`}
+        >
+          English
+        </button>
+        <span className="text-slate-300">/</span>
+        <button
+          onMouseEnter={() => setLanguage('ne')}
+          className={`px-3 py-1.5 text-sm font-medium transition ${
+            language === 'ne'
+              ? 'text-teal-600 border-b-2 border-teal-600'
+              : 'text-slate-400 hover:text-slate-600'
+          }`}
+        >
+          नेपाली
+        </button>
+      </div>
 
-      {/* Login Container */}
-      <div className="w-full max-w-md">
-        {/* Header */}
-        <div className="text-center mb-8 text-white">
-          <h1 className="text-6xl font-black mb-2">🤰 आमा सुरक्षा</h1>
-          <p className="text-xl font-semibold opacity-90">{t.subtitle}</p>
-        </div>
-
-        {/* Login Card */}
-        <div className="bg-white rounded-3xl shadow-2xl p-8 space-y-6">
-          <div>
-            <h2 className="text-3xl font-bold text-center text-gray-800 mb-2">
-              {t.loginTitle}
-            </h2>
-            <p className="text-center text-gray-600 text-sm">{t.subtitle}</p>
+      {/* Main Content */}
+      <div className="flex-1 flex items-center justify-center p-4">
+        <div className="w-full max-w-sm">
+          {/* Header Section */}
+          <div className="text-center mb-6">
+            {/* Logo */}
+            <div className="inline-flex items-center justify-center mb-3">
+              <svg width="48" height="48" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+                {/* Heart shape representing care */}
+                <path d="M28 48C28 48 8 35 8 22C8 15.373 13.373 10 20 10C23.5 10 26.5 11.5 28 14C29.5 11.5 32.5 10 36 10C42.627 10 48 15.373 48 22C48 35 28 48 28 48Z" fill="#0F766E"/>
+                {/* Protective circle */}
+                <circle cx="28" cy="28" r="26" stroke="#0F766E" strokeWidth="1.5" fill="none" opacity="0.3"/>
+              </svg>
+            </div>
+            
+            {/* Branding */}
+            <h1 className="text-2xl font-bold text-slate-900 mb-1">AamaSuraksha</h1>
+            <p className="text-slate-500 text-xs">{language === 'ne' ? 'गर्भावस्था साथी' : 'Maternal Health Companion'}</p>
           </div>
 
-          {error && (
-            <div className="bg-red-100 border-2 border-red-400 text-red-700 px-4 py-3 rounded-lg text-sm">
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleLogin} className="space-y-4">
+          {/* Login Card */}
+          <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
+            {/* Header */}
             <div>
-              <label className="block text-gray-700 font-semibold mb-3">
-                {t.name}
-              </label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder={language === 'ne' ? 'नाम लेख्नुहोस्' : 'Enter name'}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-200 text-gray-800 font-semibold"
-              />
+              <h2 className="text-lg font-semibold text-slate-900">{t.loginTitle}</h2>
             </div>
 
-            <div>
-              <label className="block text-gray-700 font-semibold mb-3">
-                {t.phone}
-              </label>
-              <input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder={language === 'ne' ? 'फोन नम्बर' : 'Enter phone number'}
-                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-200 text-gray-800 font-semibold"
-              />
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-xs">
+                {error}
+              </div>
+            )}
+
+            {/* Form */}
+            <form onSubmit={handleLogin} className="space-y-3">
+              {/* Name Input */}
+              <div>
+                <label className="block text-slate-700 font-medium text-xs mb-1">
+                  {t.name}
+                </label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder={language === 'ne' ? 'नाम लेख्नुहोस्' : 'Your name'}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 text-slate-900 placeholder-slate-400 transition text-sm"
+                />
+              </div>
+
+              {/* Phone Input */}
+              <div>
+                <label className="block text-slate-700 font-medium text-xs mb-1">
+                  {t.phone}
+                </label>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder={language === 'ne' ? 'फोन नम्बर' : '97/98xxxxxxxx'}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 text-slate-900 placeholder-slate-400 transition text-sm"
+                />
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-teal-600 hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-2 rounded-lg transition mt-4 text-sm"
+              >
+                {isLoading ? (language === 'ne' ? 'लोड हो रहेको...' : 'Loading...') : t.login}
+              </button>
+            </form>
+
+            {/* Divider */}
+            <div className="relative py-2">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-200"></div>
+              </div>
+              <div className="relative flex justify-center text-xs">
+                <span className="px-2 bg-white text-slate-500">{language === 'ne' ? 'वा' : 'or'}</span>
+              </div>
             </div>
 
+            {/* Register Button */}
             <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-linear-to-r from-teal-600 to-blue-600 hover:from-teal-700 hover:to-blue-700 disabled:opacity-50 text-white font-bold py-3 rounded-lg transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+              type="button"
+              onClick={onSwitchToOnboarding}
+              className="w-full border border-slate-300 hover:border-teal-300 bg-slate-50 hover:bg-teal-50 text-slate-700 font-medium py-2 rounded-lg transition text-sm"
             >
-              {isLoading ? (language === 'ne' ? 'लोड हो रहेको...' : 'Loading...') : t.login}
+              {t.noAccount}
             </button>
-          </form>
-
-          {/* Divider */}
-          <div className="flex items-center gap-4">
-            <div className="flex-1 h-px bg-gray-300"></div>
-            <span className="text-gray-500 text-sm">{language === 'ne' ? 'वा' : 'or'}</span>
-            <div className="flex-1 h-px bg-gray-300"></div>
           </div>
 
-          {/* Switch to Onboarding */}
-          <button
-            type="button"
-            onClick={onSwitchToOnboarding}
-            className="w-full border-2 border-gray-300 hover:border-teal-600 text-gray-700 hover:text-teal-600 font-bold py-3 rounded-lg transition-all"
-          >
-            {t.noAccount} {t.createAccount}
-          </button>
+          {/* Footer Disclaimer */}
+          <div className="text-center mt-4 px-4">
+            <p className="text-slate-500 text-xs leading-relaxed">
+              {language === 'ne' ? 'यो एक सलाहकार उपकरण हो। चिकित्सकीय सलाहको विकल्प होइन।' : 'Advisory tool only. Not a substitute for medical advice.'}
+            </p>
+          </div>
         </div>
+      </div>
 
-        {/* Disclaimer */}
-        <p className="text-center text-white/80 text-xs mt-6 px-4">
-          {t.disclaimer}
-        </p>
+      {/* Footer */}
+      <div className="text-center py-4 text-slate-500 text-xs">
+        <p>© 2024 AamaSuraksha</p>
       </div>
     </div>
   );

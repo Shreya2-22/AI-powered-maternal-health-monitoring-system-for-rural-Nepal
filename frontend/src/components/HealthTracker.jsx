@@ -28,7 +28,7 @@ export default function HealthTracker({ user, language }) {
   const text = {
     ne: {
       title: 'स्वास्थ्य ट्र्याकर',
-      back: '⬅️ फिर्ता',
+      back: 'फिर्ता',
       addRecord: '➕ नयाँ रेकर्ड',
       weight: 'वजन (किलो)',
       systolic: 'सिस्टोलिक BP (mmHg)',
@@ -51,7 +51,7 @@ export default function HealthTracker({ user, language }) {
     },
     en: {
       title: 'Health Tracker',
-      back: '⬅️ Back',
+      back: 'Back',
       addRecord: '➕ Add Record',
       weight: 'Weight (kg)',
       systolic: 'Systolic BP (mmHg)',
@@ -247,39 +247,41 @@ export default function HealthTracker({ user, language }) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-slate-50 flex flex-col">
       {/* Toast Notification */}
       {toast.show && (
         <div className={`fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white font-semibold animate-slide-in ${
-          toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'
+          toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'
         }`}>
           {toast.message}
         </div>
       )}
-      <div className="bg-linear-to-r from-blue-500 to-cyan-500 text-white p-4 shadow-lg">
-        <div className="max-w-4xl mx-auto flex justify-between items-center">
+
+      {/* Header */}
+      <header className="bg-white border-b border-slate-200">
+        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <button 
             onClick={() => navigate('/')}
-            className="bg-white/20 hover:bg-white/30 rounded-lg px-3 py-2 font-semibold transition-all"
+            className="text-slate-600 hover:text-slate-900 font-medium text-sm transition"
           >
-            {t.back}
+            Back
           </button>
-          <h1 className="text-2xl font-bold">{t.title}</h1>
-          <div style={{ width: '60px' }}></div>
+          <h1 className="text-xl font-semibold text-slate-900">{t.title}</h1>
+          <div style={{ width: '40px' }}></div>
         </div>
-      </div>
+      </header>
 
-      <div className="max-w-4xl mx-auto w-full p-6">
+      <div className="max-w-6xl mx-auto w-full px-6 py-8">
         <button 
           onClick={() => setShowForm(!showForm)}
-          className="mb-6 px-6 py-3 bg-linear-to-r from-blue-500 to-cyan-600 text-white font-semibold rounded-lg hover:shadow-lg transition-all"
+          className="mb-8 px-6 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg transition shadow-sm hover:shadow-md"
         >
           {showForm ? t.cancel : t.addRecord}
         </button>
 
         {/* Form */}
         {showForm && (
-          <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6 mb-6 space-y-4">
+          <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-8 space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">{t.date} <span className="text-red-500">*</span></label>

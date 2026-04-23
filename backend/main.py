@@ -7,6 +7,17 @@ from dotenv import load_dotenv
 import os
 from datetime import datetime
 from risk_assessment import PregnancyRiskAssessment
+
+# Import validation module
+try:
+    from validation import (
+        HealthRecordValidator, UserValidator, RiskAssessmentValidator,
+        DataSanitizer, ErrorResponse
+    )
+    VALIDATION_AVAILABLE = True
+except ImportError:
+    print("⚠️ Validation module not available - proceeding without validation")
+    VALIDATION_AVAILABLE = False
  
 load_dotenv()
  
@@ -53,6 +64,21 @@ saved_articles_collection = db["saved_articles"]  if db else None
 # ── ML Model ──────────────────────────────────────────────────────────────────
 os.makedirs("models", exist_ok=True)
 risk_assessment = PregnancyRiskAssessment()
+
+# Import ML enhancement modules
+try:
+    from ml_analyzer import MLAnalyzer, FeatureEngineering
+    ml_analyzer = MLAnalyzer()
+except ImportError:
+    print("⚠️ ml_analyzer module not available")
+    ml_analyzer = None
+
+try:
+    from train_model import ModelTrainer
+    model_trainer = ModelTrainer(db) if db else None
+except ImportError:
+    print("⚠️ ModelTrainer not available")
+    model_trainer = None
  
 if risk_assessment.is_trained:
     print("🤖 ML model loaded — using Random Forest for risk predictions.")
@@ -99,6 +125,14 @@ class SavedArticle(BaseModel):
 class RiskAssessmentRequest(BaseModel):
     user_id: str
     health_records: list = []   # frontend sends localStorage records here
+
+class ModelTrainingRequest(BaseModel):
+    action: str  # "train", "evaluate", "stats"
+
+class FeatureAnalysisRequest(BaseModel):
+    health_records: list
+    user_age: int = 25
+    weeks_pregnant: int = 20
  
  
 @app.get("/")
@@ -118,17 +152,33 @@ async def root():
 async def create_user(user: User):
     if users_collection is None:
         raise HTTPException(status_code=503, detail="Database offline. User saved locally.")
+    
     try:
-        existing = users_collection.find_one({"name": user.name})
+        # Validate user data
+        if VALIDATION_AVAILABLE:
+            is_valid, error_msg = UserValidator.validate_user_registration(user.dict())
+            if not is_valid:
+                raise HTTPException(status_code=400, detail=f"Invalid registration: {error_msg}")
+            
+            # Normalize phone
+            normalized_phone = DataSanitizer.normalize_phone(user.phone)
+        else:
+            normalized_phone = user.phone
+        
+        existing = users_collection.find_one({"phone": normalized_phone})
         if existing:
             existing["id"] = str(existing.pop("_id"))
             return existing
+        
         data = user.dict()
+        data["phone"] = normalized_phone
         data["created_at"] = datetime.now().isoformat()
         result  = users_collection.insert_one(data)
         created = users_collection.find_one({"_id": result.inserted_id})
         created["id"] = str(created.pop("_id"))
         return created
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
  
@@ -167,19 +217,32 @@ async def get_user(user_name: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
  
-# ── Health Records ─────────────────────────────────────────────────────────────
  
 @app.post("/api/health-records")
 async def create_health_record(record: HealthRecord):
     if health_records_collection is None:
         raise HTTPException(status_code=503, detail="Database offline")
+    
     try:
-        data = record.dict()
+        # Validate record
+        if VALIDATION_AVAILABLE:
+            is_valid, error_msg = HealthRecordValidator.validate_health_record(record.dict())
+            if not is_valid:
+                raise HTTPException(status_code=400, detail=f"Invalid health record: {error_msg}")
+            
+            # Normalize record
+            normalized_data = DataSanitizer.normalize_health_record(record.dict())
+            data = normalized_data
+        else:
+            data = record.dict()
+        
         data["created_at"] = datetime.now().isoformat()
         result  = health_records_collection.insert_one(data)
         created = health_records_collection.find_one({"_id": result.inserted_id})
         created["id"] = str(created.pop("_id"))
         return created
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
  
@@ -295,7 +358,7 @@ async def get_risk_assessment(request: RiskAssessmentRequest):
     try:
         user           = None
         health_records = request.health_records or []
- 
+
         # Try DB first, fall back to defaults
         if users_collection is not None:
             try:
@@ -305,10 +368,10 @@ async def get_risk_assessment(request: RiskAssessmentRequest):
                 pass
             if not user:
                 user = users_collection.find_one({"_id": str(request.user_id)})
- 
+
         if not user:
             user = {"age": 25, "weeks_pregnant": 20}
- 
+
         # Get health records from DB only if frontend didn't send them
         if not health_records and health_records_collection is not None:
             health_records = list(
@@ -316,19 +379,176 @@ async def get_risk_assessment(request: RiskAssessmentRequest):
             )
             for r in health_records:
                 r['_id'] = str(r['_id'])
- 
+
         result = risk_assessment.calculate_risk(
             health_records  = health_records,
             user_age        = user.get('age', 25),
             weeks_pregnant  = user.get('weeks_pregnant', 20)
         )
         return result
- 
+
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── NEW: Model Training & Management ───────────────────────────────────────────
+
+@app.post("/api/ml/train-model")
+async def train_model():
+    """
+    Retrain the ML model using all user data from MongoDB
+    Includes cross-validation, metrics, and model evaluation
+    """
+    if model_trainer is None:
+        raise HTTPException(status_code=503, detail="Model trainer not available")
+    if db is None:
+        raise HTTPException(status_code=503, detail="Database offline")
+    
+    try:
+        success, metrics = model_trainer.train()
+        
+        if success:
+            return {
+                'status': 'success',
+                'message': 'Model trained successfully',
+                'metrics': metrics
+            }
+        else:
+            raise HTTPException(status_code=400, detail="Training failed - insufficient data")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Training error: {str(e)}")
+
+
+@app.get("/api/ml/model-stats")
+async def get_model_stats():
+    """Get comprehensive model statistics and insights"""
+    if ml_analyzer is None:
+        raise HTTPException(status_code=503, detail="ML analyzer not available")
+    
+    try:
+        insights = ml_analyzer.get_model_insights()
+        
+        # Try to load metrics if available
+        metrics = model_trainer.load_metrics() if model_trainer else None
+        
+        return {
+            'model_status': 'loaded' if risk_assessment.is_trained else 'not_loaded',
+            'insights': insights,
+            'training_metrics': metrics if metrics else {},
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/ml/feature-importance")
+async def get_feature_importance():
+    """Get feature importance rankings from the trained model"""
+    if ml_analyzer is None:
+        raise HTTPException(status_code=503, detail="ML analyzer not available")
+    
+    try:
+        importance = ml_analyzer.get_feature_importance()
+        
+        if not importance:
+            raise HTTPException(status_code=400, detail="Model not available for analysis")
+        
+        return {
+            'feature_importance': importance,
+            'total_features': len(importance),
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/ml/analyze-features")
+async def analyze_features(request: FeatureAnalysisRequest):
+    """
+    Perform advanced feature engineering analysis on health records
+    Returns feature importance and risk factor breakdown
+    """
+    if ml_analyzer is None:
+        raise HTTPException(status_code=503, detail="ML analyzer not available")
+    
+    try:
+        temporal_features = FeatureEngineering.extract_temporal_features(request.health_records)
+        vital_trends = FeatureEngineering.extract_vital_trends(request.health_records)
+        nepal_factors = FeatureEngineering.extract_nepal_risk_factors(request.health_records)
+        
+        return {
+            'temporal_features': temporal_features,
+            'vital_trends': vital_trends,
+            'nepal_risk_factors': nepal_factors,
+            'summary': {
+                'total_records': len(request.health_records),
+                'analysis_timestamp': datetime.now().isoformat(),
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/ml/predict-confidence")
+async def predict_with_confidence(request: FeatureAnalysisRequest):
+    """
+    Make prediction with detailed confidence metrics and decision boundaries
+    """
+    if ml_analyzer is None or not risk_assessment.is_trained:
+        raise HTTPException(status_code=503, detail="Model not available")
+    
+    try:
+        from risk_assessment import PregnancyRiskAssessment
+        
+        # Prepare features
+        pra = PregnancyRiskAssessment()
+        features = pra._prepare_features(
+            request.health_records,
+            request.user_age,
+            request.weeks_pregnant
+        )
+        
+        if features is None:
+            raise HTTPException(status_code=400, detail="Insufficient health data")
+        
+        result = ml_analyzer.predict_with_confidence(features)
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/ml/model-health")
+async def check_model_health():
+    """
+    Check model health and readiness for predictions
+    Returns: { is_trained, model_type, confidence_level, warnings }
+    """
+    try:
+        warnings = []
+        
+        if not risk_assessment.is_trained:
+            warnings.append("ML model not loaded - using rule-based predictions")
+        
+        if users_collection is None:
+            warnings.append("Database offline - cannot retrain model")
+        
+        return {
+            'is_trained': risk_assessment.is_trained,
+            'model_type': 'RandomForest' if risk_assessment.is_trained else 'RuleBased',
+            'prediction_mode': 'ml' if risk_assessment.is_trained else 'fallback',
+            'warnings': warnings,
+            'timestamp': datetime.now().isoformat(),
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
  
+
  
 @app.post("/api/saved-articles")
 async def save_article(article: SavedArticle):

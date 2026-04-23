@@ -3,7 +3,8 @@ import numpy as np
 from datetime import datetime
 import pickle
 import os
- 
+from scipy import stats
+
 # ── Must match FEATURE_COLUMNS in the Jupyter notebook exactly ───────────────
 FEATURE_COLUMNS = [
     'weight_kg',
@@ -15,9 +16,12 @@ FEATURE_COLUMNS = [
     'days_between_visits',
     'avg_systolic',
     'avg_diastolic',
-    'blood_sugar',        # NEW — gestational diabetes indicator
-    'haemoglobin',        # NEW — anaemia (major Nepal-specific risk factor)
-    'prev_complications', # NEW — previous obstetric complications flag
+    'blood_sugar',        # Gestational diabetes indicator
+    'haemoglobin',        # Anaemia (major Nepal-specific risk factor)
+    'prev_complications', # Previous obstetric complications flag
+    'bp_variability',     # NEW — BP volatility indicator
+    'weight_trajectory',  # NEW — weight gain trend
+    'visit_adherence',    # NEW — appointment compliance score
 ]
  
  
@@ -52,28 +56,26 @@ class PregnancyRiskAssessment:
     # ─────────────────────────────────────────────────────────────────────────
     def _prepare_features(self, health_records, user_age, weeks_pregnant):
         """
-        Convert health records from MongoDB into the 12-feature vector
-        that matches the Jupyter notebook training format.
- 
-        New fields (blood_sugar, haemoglobin, prev_complications) are read
-        from health records if present, otherwise safe Nepal-population
-        defaults are used.
+        Convert health records from MongoDB into the 15-feature vector
+        with advanced feature engineering for better ML predictions.
+
+        Includes trend analysis, anomaly detection, and Nepal-specific factors.
         """
         if not health_records:
             return None
- 
+
         records = sorted(health_records, key=lambda r: r.get('date', ''))
         latest  = records[-1]
         first   = records[0]
- 
+
         # ── Core features (same as before) ───────────────────────────────────
         weight_kg    = float(latest.get('weight', 52.0))
         systolic_bp  = float(latest.get('systolic', 115))
         diastolic_bp = float(latest.get('diastolic', 75))
- 
+
         first_weight   = float(first.get('weight', weight_kg))
         weight_gain_kg = round(weight_kg - first_weight, 1)
- 
+
         days_between_visits = 14  # safe default
         if len(records) >= 2:
             try:
@@ -82,17 +84,57 @@ class PregnancyRiskAssessment:
                 days_between_visits = max(1, (d2 - d1).days)
             except Exception:
                 pass
- 
+
         avg_systolic  = float(np.mean([r.get('systolic',  115) for r in records]))
         avg_diastolic = float(np.mean([r.get('diastolic',  75) for r in records]))
- 
+
         # ── Nepal-specific features ───────────────────────────────────────────
-        # If the user has entered these in HealthTracker, use them.
-        # Otherwise use Nepal population mean as a safe neutral default.
-        blood_sugar       = float(latest.get('blood_sugar', 4.9))     # mmol/L — Nepal mean ~4.9
-        haemoglobin       = float(latest.get('haemoglobin', 11.2))    # g/dL   — rural Nepal mean
-        prev_complications = int(latest.get('prev_complications', 0)) # 0 or 1
- 
+        blood_sugar       = float(latest.get('blood_sugar', 4.9))
+        haemoglobin       = float(latest.get('haemoglobin', 11.2))
+        prev_complications = int(latest.get('prev_complications', 0))
+
+        # ── ADVANCED FEATURES (Feature Engineering) ──────────────────────────
+        # 1. BP Variability Score (lower is better)
+        systolic_readings = np.array([r.get('systolic', 115) for r in records])
+        bp_variability = float(np.std(systolic_readings)) if len(systolic_readings) > 1 else 0.0
+
+        # 2. Weight Trajectory (trend direction and slope)
+        if len(records) >= 3:
+            dates_for_weight = []
+            weights_for_trend = []
+            for r in records[-5:]:
+                try:
+                    d = datetime.strptime(r.get('date', ''), '%Y-%m-%d')
+                    dates_for_weight.append(d.timestamp())
+                    weights_for_trend.append(float(r.get('weight', 52.0)))
+                except:
+                    pass
+            if len(dates_for_weight) >= 2:
+                slope, intercept, r_value, p_value, std_err = stats.linregress(dates_for_weight, weights_for_trend)
+                weight_trajectory = float(abs(slope) * 86400)  # Convert to per-day change
+            else:
+                weight_trajectory = 0.0
+        else:
+            weight_trajectory = 0.0
+
+        # 3. Visit Adherence Score (how consistent with appointments)
+        if len(records) >= 2:
+            date_gaps = []
+            for i in range(len(records) - 1):
+                try:
+                    d1 = datetime.strptime(records[i].get('date', ''), '%Y-%m-%d')
+                    d2 = datetime.strptime(records[i+1].get('date', ''), '%Y-%m-%d')
+                    date_gaps.append((d2 - d1).days)
+                except:
+                    pass
+            if date_gaps:
+                expected_gap = 14  # 2 weeks is expected in pregnancy
+                adherence_score = float(np.mean([min(abs(g - expected_gap), 30) for g in date_gaps]))
+            else:
+                adherence_score = 0.0
+        else:
+            adherence_score = 0.0
+
         return [
             weight_kg,
             systolic_bp,
@@ -106,8 +148,10 @@ class PregnancyRiskAssessment:
             blood_sugar,
             haemoglobin,
             float(prev_complications),
-        ]
- 
+            bp_variability,           # Advanced: BP volatility
+            weight_trajectory,        # Advanced: weight trend
+            adherence_score,
+        ]          # Advanced: visit consistency
     # ─────────────────────────────────────────────────────────────────────────
     def calculate_risk(self, health_records, user_age, weeks_pregnant):
         """
@@ -132,33 +176,55 @@ class PregnancyRiskAssessment:
  
     # ─────────────────────────────────────────────────────────────────────────
     def _predict_ml(self, health_records, user_age, weeks_pregnant):
-        """Use the trained Random Forest model."""
+        """Use the trained Random Forest model with enhanced confidence metrics."""
         features = self._prepare_features(health_records, user_age, weeks_pregnant)
         if features is None:
             return self._predict_rules(health_records, user_age, weeks_pregnant)
- 
+
         try:
             pred_num   = self.model.predict([features])[0]
             proba      = self.model.predict_proba([features])[0]
             risk_level = self.encoder.inverse_transform([pred_num])[0]
             confidence = round(float(max(proba)) * 100)
- 
+
             class_probs = {
                 cls: round(float(p) * 100)
                 for cls, p in zip(self.encoder.classes_, proba)
             }
- 
+
+            # Analyze feature contributions
+            feature_importance = self._get_feature_impact(features, risk_level)
+
             return {
                 'risk_level':      risk_level,
                 'score':           confidence,
                 'factors':         class_probs,
+                'feature_impact':  feature_importance,
                 'recommendations': self._recommendations(risk_level, health_records),
                 'model_used':      'ml',
+                'samples_in_model': len(health_records),
             }
         except Exception as e:
             print(f"ML error: {e} — falling back to rules.")
             return self._predict_rules(health_records, user_age, weeks_pregnant)
- 
+
+    def _get_feature_impact(self, features, risk_level):
+        """Analyze which factors have the biggest impact on the prediction."""
+        if not self.model or not hasattr(self.model, 'feature_importances_'):
+            return {}
+
+        importances = self.model.feature_importances_
+        feature_names = FEATURE_COLUMNS
+        
+        impact = {}
+        for name, importance, value in zip(feature_names, importances, features):
+            impact[name] = {
+                'importance': round(float(importance) * 100, 2),
+                'value': round(float(value), 2)
+            }
+
+        # Sort by importance
+        return dict(sorted(impact.items(), key=lambda x: x[1]['importance'], reverse=True)[:5])
     # ─────────────────────────────────────────────────────────────────────────
     def _predict_rules(self, health_records, user_age, weeks_pregnant):
         """

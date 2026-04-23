@@ -11,7 +11,7 @@ export default function RiskAssessment({ user, language }) {
   const text = {
     ne: {
       title:         'जोखिम मूल्यांकन',
-      back:          '⬅️ फिर्ता',
+      back:          'फिर्ता',
       yourRisk:      'तपाईंको गर्भावस्था जोखिम',
       low:           'कम जोखिम',
       medium:        'मध्यम जोखिम',
@@ -28,13 +28,13 @@ export default function RiskAssessment({ user, language }) {
       recommendations: 'सिफारिसहरू',
       recalculate:   'पुनः गणना गर्नुहोस्',
       loading:       'लोड हो रहेको...',
-      mlBadge:       '🤖 ML मोडल (Random Forest)',
-      rulesBadge:    '📋 नियम-आधारित',
+      mlBadge:       'ML मोडल (Random Forest)',
+      rulesBadge:    'नियम-आधारित',
       confidence:    'आत्मविश्वास स्कोर',
     },
     en: {
       title:         'Risk Assessment',
-      back:          '⬅️ Back',
+      back:          'Back',
       yourRisk:      'Your Pregnancy Risk Level',
       low:           'Low Risk',
       medium:        'Medium Risk',
@@ -51,8 +51,8 @@ export default function RiskAssessment({ user, language }) {
       recommendations: 'Recommendations',
       recalculate:   'Recalculate',
       loading:       'Calculating risk...',
-      mlBadge:       '🤖 ML Model (Random Forest)',
-      rulesBadge:    '📋 Rule-based',
+      mlBadge:       'ML Model (Random Forest)',
+      rulesBadge:    'Rule-based',
       confidence:    'Confidence Score',
     }
   };
@@ -132,16 +132,22 @@ export default function RiskAssessment({ user, language }) {
  
   // ══════════════════════════════════════════════════════════════════════════
   return (
-    <div className="min-h-screen bg-gradient-to-b from-pink-50 to-white p-4">
- 
+    <div className="min-h-screen bg-slate-50 flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <button onClick={() => navigate('/')} className="text-2xl font-bold text-pink-600">
-          {t.back}
-        </button>
-        <h1 className="text-2xl font-bold text-gray-800">{t.title}</h1>
-        <div className="w-8" />
-      </div>
+      <header className="bg-white border-b border-slate-200">
+        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+          <button 
+            onClick={() => navigate('/')}
+            className="text-slate-600 hover:text-slate-900 font-medium text-sm transition"
+          >
+            Back
+          </button>
+          <h1 className="text-xl font-semibold text-slate-900">{t.title}</h1>
+          <div style={{ width: '40px' }}></div>
+        </div>
+      </header>
+
+      <div className="max-w-6xl mx-auto w-full px-6 py-8">
  
       {/* Loading */}
       {isLoading && (
@@ -253,6 +259,7 @@ export default function RiskAssessment({ user, language }) {
           </button>
         </div>
       )}
+      </div>
     </div>
   );
 }

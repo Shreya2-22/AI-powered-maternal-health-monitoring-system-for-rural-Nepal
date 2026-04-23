@@ -112,124 +112,107 @@ const Dashboard = ({ user, language, setLanguage, onLogout }) => {
 
   const menuItems = [
     {
-      icon: '🤖',
-      title_ne: 'च्याटबट',
-      title_en: 'Chatbot',
+      title_ne: 'संवाद सेवक',
+      title_en: 'Chat',
       desc_ne: 'स्वास्थ्य सलाहकार',
       desc_en: 'Health advisor',
       path: '/chat',
-      gradient: 'from-blue-500/20 to-cyan-500/20',
-      borderColor: 'border-blue-500/50',
-      hoverBorder: 'hover:border-blue-400'
+      color: 'blue'
     },
     {
-      icon: '📊',
       title_ne: 'स्वास्थ्य ट्र्याकर',
       title_en: 'Health Tracker',
       desc_ne: 'वजन र रक्तचाप',
-      desc_en: 'Weight & blood pressure',
+      desc_en: 'Weight & BP',
       path: '/health',
-      gradient: 'from-green-500/20 to-emerald-500/20',
-      borderColor: 'border-green-500/50',
-      hoverBorder: 'hover:border-green-400'
+      color: 'green'
     },
     {
-      icon: '📅',
       title_ne: 'नियुक्तिहरू',
       title_en: 'Appointments',
-      desc_ne: 'जाँच समय सूची',
-      desc_en: 'Checkup schedule',
+      desc_ne: 'देखदक्षता समय',
+      desc_en: 'Schedule',
       path: '/appointments',
-      gradient: 'from-purple-500/20 to-pink-500/20',
-      borderColor: 'border-purple-500/50',
-      hoverBorder: 'hover:border-purple-400'
+      color: 'purple'
     },
     {
-      icon: '📚',
       title_ne: 'शिक्षा',
       title_en: 'Education',
       desc_ne: 'स्वास्थ्य जानकारी',
-      desc_en: 'Health information',
+      desc_en: 'Health info',
       path: '/education',
-      gradient: 'from-amber-500/20 to-orange-500/20',
-      borderColor: 'border-amber-500/50',
-      hoverBorder: 'hover:border-amber-400'
+      color: 'amber'
     },
     {
-      icon: '⚖️',
       title_ne: 'जोखिम मूल्यांकन',
       title_en: 'Risk Assessment',
       desc_ne: 'स्वास्थ्य विश्लेषण',
       desc_en: 'Health analysis',
       path: '/risk',
-      gradient: 'from-rose-500/20 to-red-500/20',
-      borderColor: 'border-rose-500/50',
-      hoverBorder: 'hover:border-rose-400'
+      color: 'rose'
     }
   ];
 
   const tips = [
-    { icon: '💧', text_ne: t.tip1, text_en: text.en.tip1 },
-    { icon: '😴', text_ne: t.tip2, text_en: text.en.tip2 },
-    { icon: '🏃', text_ne: t.tip3, text_en: text.en.tip3 }
+    { text_ne: t.tip1, text_en: text.en.tip1 },
+    { text_ne: t.tip2, text_en: text.en.tip2 },
+    { text_ne: t.tip3, text_en: text.en.tip3 }
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-50 to-blue-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
-            {/* Logo */}
-            <div className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center text-2xl shadow-lg">
-                🤰
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-slate-900">आमा सुरक्षा</h1>
-                <p className="text-xs text-slate-500">Maternal Health Companion</p>
-              </div>
+      <header className="bg-white border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+          {/* Logo */}
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-teal-600 to-teal-700 flex items-center justify-center text-white font-bold text-sm shadow-md">
+              AS
             </div>
+            <div>
+              <h1 className="text-base font-semibold text-slate-900 tracking-tight">AamaSuraksha</h1>
+              <p className="text-xs text-slate-500">Maternal Health</p>
+            </div>
+          </div>
 
-            {/* Right Actions */}
-            <div className="flex gap-3 items-center">
-              <button
-                onClick={() => setLanguage(language === 'en' ? 'ne' : 'en')}
-                className="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold transition-colors border border-slate-300"
-              >
-                {language === 'en' ? '🇳🇵 नेपाली' : '🇬🇧 English'}
-              </button>
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 rounded-lg bg-red-50 hover:bg-red-100 text-red-700 font-semibold transition-colors border border-red-200"
-              >
-                {t.logout}
-              </button>
-            </div>
+          {/* Right Actions */}
+          <div className="flex gap-2 items-center">
+            <button
+              onClick={() => setLanguage(language === 'en' ? 'ne' : 'en')}
+              className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs transition-colors"
+            >
+              {language === 'en' ? 'नेपाली' : 'English'}
+            </button>
+            <button
+              onClick={handleLogout}
+              className="px-3 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-700 font-medium text-xs transition-colors"
+            >
+              {t.logout}
+            </button>
           </div>
         </div>
         {/* Logout Confirmation Dialog */}
         {showLogoutConfirm && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-sm">
-              <p className="text-lg font-bold text-slate-900 mb-2">
-                {language === 'ne' ? 'लग आउट गर्न निश्चित हुनुहुन्छ?' : 'Are you sure you want to logout?'}
+          <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-xl shadow-lg p-6 max-w-sm border border-slate-200">
+              <p className="text-lg font-semibold text-slate-900 mb-1">
+                {language === 'ne' ? 'लग आउट गर्न निश्चित हुनुहुन्छ?' : 'Confirm Logout'}
               </p>
               <p className="text-sm text-slate-600 mb-6">
-                {language === 'ne' ? 'तपाईंको सब डेटा सुरक्षित रहनेछ।' : 'All your data will be saved.'}
+                {language === 'ne' ? 'यस कार्यको पश्चात तपाईं पुनः लगइन गर्नुपर्नेछ।' : 'You will need to login again to access your account.'}
               </p>
-              <div className="flex gap-3">
+              <div className="flex gap-2">
                 <button
                   onClick={() => setShowLogoutConfirm(false)}
-                  className="flex-1 px-4 py-2 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold transition"
+                  className="flex-1 px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-sm transition"
                 >
                   {language === 'ne' ? 'रद्द गर्नुहोस्' : 'Cancel'}
                 </button>
                 <button
                   onClick={confirmLogout}
-                  className="flex-1 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold transition"
+                  className="flex-1 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium text-sm transition"
                 >
-                  {language === 'ne' ? 'लग आउट गर्नुहोस्' : 'Logout'}
+                  {language === 'ne' ? 'लग आउट' : 'Logout'}
                 </button>
               </div>
             </div>
@@ -237,199 +220,171 @@ const Dashboard = ({ user, language, setLanguage, onLogout }) => {
         )}      </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Hero Section */}
-        <section className="mb-10">
-          <div className="bg-gradient-to-r from-teal-600 to-cyan-600 rounded-3xl shadow-xl p-8 text-white overflow-hidden relative">
-            {/* Decorative elements */}
-            <div className="absolute -right-32 -top-32 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
-            <div className="absolute -left-20 -bottom-20 w-80 h-80 bg-white/5 rounded-full blur-3xl"></div>
+      <main className="max-w-6xl mx-auto px-6 py-12">
+        {/* Welcome Section */}
+        <section className="mb-12">
+          <h2 className="text-4xl font-bold text-slate-900 mb-1">{user.name}</h2>
+          <p className="text-slate-600">{t.pregnancyJourney}</p>
+        </section>
 
-            <div className="relative z-10">
-              <div className="flex justify-between items-start mb-8">
-                <div>
-                  <p className="text-teal-100 font-semibold text-lg mb-2">{t.welcome},</p>
-                  <h2 className="text-5xl font-black mb-2">{user.name} 🤰</h2>
-                  <p className="text-teal-50 text-lg">{t.pregnancyJourney}</p>
-                </div>
-                <div className="text-7xl opacity-30">🤰</div>
+        {/* Progress Cards */}
+        <section className="mb-12">
+          <div className="grid grid-cols-3 gap-6">
+            <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition">
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Weeks Complete</p>
+              <p className="text-4xl font-bold text-teal-600 mb-2">{weeksProgress}</p>
+              <div className="w-full h-1 bg-slate-200 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-teal-600 transition-all duration-500"
+                  style={{ width: `${(weeksProgress / 40) * 100}%` }}
+                ></div>
               </div>
-
-              {/* Stats Grid */}
-              <div className="grid grid-cols-3 gap-4">
-                <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20">
-                  <p className="text-teal-100 text-sm font-semibold mb-1">{t.weekComplete}</p>
-                  <p className="text-4xl font-bold">{weeksProgress}</p>
-                  <p className="text-teal-50 text-xs mt-1">/ 40 weeks</p>
-                </div>
-                <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20">
-                  <p className="text-teal-100 text-sm font-semibold mb-1">{t.daysRemaining}</p>
-                  <p className="text-4xl font-bold">{daysLeft}</p>
-                  <p className="text-teal-50 text-xs mt-1">days</p>
-                </div>
-                <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20">
-                  <p className="text-teal-100 text-sm font-semibold mb-1">{t.pregnancyProgress}</p>
-                  <p className="text-4xl font-bold">{Math.round(percentComplete)}%</p>
-                  <p className="text-teal-50 text-xs mt-1">complete</p>
-                </div>
-              </div>
-
-              {/* Health Summary Stats */}
-              <div className="grid grid-cols-3 gap-4 mt-6">
-                {(() => {
-                  const health = getHealthSummary();
-                  return (
-                    <>
-                      <div className="bg-blue-500/20 backdrop-blur-md rounded-xl p-4 border border-blue-300/30">
-                        <p className="text-blue-100 text-sm font-semibold mb-1">{language === 'ne' ? 'स्वास्थ्य रेकर्ड' : 'Health Records'}</p>
-                        <p className="text-3xl font-bold">{health.count}</p>
-                        <p className="text-blue-50 text-xs mt-1">{language === 'ne' ? 'दर्ता किए गएे' : 'logged'}</p>
-                      </div>
-                      <div className="bg-amber-500/20 backdrop-blur-md rounded-xl p-4 border border-amber-300/30">
-                        <p className="text-amber-100 text-sm font-semibold mb-1">{language === 'ne' ? 'तजुरा वजन' : 'Latest Weight'}</p>
-                        <p className="text-3xl font-bold">{health.latestWeight || '--'}</p>
-                        <p className="text-amber-50 text-xs mt-1">kg</p>
-                      </div>
-                      <div className="bg-rose-500/20 backdrop-blur-md rounded-xl p-4 border border-rose-300/30">
-                        <p className="text-rose-100 text-sm font-semibold mb-1">{language === 'ne' ? 'रक्तचाप' : 'Blood Pressure'}</p>
-                        <p className="text-3xl font-bold">{health.latestBP || '--'}</p>
-                        <p className="text-rose-50 text-xs mt-1">mmHg</p>
-                      </div>
-                    </>
-                  );
-                })()}
-              </div>
-
-              {/* Progress Bar */}
-              <div className="mt-6">
-                <div className="w-full h-3 bg-white/20 rounded-full overflow-hidden backdrop-blur-md">
-                  <div
-                    className="h-full bg-gradient-to-r from-white to-teal-100 transition-all duration-500 shadow-lg"
-                    style={{ width: `${percentComplete}%` }}
-                  ></div>
-                </div>
-              </div>
+              <p className="text-xs text-slate-500 mt-2">of 40 weeks</p>
             </div>
+
+            <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition">
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Days Remaining</p>
+              <p className="text-4xl font-bold text-blue-600 mb-2">{daysLeft}</p>
+              <div className="w-full h-1 bg-slate-200 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-blue-600 transition-all duration-500"
+                  style={{ width: `${Math.max(0, Math.min(100, (daysLeft / 280) * 100))}%` }}
+                ></div>
+              </div>
+              <p className="text-xs text-slate-500 mt-2">until due date</p>
+            </div>
+
+            <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition">
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Progress</p>
+              <p className="text-4xl font-bold text-indigo-600 mb-2">{Math.round(percentComplete)}%</p>
+              <div className="w-full h-1 bg-slate-200 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-indigo-600 transition-all duration-500"
+                  style={{ width: `${percentComplete}%` }}
+                ></div>
+              </div>
+              <p className="text-xs text-slate-500 mt-2">complete</p>
+            </div>
+          </div>
+        </section>
+
+        {/* Health Summary */}
+        <section className="mb-12">
+          <h3 className="text-lg font-semibold text-slate-900 mb-4">Your Health Records</h3>
+          <div className="grid grid-cols-3 gap-6">
+            {(() => {
+              const health = getHealthSummary();
+              return (
+                <>
+                  <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition">
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Records Logged</p>
+                    <p className="text-3xl font-bold text-teal-600">{health.count}</p>
+                  </div>
+                  <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition">
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Latest Weight</p>
+                    <p className="text-3xl font-bold text-amber-600">{health.latestWeight || '--'} <span className="text-sm text-slate-500 font-normal">kg</span></p>
+                  </div>
+                  <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition">
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Blood Pressure</p>
+                    <p className="text-3xl font-bold text-rose-600">{health.latestBP || '--'}</p>
+                  </div>
+                </>
+              );
+            })()}
           </div>
         </section>
 
         {/* Emergency Alert */}
-        <section className="mb-10">
+        <section className="mb-12">
           <button
             onClick={() => navigate('/emergency')}
-            className="w-full relative group overflow-hidden"
+            className="w-full bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 rounded-xl shadow-md p-6 text-white transition group"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-red-600 to-rose-600 group-hover:from-red-700 group-hover:to-rose-700 rounded-2xl shadow-lg transition-all duration-300 transform group-hover:scale-105"></div>
-            <div className="relative px-8 py-6 flex items-center justify-center gap-4">
-              <span className="text-4xl animate-pulse group-hover:animate-bounce">🚨</span>
-              <div className="text-left">
-                <p className="text-white font-bold text-xl">{t.emergency}</p>
-                <p className="text-red-100 text-sm">{t.emergencyDesc}</p>
-              </div>
-              <span className="ml-auto text-white text-2xl group-hover:translate-x-2 transition-transform">→</span>
-            </div>
+            <p className="font-semibold text-lg">Emergency Assessment</p>
+            <p className="text-red-100 text-sm mt-1">Quick symptom evaluation for urgent care</p>
           </button>
         </section>
-
         {/* Quick Tips */}
-        <section className="mb-10">
-          <h3 className="text-2xl font-bold text-slate-900 mb-4">{t.quickTips}</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {tips.map((tip, idx) => (
-              <div
-                key={idx}
-                className="bg-white rounded-xl p-4 shadow-sm border border-slate-200 hover:shadow-lg hover:border-teal-300 transition-all"
-              >
-                <div className="flex items-start gap-3">
-                  <span className="text-3xl">{tip.icon}</span>
-                  <p className="text-slate-700 font-semibold text-sm">
+        <section className="mb-12">
+          <h3 className="text-lg font-semibold text-slate-900 mb-4">Helpful Tips</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {tips.map((tip, idx) => {
+              const colors = [
+                { bg: 'bg-teal-50', border: 'border-teal-200', text: 'text-teal-900' },
+                { bg: 'bg-cyan-50', border: 'border-cyan-200', text: 'text-cyan-900' },
+                { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-900' }
+              ];
+              const color = colors[idx];
+              return (
+                <div
+                  key={idx}
+                  className={`${color.bg} ${color.border} rounded-xl p-5 border shadow-sm hover:shadow-md transition`}
+                >
+                  <p className={`text-sm leading-relaxed ${color.text}`}>
                     {language === 'ne' ? tip.text_ne : tip.text_en}
                   </p>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
 
-        {/* Main Menu Grid */}
         <section className="mb-12">
-          <h3 className="text-2xl font-bold text-slate-900 mb-6">
-            {language === 'ne' ? 'मुख्य विशेषताएं' : 'Main Features'}
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5">
-            {menuItems.map((item, idx) => (
-              <button
-                key={idx}
-                onClick={() => navigate(item.path)}
-                onMouseEnter={() => setHoveredCard(idx)}
-                onMouseLeave={() => setHoveredCard(null)}
-                className={`relative group rounded-2xl border-2 transition-all duration-300 overflow-hidden ${item.borderColor} ${item.hoverBorder} hover:shadow-xl transform hover:-translate-y-1`}
-              >
-                {/* Background gradient */}
-                <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient}`}></div>
-                
-                {/* Hover effect */}
-                <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-
-                {/* Content */}
-                <div className="relative p-6 h-full flex flex-col items-center justify-center text-center">
-                  <div className="text-5xl mb-3 group-hover:scale-125 group-hover:-translate-y-1 transition-all duration-300">
-                    {item.icon}
-                  </div>
-                  <h4 className="text-lg font-bold text-slate-900 mb-1">
+          <h3 className="text-lg font-semibold text-slate-900 mb-4">Features</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            {menuItems.map((item, idx) => {
+              const colorMap = {
+                blue: { bg: 'bg-blue-50', border: 'border-blue-200', hover: 'hover:bg-blue-100', text: 'text-blue-900' },
+                green: { bg: 'bg-green-50', border: 'border-green-200', hover: 'hover:bg-green-100', text: 'text-green-900' },
+                purple: { bg: 'bg-purple-50', border: 'border-purple-200', hover: 'hover:bg-purple-100', text: 'text-purple-900' },
+                amber: { bg: 'bg-amber-50', border: 'border-amber-200', hover: 'hover:bg-amber-100', text: 'text-amber-900' },
+                rose: { bg: 'bg-rose-50', border: 'border-rose-200', hover: 'hover:bg-rose-100', text: 'text-rose-900' }
+              };
+              const color = colorMap[item.color];
+              return (
+                <button
+                  key={idx}
+                  onClick={() => navigate(item.path)}
+                  className={`p-4 rounded-lg border ${color.bg} ${color.border} ${color.hover} transition shadow-sm hover:shadow-md`}
+                >
+                  <h4 className={`text-sm font-semibold ${color.text} mb-1`}>
                     {language === 'ne' ? item.title_ne : item.title_en}
                   </h4>
-                  <p className="text-sm text-slate-600">
+                  <p className="text-xs text-slate-600">
                     {language === 'ne' ? item.desc_ne : item.desc_en}
                   </p>
-                  <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <p className="text-xs font-semibold text-teal-600">
-                      {language === 'ne' ? '↓ क्लिक करें' : '↓ Click'}
-                    </p>
-                  </div>
-                </div>
-              </button>
-            ))}
+                </button>
+              );
+            })}
           </div>
         </section>
 
-        {/* Health Tips Section */}
-        <section className="mb-12 bg-gradient-to-r from-teal-50 to-cyan-50 rounded-3xl p-8 border border-teal-200">
-          <h3 className="text-2xl font-bold text-slate-900 mb-6">
-            {language === 'ne' ? 'स्वास्थ्य मार्गदर्शन' : 'Health Guidance'}
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white rounded-xl p-5 border border-teal-200 shadow-sm">
-              <h4 className="font-bold text-slate-900 mb-3">
-                {language === 'ne' ? 'पोषण' : 'Nutrition'}
-              </h4>
-              <ul className="space-y-2 text-slate-700 text-sm">
-                <li>✓ {language === 'ne' ? 'हरे पत्तेदार सब्जियां खान' : 'Eat leafy vegetables daily'}</li>
-                <li>✓ {language === 'ne' ? 'कैल्शियम युक्त खाद्य पदार्थ' : 'Calcium-rich foods'}</li>
-                <li>✓ {language === 'ne' ? 'प्रोटीन और आयरन' : 'Protein & iron sources'}</li>
+        {/* Health Guidance */}
+        <section className="mb-12 bg-white rounded-xl p-8 border border-slate-200 shadow-sm">
+          <h3 className="text-lg font-semibold text-slate-900 mb-6">Health Guidance</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div>
+              <h4 className="font-semibold text-teal-900 mb-4">Nutrition</h4>
+              <ul className="space-y-3 text-sm text-slate-700">
+                <li className="flex items-start gap-3"><span className="text-teal-600 font-semibold mt-0.5">•</span> Eat leafy vegetables daily</li>
+                <li className="flex items-start gap-3"><span className="text-teal-600 font-semibold mt-0.5">•</span> Include calcium-rich foods</li>
+                <li className="flex items-start gap-3"><span className="text-teal-600 font-semibold mt-0.5">•</span> Get protein and iron</li>
               </ul>
             </div>
-            <div className="bg-white rounded-xl p-5 border border-cyan-200 shadow-sm">
-              <h4 className="font-bold text-slate-900 mb-3">
-                {language === 'ne' ? 'व्यायाम' : 'Exercise'}
-              </h4>
-              <ul className="space-y-2 text-slate-700 text-sm">
-                <li>✓ {language === 'ne' ? 'हल्का व्यायाम 30 मिनट' : '30 minutes light walking'}</li>
-                <li>✓ {language === 'ne' ? 'योग और स्ट्रेचिंग' : 'Yoga & stretching'}</li>
-                <li>✓ {language === 'ne' ? 'डॉक्टर की सलाह लें' : 'Consult doctor first'}</li>
+            <div>
+              <h4 className="font-semibold text-cyan-900 mb-4">Exercise</h4>
+              <ul className="space-y-3 text-sm text-slate-700">
+                <li className="flex items-start gap-3"><span className="text-cyan-600 font-semibold mt-0.5">•</span> Light walking 30 mins</li>
+                <li className="flex items-start gap-3"><span className="text-cyan-600 font-semibold mt-0.5">•</span> Yoga and stretching</li>
+                <li className="flex items-start gap-3"><span className="text-cyan-600 font-semibold mt-0.5">•</span> Consult doctor first</li>
               </ul>
             </div>
           </div>
         </section>
 
         {/* Footer */}
-        <footer className="text-center py-8 border-t border-slate-200">
-          <p className="text-slate-600 text-sm">
-            🤰 {language === 'ne' ? 'नेपाली माताओं के लिए प्रेम और देखभाल के साथ बनाया गया' : 'Made with love and care for mothers of Nepal'}
-          </p>
-          <p className="text-slate-500 text-xs mt-2">
-            {language === 'ne' ? '⚠️ सलाहकार उपकरण, चिकित्सा निदान नहीं। हमेशा डॉक्टर से परामर्श लें।' : '⚠️ Advisory tool, not medical diagnosis. Always consult a doctor.'}
-          </p>
+        <footer className="border-t border-slate-200 pt-8 pb-4 text-center text-xs text-slate-600">
+          <p>Advisory tool for maternal health. Always consult your doctor.</p>
         </footer>
       </main>
     </div>

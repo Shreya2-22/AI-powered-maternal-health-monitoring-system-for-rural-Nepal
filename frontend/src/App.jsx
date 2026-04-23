@@ -12,7 +12,7 @@ import Login        from './components/Login.jsx';
 export const API = 'http://localhost:8001/api';
  
 function App() {
-  const [language, setLanguage]           = useState('ne');
+  const [language, setLanguage]           = useState('en');
   const [currentUser, setCurrentUser]     = useState(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showLogin, setShowLogin]         = useState(true);
@@ -178,11 +178,11 @@ const Onboarding = ({ onComplete, onSwitchToLogin, language, setLanguage }) => {
   };
 
   const validate = {
-    name:            (v) => !v.trim() ? 'नाम आवश्यक छ / Name is required' : v.trim().length < 2 ? 'कम्तिमा २ वर्ण / Min 2 chars' : '',
-    age:             (v) => !v ? 'उमेर आवश्यक छ / Age is required' : (parseInt(v) < 13 || parseInt(v) > 60) ? 'उमेर १३-६० हुनुपर्छ / Age 13-60' : '',
-    phone:           (v) => !v ? 'फोन आवश्यक छ / Phone is required' : !validateNepaliPhone(v) ? 'नेपाल फोन (९७/९८ ले शुरु) / Nepal phone (97/98, 10 digits)' : '',
-    district:        (v) => !v.trim() ? 'जिल्ला आवश्यक छ / District is required' : '',
-    weeks_pregnant:  (v) => !v ? 'हप्ता आवश्यक छ / Required' : (parseInt(v) < 1 || parseInt(v) > 42) ? 'कम्तिमा १-४२ / Must be 1-42' : '',
+    name:            (v) => !v.trim() ? 'Name is required / नाम आवश्यक छ' : v.trim().length < 2 ? 'Min 2 chars / कम्तिमा २ वर्ण' : '',
+    age:             (v) => !v ? 'Age is required / उमेर आवश्यक छ' : (parseInt(v) < 13 || parseInt(v) > 60) ? 'Age 13-60 / उमेर १३-६० हुनुपर्छ' : '',
+    phone:           (v) => !v ? 'Phone is required / फोन आवश्यक छ' : !validateNepaliPhone(v) ? 'Nepal phone (97/98, 10 digits) / नेपाल फोन (९७/९८ ले शुरु)' : '',
+    district:        (v) => !v.trim() ? 'District is required / जिल्ला आवश्यक छ' : '',
+    weeks_pregnant:  (v) => !v ? 'Required / आवश्यक छ' : (parseInt(v) < 1 || parseInt(v) > 42) ? 'Must be 1-42 / कम्तिमा १-४२' : '',
   };
 
   // Auto-calculate due_date when weeks_pregnant changes
@@ -225,7 +225,7 @@ const Onboarding = ({ onComplete, onSwitchToLogin, language, setLanguage }) => {
  
   const field = (key, label, type = 'text', placeholder = '') => (
     <div key={key}>
-      <label className="block text-sm font-semibold text-gray-700 mb-2">
+      <label className="block text-slate-700 font-medium text-xs mb-1">
         {label} <span className="text-red-500">*</span>
       </label>
       <input
@@ -234,102 +234,161 @@ const Onboarding = ({ onComplete, onSwitchToLogin, language, setLanguage }) => {
         value={formData[key]}
         onChange={e => setFormData(p => ({ ...p, [key]: e.target.value }))}
         onBlur={() => handleBlur(key)}
-        className={`w-full px-4 py-2 border-2 rounded-lg outline-none transition ${
+        className={`w-full px-3 py-2 border rounded-lg outline-none transition text-sm ${
           touched[key] && errors[key]
-            ? 'border-red-500 focus:ring-2 focus:ring-red-200'
-            : 'border-gray-300 focus:border-pink-500 focus:ring-2 focus:ring-pink-200'
-        }`}
+            ? 'border-red-500 focus:ring-1 focus:ring-red-500'
+            : 'border-slate-300 focus:border-teal-500 focus:ring-1 focus:ring-teal-500'
+        } text-slate-900 placeholder-slate-400`}
       />
-      {touched[key] && errors[key] && <p className="text-red-500 text-xs mt-1">❌ {errors[key]}</p>}
+      {touched[key] && errors[key] && <p className="text-red-500 text-xs mt-0.5">{errors[key]}</p>}
+      {touched[key] && !errors[key] && <p className="text-green-600 text-xs mt-0.5">{language === 'ne' ? 'ठीक छ' : 'Valid'}</p>}
     </div>
   );
- 
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-teal-900 to-blue-900 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="text-6xl mb-4 animate-bounce">🤰</div>
-          <h1 className="text-4xl font-bold text-white mb-2">{t.welcome}</h1>
-          <p className="text-lg text-white/90">{t.subtitle}</p>
-        </div>
- 
-        <div className="flex gap-4 mb-6">
-          {['ne','en'].map(lang => (
-            <button key={lang}
-              className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-all ${
-                language === lang
-                  ? 'bg-gradient-to-r from-teal-500 to-blue-600 text-white shadow-lg'
-                  : 'bg-white/20 text-white hover:bg-white/30'
-              }`}
-              onClick={() => setLanguage(lang)}
-            >
-              {lang === 'ne' ? `🇳🇵 ${t.nepali}` : `🇬🇧 ${t.english}`}
-            </button>
-          ))}
-        </div>
- 
-        <div className="bg-white rounded-2xl shadow-2xl p-8">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {field('name',           t.name,    'text',   t.name)}
-            {field('age',            t.age,     'number', 'e.g. 25')}
-            {field('phone',          t.phone,   'tel',    'e.g. 9841234567')}
-            {field('district',       t.district,'text',   t.district)}
-            
-            {/* Weeks Pregnant */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                {t.weeks} <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="number"
-                placeholder="e.g. 20"
-                value={formData.weeks_pregnant}
-                onChange={e => handleWeeksChange(e.target.value)}
-                onBlur={() => handleBlur('weeks_pregnant')}
-                className={`w-full px-4 py-2 border-2 rounded-lg outline-none transition ${
-                  touched.weeks_pregnant && errors.weeks_pregnant
-                    ? 'border-red-500 focus:ring-2 focus:ring-red-200'
-                    : 'border-gray-300 focus:border-pink-500 focus:ring-2 focus:ring-pink-200'
-                }`}
-              />
-              {touched.weeks_pregnant && errors.weeks_pregnant && <p className="text-red-500 text-xs mt-1">❌ {errors.weeks_pregnant}</p>}
+    <div className="min-h-screen bg-white flex flex-col">
+      {/* Language Toggle - Hover based */}
+      <div className="absolute top-8 right-8 flex gap-3 z-10">
+        <button
+          onMouseEnter={() => setLanguage('en')}
+          className={`px-3 py-1.5 text-sm font-medium transition ${
+            language === 'en'
+              ? 'text-teal-600 border-b-2 border-teal-600'
+              : 'text-slate-400 hover:text-slate-600'
+          }`}
+        >
+          English
+        </button>
+        <span className="text-slate-300">/</span>
+        <button
+          onMouseEnter={() => setLanguage('ne')}
+          className={`px-3 py-1.5 text-sm font-medium transition ${
+            language === 'ne'
+              ? 'text-teal-600 border-b-2 border-teal-600'
+              : 'text-slate-400 hover:text-slate-600'
+          }`}
+        >
+          नेपाली
+        </button>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 flex items-center justify-center p-4 py-6">
+        <div className="w-full max-w-2xl">
+          {/* Header Section */}
+          <div className="text-center mb-6">
+            {/* Logo */}
+            <div className="inline-flex items-center justify-center mb-3">
+              <svg width="48" height="48" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+                {/* Heart shape representing care */}
+                <path d="M28 48C28 48 8 35 8 22C8 15.373 13.373 10 20 10C23.5 10 26.5 11.5 28 14C29.5 11.5 32.5 10 36 10C42.627 10 48 15.373 48 22C48 35 28 48 28 48Z" fill="#0F766E"/>
+                {/* Protective circle */}
+                <circle cx="28" cy="28" r="26" stroke="#0F766E" strokeWidth="1.5" fill="none" opacity="0.3"/>
+              </svg>
             </div>
-            
-            {/* Due Date (Auto-calculated) */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                {t.dueDate} <span className="text-green-600 text-xs">(auto-calculated)</span>
-              </label>
-              <input
-                type="date"
-                value={formData.due_date}
-                disabled
-                className="w-full px-4 py-2 border-2 border-green-300 rounded-lg bg-green-50 text-gray-600"
-              />
-              <p className="text-xs text-green-600 mt-1">✅ Automatically calculated from weeks</p>
+
+            {/* Branding */}
+            <h1 className="text-2xl font-bold text-slate-900 mb-1">AamaSuraksha</h1>
+            <p className="text-slate-500 text-xs">{t.subtitle}</p>
+          </div>
+
+          {/* Registration Card */}
+          <div className="bg-white rounded-xl border border-slate-200 p-6">
+            {/* Header */}
+            <div className="mb-4">
+              <h2 className="text-lg font-semibold text-slate-900">{t.welcome}</h2>
             </div>
- 
-            <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded mt-6">
-              <p className="text-sm text-gray-700">{t.disclaimer}</p>
+
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="space-y-3">
+              {/* Grid for Personal Info */}
+              <div className="grid grid-cols-2 gap-3">
+                {field('name', t.name, 'text', t.name)}
+                {field('age', t.age, 'number', 'e.g. 25')}
+              </div>
+
+              {/* Phone & District */}
+              <div className="grid grid-cols-2 gap-3">
+                {field('phone', t.phone, 'tel', 'e.g. 9841234567')}
+                {field('district', t.district, 'text', t.district)}
+              </div>
+
+              {/* Pregnancy Info */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-700 font-medium text-xs mb-1">
+                    {t.weeks} <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    placeholder="e.g. 20"
+                    value={formData.weeks_pregnant}
+                    onChange={e => handleWeeksChange(e.target.value)}
+                    onBlur={() => handleBlur('weeks_pregnant')}
+                    className={`w-full px-3 py-2 border rounded-lg outline-none transition text-sm ${
+                      touched.weeks_pregnant && errors.weeks_pregnant
+                        ? 'border-red-500 focus:ring-1 focus:ring-red-500'
+                        : 'border-slate-300 focus:border-teal-500 focus:ring-1 focus:ring-teal-500'
+                    } text-slate-900 placeholder-slate-400`}
+                  />
+                  {touched.weeks_pregnant && errors.weeks_pregnant && <p className="text-red-500 text-xs mt-0.5">{errors.weeks_pregnant}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-slate-700 font-medium text-xs mb-1">
+                    {t.dueDate}
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.due_date}
+                    disabled
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-slate-50 text-slate-600 font-medium text-sm"
+                  />
+                  <p className="text-xs text-slate-500 mt-0.5">{language === 'ne' ? 'स्वतः गणना' : 'Auto-calculated'}</p>
+                </div>
+              </div>
+
+              {/* Disclaimer */}
+              <div className="bg-slate-50 border border-slate-200 p-3 rounded-lg mt-3">
+                <p className="text-xs text-slate-700">{t.disclaimer}</p>
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full mt-4 py-2 bg-teal-600 hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg transition text-sm"
+              >
+                {isSubmitting ? (language === 'ne' ? 'प्रक्रिया गरिँदै...' : 'Processing...') : t.getStarted}
+              </button>
+            </form>
+
+            {/* Already have account */}
+            <div className="text-center mt-4 pt-4 border-t border-slate-200">
+              <p className="text-slate-600 text-xs">
+                {t.haveAccount}{' '}
+                <button
+                  onClick={onSwitchToLogin}
+                  className="text-teal-600 hover:text-teal-700 font-medium transition"
+                >
+                  {t.backToLogin}
+                </button>
+              </p>
             </div>
- 
-            <button type="submit" disabled={isSubmitting}
-              className="w-full mt-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold rounded-lg hover:shadow-lg hover:-translate-y-0.5 transition-all disabled:opacity-50"
-            >
-              {isSubmitting ? '⏳ Processing...' : `${t.getStarted} →`}
-            </button>
-          </form>
+          </div>
+
+          {/* Footer Disclaimer */}
+          <div className="text-center mt-4 px-4">
+            <p className="text-slate-500 text-xs leading-relaxed">
+              {language === 'ne' ? 'यो सेवा गर्भवती महिलाहरूलाई शैक्षिक सहायता प्रदान गर्दछ।' : 'This service provides educational support for pregnant women.'}
+            </p>
+          </div>
         </div>
- 
-        <p className="text-center text-white/80 mt-6 text-sm">Made with ❤️ for the mothers of Nepal</p>
-        <div className="flex gap-2 justify-center mt-4">
-          <p className="text-white text-sm font-semibold">{t.haveAccount}</p>
-          <button onClick={onSwitchToLogin}
-            className="text-white font-bold underline hover:text-yellow-200 transition-colors text-sm"
-          >
-            {t.backToLogin}
-          </button>
-        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="text-center py-4 text-slate-500 text-xs">
+        <p>© 2024 AamaSuraksha</p>
       </div>
     </div>
   );

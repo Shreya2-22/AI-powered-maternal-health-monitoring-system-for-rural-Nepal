@@ -30,7 +30,7 @@ export default function Emergency({ language }) {
   const text = {
     ne: {
       title: 'आपातकालीन मूल्यांकन',
-      back: '⬅️ फिर्ता',
+      back: 'फिर्ता',
       instruction: 'आप अनुभव गरेको लक्षणहरू चयन गर्नुहोस्:',
       checkBtn: 'मूल्यांकन गर्नुहोस्',
       emergency: '🚨 आपातकालीन - तुरुन्त अस्पताल जानुहोस्!',
@@ -40,7 +40,7 @@ export default function Emergency({ language }) {
     },
     en: {
       title: 'Emergency Assessment',
-      back: '⬅️ Back',
+      back: 'Back',
       instruction: 'Select the symptoms you are experiencing:',
       checkBtn: 'Assess Risk',
       emergency: '🚨 EMERGENCY - Go to hospital immediately!',
@@ -95,19 +95,20 @@ export default function Emergency({ language }) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <div className="bg-linear-to-r from-pink-500 to-purple-500 text-white p-4 shadow-lg">
-        <div className="max-w-4xl mx-auto flex justify-between items-center">
+    <div className="min-h-screen bg-slate-50 flex flex-col">
+      {/* Header */}
+      <header className="bg-white border-b border-slate-200">
+        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <button 
             onClick={() => navigate('/')}
-            className="bg-white/20 hover:bg-white/30 rounded-lg px-3 py-2 font-semibold transition-all"
+            className="text-slate-600 hover:text-slate-900 font-medium text-sm transition"
           >
-            {t.back}
+            Back
           </button>
-          <h1 className="text-2xl font-bold">{t.title}</h1>
-          <div style={{ width: '60px' }}></div>
+          <h1 className="text-xl font-semibold text-slate-900">{t.title}</h1>
+          <div style={{ width: '40px' }}></div>
         </div>
-      </div>
+      </header>
 
       <div className="max-w-4xl mx-auto w-full p-6">
         <p className="text-gray-600 mb-6 text-base">

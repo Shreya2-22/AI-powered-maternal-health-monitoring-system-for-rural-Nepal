@@ -342,45 +342,44 @@ export default function ChatBot({ user, language }) {
   const t = text[language];
 
   return (
-    <div className="min-h-screen flex flex-col bg-linear-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="min-h-screen flex flex-col bg-slate-50">
       {/* Header */}
-      <div className="bg-linear-to-r from-teal-700 via-blue-700 to-slate-800 text-white p-6 shadow-lg">
-        <div className="flex justify-between items-center max-w-4xl mx-auto w-full">
+      <header className="bg-white border-b border-slate-200">
+        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <button 
             onClick={() => navigate('/')}
-            className="bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-lg px-4 py-2 font-semibold transition-all border border-white/20"
+            className="text-slate-600 hover:text-slate-900 font-medium text-sm transition"
           >
-            {t.back}
+            Back
           </button>
-          <h1 className="text-3xl font-bold">{t.title}</h1>
+          <h1 className="text-xl font-semibold text-slate-900">{t.title}</h1>
           <button 
             onClick={handleClearChat}
-            className="bg-red-900/40 hover:bg-red-900/60 rounded-lg px-4 py-2 font-semibold transition-all border border-red-600/50"
+            className="text-red-600 hover:text-red-700 font-medium text-sm transition"
           >
             {t.clearBtn}
           </button>
         </div>
-      </div>
+      </header>
 
       {/* Messages Area */}
-      <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full p-6">
-        <div className="flex-1 overflow-y-auto bg-slate-800/50 rounded-2xl shadow-lg p-6 mb-6 space-y-4 border border-slate-700/50 backdrop-blur-sm">
+      <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full px-6 py-8">
+        <div className="flex-1 overflow-y-auto bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6 space-y-4">
           {messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-teal-200/60 py-12">
-              <div className="text-6xl mb-4">🤖</div>
-              <p className="text-center text-lg">{t.welcome}</p>
+            <div className="flex flex-col items-center justify-center h-full text-slate-500 py-12">
+              <p className="text-center text-base leading-relaxed">{t.welcome}</p>
             </div>
           ) : (
             messages.map(message => (
               <div key={message.id} className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-xs px-5 py-3 rounded-2xl ${
+                <div className={`max-w-xs px-4 py-3 rounded-lg ${
                   message.sender === 'user'
-                    ? 'bg-linear-to-r from-teal-600 to-cyan-600 text-white shadow-lg'
-                    : 'bg-slate-700/70 text-teal-100 border border-slate-600/50'
+                    ? 'bg-teal-600 text-white shadow-sm'
+                    : 'bg-slate-100 text-slate-900 border border-slate-200'
                 }`}>
                   <p className="text-sm leading-relaxed">{message.text}</p>
                   <span className={`text-xs mt-2 block ${
-                    message.sender === 'user' ? 'text-teal-100/70' : 'text-teal-300/60'
+                    message.sender === 'user' ? 'text-teal-100/80' : 'text-slate-600'
                   }`}>{message.timestamp}</span>
                 </div>
               </div>
@@ -388,10 +387,8 @@ export default function ChatBot({ user, language }) {
           )}
           {isLoading && (
             <div className="flex justify-start">
-              <div className="bg-slate-700/70 text-teal-100 px-5 py-3 rounded-2xl border border-slate-600/50">
-                <span className="inline-block w-2 h-2 bg-teal-400 rounded-full animate-bounce mr-1"></span>
-                <span className="inline-block w-2 h-2 bg-teal-400 rounded-full animate-bounce mr-1" style={{ animationDelay: '0.2s' }}></span>
-                <span className="inline-block w-2 h-2 bg-teal-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></span>
+              <div className="bg-slate-100 text-slate-700 px-4 py-3 rounded-lg border border-slate-200 text-sm">
+                Typing...
               </div>
             </div>
           )}
@@ -406,12 +403,12 @@ export default function ChatBot({ user, language }) {
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             disabled={isLoading}
-            className="flex-1 px-5 py-3 bg-slate-700/60 border-2 border-slate-600/50 rounded-xl focus:border-teal-500 focus:ring-2 focus:ring-teal-500/30 outline-none transition text-white placeholder-teal-200/40 disabled:opacity-50 backdrop-blur-sm"
+            className="flex-1 px-4 py-2.5 bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-50 text-slate-900 placeholder-slate-500 disabled:opacity-50 transition"
           />
           <button 
             type="submit"
             disabled={!inputValue.trim() || isLoading}
-            className="px-8 py-3 bg-linear-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white font-bold rounded-xl hover:shadow-xl disabled:opacity-50 transition-all transform hover:scale-105"
+            className="px-6 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg hover:shadow-md disabled:opacity-50 transition"
           >
             {t.sendBtn}
           </button>

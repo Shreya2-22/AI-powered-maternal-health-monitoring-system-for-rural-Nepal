@@ -11,7 +11,7 @@ export default function Education({ user, language }) {
   const text = {
     ne: {
       title: 'शिक्षा',
-      back: '⬅️ फिर्ता',
+      back: 'फिर्ता',
       thisWeek: 'यस हप्ताको सलाह',
       categories: {
         nutrition: 'पोषण',
@@ -28,7 +28,7 @@ export default function Education({ user, language }) {
     },
     en: {
       title: 'Education',
-      back: '⬅️ Back',
+      back: 'Back',
       thisWeek: 'This Week\'s Tips',
       categories: {
         nutrition: 'Nutrition',
@@ -274,19 +274,20 @@ export default function Education({ user, language }) {
   const categoryArticles = articles[selectedCategory][language];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <div className="bg-linear-to-r from-green-500 to-teal-500 text-white p-4 shadow-lg">
-        <div className="max-w-4xl mx-auto flex justify-between items-center">
+    <div className="min-h-screen bg-slate-50 flex flex-col">
+      {/* Header */}
+      <header className="bg-white border-b border-slate-200">
+        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <button 
             onClick={() => navigate('/')}
-            className="bg-white/20 hover:bg-white/30 rounded-lg px-3 py-2 font-semibold transition-all"
+            className="text-slate-600 hover:text-slate-900 font-medium text-sm transition"
           >
-            {t.back}
+            Back
           </button>
-          <h1 className="text-2xl font-bold">{t.title}</h1>
-          <div style={{ width: '60px' }}></div>
+          <h1 className="text-xl font-semibold text-slate-900">{t.title}</h1>
+          <div style={{ width: '40px' }}></div>
         </div>
-      </div>
+      </header>
 
       <div className="max-w-4xl mx-auto w-full p-6">
         <div className="bg-linear-to-r from-green-100 to-teal-100 border-2 border-green-500 rounded-lg p-6 mb-6">
