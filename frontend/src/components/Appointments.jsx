@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+const API = import.meta.env.VITE_API_URL || 'http://localhost:8001/api';
+
+const isMongoId = (value) => /^[a-f0-9]{24}$/i.test(String(value || ''));
+
 export default function Appointments({ user, language }) {
   const navigate = useNavigate();
   const [appointments, setAppointments] = useState([]);
@@ -24,7 +28,7 @@ export default function Appointments({ user, language }) {
     ne: {
       title: 'नियुक्तिहरू',
       back: 'फिर्ता',
-      addAppointment: '➕ नयाँ नियुक्ति',
+      addAppointment: 'नयाँ नियुक्ति',
       doctorName: 'डाक्टरको नाम',
       clinic: 'क्लिनिक/अस्पताल',
       date: 'मिति',
@@ -69,7 +73,7 @@ export default function Appointments({ user, language }) {
     en: {
       title: 'Appointments',
       back: 'Back',
-      addAppointment: '➕ Add Appointment',
+      addAppointment: 'Add Appointment',
       doctorName: 'Doctor\'s Name',
       clinic: 'Clinic/Hospital',
       date: 'Date',
@@ -115,6 +119,18 @@ export default function Appointments({ user, language }) {
 
   const t = text[language];
 
+  const normalizeAppointment = (appointment) => ({
+    ...appointment,
+    id: appointment.id || appointment._id,
+    doctor_name: appointment.doctor_name || appointment.doctorName,
+  });
+
+  const getLocalAppointments = () => {
+    if (!user?.name) return [];
+    const saved = localStorage.getItem(`appointments_${user.name}`);
+    return saved ? JSON.parse(saved) : [];
+  };
+
   // Validation functions
   const validateDate = (date) => {
     if (!date) return t.errors.dateRequired;
@@ -157,9 +173,31 @@ export default function Appointments({ user, language }) {
   const fetchAppointments = async () => {
     setIsLoading(true);
     try {
-      const saved = localStorage.getItem(`appointments_${user.name}`);
-      if (saved) {
-        setAppointments(JSON.parse(saved));
+      const localAppointments = getLocalAppointments();
+      let remoteAppointments = [];
+
+      if (user?.id) {
+        try {
+          const response = await fetch(`${API}/appointments/${user.id}`);
+          if (response.ok) {
+            remoteAppointments = await response.json();
+          }
+        } catch {
+          remoteAppointments = [];
+        }
+      }
+
+      const merged = new Map();
+      [...remoteAppointments, ...localAppointments].forEach((appointment) => {
+        const normalized = normalizeAppointment(appointment);
+        merged.set(String(normalized.id), normalized);
+      });
+
+      const mergedAppointments = Array.from(merged.values());
+      setAppointments(mergedAppointments);
+
+      if (mergedAppointments.length > 0) {
+        localStorage.setItem(`appointments_${user.name}`, JSON.stringify(mergedAppointments));
       }
     } catch (error) {
       console.error('Error fetching appointments:', error);
@@ -174,31 +212,86 @@ export default function Appointments({ user, language }) {
 
   const saveAppointment = async (appointmentData) => {
     try {
-      const saved = localStorage.getItem(`appointments_${user.name}`);
-      let appointmentsList = saved ? JSON.parse(saved) : [];
+      const appointmentsList = getLocalAppointments();
+      let updatedAppointments = appointmentsList;
+      const payload = {
+        user_id: user?.id || user?.name,
+        date: appointmentData.date,
+        time: appointmentData.time,
+        doctor_name: appointmentData.doctor_name,
+        clinic: appointmentData.clinic,
+        reason: appointmentData.reason,
+      };
       
       if (editingId) {
-        // Update existing
-        const index = appointmentsList.findIndex(a => a.id === editingId);
-        if (index >= 0) {
-          appointmentsList[index] = {
-            ...appointmentsList[index],
-            ...appointmentData,
-            updated_at: new Date().toISOString()
-          };
+        const normalizedId = String(editingId);
+
+        if (isMongoId(normalizedId)) {
+          try {
+            const response = await fetch(`${API}/appointments/${normalizedId}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload),
+            });
+
+            if (!response.ok) {
+              throw new Error('Failed to update remote appointment');
+            }
+
+            const updatedRemote = normalizeAppointment(await response.json());
+            updatedAppointments = appointmentsList.map((appointment) =>
+              String(appointment.id) === normalizedId ? updatedRemote : appointment
+            );
+          } catch {
+            updatedAppointments = appointmentsList.map((appointment) =>
+              String(appointment.id) === normalizedId
+                ? {
+                    ...appointment,
+                    ...appointmentData,
+                    doctor_name: appointmentData.doctor_name,
+                    updated_at: new Date().toISOString(),
+                  }
+                : appointment
+            );
+          }
+        } else {
+          updatedAppointments = appointmentsList.map((appointment) =>
+            String(appointment.id) === normalizedId
+              ? {
+                  ...appointment,
+                  ...appointmentData,
+                  doctor_name: appointmentData.doctor_name,
+                  updated_at: new Date().toISOString(),
+                }
+              : appointment
+          );
         }
       } else {
-        // Create new
-        const newAppointment = {
-          id: `apt_${Date.now()}`,
-          ...appointmentData,
-          user_name: user.name,
-          created_at: new Date().toISOString()
-        };
-        appointmentsList.push(newAppointment);
+        try {
+          const response = await fetch(`${API}/appointments`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to save remote appointment');
+          }
+
+          const createdAppointment = normalizeAppointment(await response.json());
+          updatedAppointments = [...appointmentsList, createdAppointment];
+        } catch {
+          const newAppointment = {
+            id: `apt_${Date.now()}`,
+            ...appointmentData,
+            user_name: user.name,
+            created_at: new Date().toISOString()
+          };
+          updatedAppointments = [...appointmentsList, newAppointment];
+        }
       }
       
-      saveToLocalStorage(appointmentsList);
+      saveToLocalStorage(updatedAppointments);
       showToast(
         editingId ? t.success.updated : t.success.created,
         'success'
@@ -217,12 +310,24 @@ export default function Appointments({ user, language }) {
     
     setDeleteLoading(appointmentId);
     try {
-      const saved = localStorage.getItem(`appointments_${user.name}`);
-      if (saved) {
-        let appointmentsList = JSON.parse(saved);
-        appointmentsList = appointmentsList.filter(a => a.id !== appointmentId);
-        saveToLocalStorage(appointmentsList);
+      let appointmentsList = getLocalAppointments();
+
+      if (isMongoId(appointmentId)) {
+        try {
+          const response = await fetch(`${API}/appointments/${appointmentId}`, {
+            method: 'DELETE',
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to delete remote appointment');
+          }
+        } catch (error) {
+          console.error('Error deleting appointment:', error);
+        }
       }
+
+      appointmentsList = appointmentsList.filter((appointment) => String(appointment.id) !== String(appointmentId));
+      saveToLocalStorage(appointmentsList);
       
       showToast(t.success.deleted, 'success');
       await fetchAppointments();

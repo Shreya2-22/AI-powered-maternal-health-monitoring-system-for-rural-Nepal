@@ -23,7 +23,7 @@ load_dotenv()
  
 app = FastAPI(title="AamaSuraksha API")
  
-# ── CORS ──────────────────────────────────────────────────────────────────────
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://localhost:3000"],
@@ -56,10 +56,10 @@ except Exception as e:
     db     = None
  
 # Collections (None if DB is offline)
-users_collection          = db["users"]           if db else None
-health_records_collection = db["health_records"]  if db else None
-appointments_collection   = db["appointments"]    if db else None
-saved_articles_collection = db["saved_articles"]  if db else None
+users_collection          = db["users"]           if db is not None else None
+health_records_collection = db["health_records"]  if db is not None else None
+appointments_collection   = db["appointments"]    if db is not None else None
+saved_articles_collection = db["saved_articles"]  if db is not None else None
  
 # ── ML Model ──────────────────────────────────────────────────────────────────
 os.makedirs("models", exist_ok=True)
@@ -75,7 +75,7 @@ except ImportError:
 
 try:
     from train_model import ModelTrainer
-    model_trainer = ModelTrainer(db) if db else None
+    model_trainer = ModelTrainer(db) if db is not None else None
 except ImportError:
     print("⚠️ ModelTrainer not available")
     model_trainer = None
@@ -140,7 +140,7 @@ async def root():
     return {
         "message":  "AamaSuraksha API",
         "status":   "running",
-        "db":       "connected" if db else "offline",
+        "db":       "connected" if db is not None else "offline",
         "ml_model": "loaded"    if risk_assessment.is_trained else "not_loaded",
     }
  

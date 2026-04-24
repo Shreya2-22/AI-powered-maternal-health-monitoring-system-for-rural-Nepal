@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { API } from '../App';
+import { API } from '../constants';
  
 export default function RiskAssessment({ user, language }) {
   const navigate = useNavigate();

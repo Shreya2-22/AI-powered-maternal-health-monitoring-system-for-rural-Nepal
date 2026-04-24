@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { API } from '../App';
+import { API } from '../constants';
 
 export default function Login({ onComplete, onSwitchToOnboarding, language, setLanguage }) {
   const [name, setName] = useState('');
@@ -22,7 +22,7 @@ export default function Login({ onComplete, onSwitchToOnboarding, language, setL
       enterName: 'कृपया नाम प्रविष्ट गर्नुहोस्',
       enterPhone: 'कृपया फोन नम्बर प्रविष्ट गर्नुहोस्',
       userNotFound: 'प्रयोगकर्ता भेटिएन। नयाँ खाता बनाउनुहोस्।',
-      disclaimer: '⚠️ यो एक सलाहकार उपकरण हो, चिकित्सा निदान होइन। सधैं डाक्टरसँग परामर्श गर्नुहोस्।'
+      disclaimer: 'Advisory tool for maternal health. Always consult a doctor.'
     },
     en: {
       title: 'Welcome to AamaSuraksha',

@@ -24,15 +24,15 @@ export default function ChatBot({ user, language }) {
   const text = {
     ne: {
       title: 'च्याटबट',
-      back: '⬅️ फिर्ता',
+      back: 'फिर्ता',
       placeholder: 'तपाईंको प्रश्न लेख्नुहोस्...',
       sendBtn: 'पठाउनुहोस्',
       clearBtn: 'साफ गर्नुहोस्',
-      welcome: 'नमस्ते! 👋 गर्भावस्था सम्बन्धि कुनै पनि प्रश्न गर्नुहोस्। मैले तपाईंलाई मदत गर्न खुसी छु।'
+      welcome: 'नमस्ते! गर्भावस्था सम्बन्धि कुनै पनि प्रश्न गर्नुहोस्। मैले तपाईंलाई मदत गर्न खुसी छु।'
     },
     en: {
       title: 'Chatbot',
-      back: '⬅️ Back',
+      back: 'Back',
       placeholder: 'Ask your question...',
       sendBtn: 'Send',
       clearBtn: 'Clear',

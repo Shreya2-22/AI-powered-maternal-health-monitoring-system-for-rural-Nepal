@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-
+ 
+const API = import.meta.env.VITE_API_URL || 'http://localhost:8001/api';
+ 
+const isMongoId = (value) => /^[a-f0-9]{24}$/i.test(String(value || ''));
+ 
 export default function HealthTracker({ user, language }) {
   const navigate = useNavigate();
   const [records, setRecords] = useState(() => {
@@ -23,13 +27,14 @@ export default function HealthTracker({ user, language }) {
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
-
+ 
   const text = {
     ne: {
       title: 'स्वास्थ्य ट्र्याकर',
       back: 'फिर्ता',
-      addRecord: '➕ नयाँ रेकर्ड',
+      addRecord: 'नयाँ रेकर्ड',
       weight: 'वजन (किलो)',
       systolic: 'सिस्टोलिक BP (mmHg)',
       diastolic: 'डायस्टोलिक BP (mmHg)',
@@ -52,7 +57,7 @@ export default function HealthTracker({ user, language }) {
     en: {
       title: 'Health Tracker',
       back: 'Back',
-      addRecord: '➕ Add Record',
+      addRecord: 'Add Record',
       weight: 'Weight (kg)',
       systolic: 'Systolic BP (mmHg)',
       diastolic: 'Diastolic BP (mmHg)',
@@ -73,15 +78,33 @@ export default function HealthTracker({ user, language }) {
       notesLabel: 'Notes:'
     }
   };
-
+ 
   const t = text[language];
-
+ 
+  const normalizeRecord = (record) => ({
+    ...record,
+    id: record.id || record._id,
+    weight: Number(record.weight),
+    systolic: Number(record.systolic),
+    diastolic: Number(record.diastolic),
+    // Ensure timestamp exists for display — DB records use created_at
+    timestamp: record.timestamp || (record.created_at
+      ? new Date(record.created_at).toLocaleString(language === 'ne' ? 'ne-NP' : 'en-US')
+      : new Date().toLocaleString()),
+  });
+ 
+  const getLocalRecords = () => {
+    if (!user?.name) return [];
+    const saved = localStorage.getItem(`health_records_${user.name}`);
+    return saved ? JSON.parse(saved) : [];
+  };
+ 
   // Toast notification handler
   const showToast = (message, type = 'success') => {
     setToast({ show: true, message, type });
     setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 3000);
   };
-
+ 
   // Validation functions
   const validateDate = (date) => {
     if (!date) return language === 'ne' ? 'मिति आवश्यक छ' : 'Date is required';
@@ -90,21 +113,21 @@ export default function HealthTracker({ user, language }) {
     if (selectedDate > today) return language === 'ne' ? 'मिति आज भन्दा अगाडि हुनुपर्छ' : 'Date cannot be in the future';
     return '';
   };
-
+ 
   const validateWeight = (weight) => {
     if (!weight) return language === 'ne' ? 'वजन आवश्यक छ' : 'Weight is required';
     const w = parseFloat(weight);
     if (w < 30 || w > 200) return language === 'ne' ? 'वजन ३०-२०० किलो बीच हुनुपर्छ' : 'Weight should be between 30-200 kg';
     return '';
   };
-
+ 
   const validateSystolic = (systolic) => {
     if (!systolic) return language === 'ne' ? 'सिस्टोलिक आवश्यक छ' : 'Systolic is required';
     const s = parseInt(systolic);
     if (s < 70 || s > 180) return language === 'ne' ? 'सिस्टोलिक ७०-१८० बीच हुनुपर्छ' : 'Systolic should be between 70-180';
     return '';
   };
-
+ 
   const validateDiastolic = (diastolic, systolic) => {
     if (!diastolic) return language === 'ne' ? 'डायस्टोलिक आवश्यक छ' : 'Diastolic is required';
     const d = parseInt(diastolic);
@@ -113,7 +136,7 @@ export default function HealthTracker({ user, language }) {
     if (d >= s) return language === 'ne' ? 'डायस्टोलिक सिस्टोलिक भन्दा कम हुनुपर्छ' : 'Diastolic must be less than Systolic';
     return '';
   };
-
+ 
   const validateForm = () => {
     const newErrors = {};
     newErrors.date = validateDate(formData.date);
@@ -122,7 +145,7 @@ export default function HealthTracker({ user, language }) {
     newErrors.diastolic = validateDiastolic(formData.diastolic, formData.systolic);
     return newErrors;
   };
-
+ 
   const handleBlur = (field) => {
     setTouched({...touched, [field]: true});
     const fieldValidator = {
@@ -138,7 +161,7 @@ export default function HealthTracker({ user, language }) {
       setErrors({...errors, [field]: ''});
     }
   };
-
+ 
   // Save records to localStorage
   const saveToLocalStorage = (updatedRecords) => {
     localStorage.setItem(
@@ -146,7 +169,42 @@ export default function HealthTracker({ user, language }) {
       JSON.stringify(updatedRecords)
     );
   };
-
+ 
+  const fetchRecords = async () => {
+    setIsLoading(true);
+    try {
+      const localRecords = getLocalRecords();
+      let remoteRecords = [];
+ 
+      if (user?.id) {
+        try {
+          const response = await fetch(`${API}/health-records/${user.id}`);
+          if (response.ok) {
+            remoteRecords = await response.json();
+          }
+        } catch {
+          remoteRecords = [];
+        }
+      }
+ 
+      const merged = new Map();
+      [...remoteRecords, ...localRecords].forEach((record) => {
+        const normalized = normalizeRecord(record);
+        merged.set(String(normalized.id), normalized);
+      });
+ 
+      const mergedRecords = Array.from(merged.values());
+      setRecords(mergedRecords);
+      if (mergedRecords.length > 0) {
+        saveToLocalStorage(mergedRecords);
+      }
+    } catch (error) {
+      console.error('Error fetching health records:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+ 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -154,7 +212,7 @@ export default function HealthTracker({ user, language }) {
       [name]: value
     }));
   };
-
+ 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -166,32 +224,85 @@ export default function HealthTracker({ user, language }) {
     if (Object.values(newErrors).some(err => err)) return;
     
     setIsSubmitting(true);
-
+ 
     try {
+      const payload = {
+        user_id: user?.id || user?.name,
+        date: formData.date,
+        weight: parseFloat(formData.weight),
+        systolic: parseInt(formData.systolic, 10),
+        diastolic: parseInt(formData.diastolic, 10),
+        symptoms: formData.symptoms,
+        notes: formData.notes,
+      };
+ 
+      let updatedRecords = records;
+ 
       if (editingId) {
-        // Update existing record
-        const updatedRecords = records.map(r =>
-          r.id === editingId
-            ? { ...formData, id: editingId, timestamp: r.timestamp }
-            : r
-        );
-        setRecords(updatedRecords);
-        saveToLocalStorage(updatedRecords);
+        const normalizedId = String(editingId);
+ 
+        if (isMongoId(normalizedId)) {
+          try {
+            const response = await fetch(`${API}/health-records/${normalizedId}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload),
+            });
+ 
+            if (!response.ok) {
+              throw new Error('Failed to update remote health record');
+            }
+ 
+            const updatedRemoteRecord = normalizeRecord(await response.json());
+            updatedRecords = records.map((record) =>
+              String(record.id) === normalizedId ? updatedRemoteRecord : record
+            );
+          } catch {
+            updatedRecords = records.map((record) =>
+              String(record.id) === normalizedId
+                ? { ...record, ...formData, id: editingId, timestamp: record.timestamp }
+                : record
+            );
+          }
+        } else {
+          updatedRecords = records.map((record) =>
+            String(record.id) === normalizedId
+              ? { ...record, ...formData, id: editingId, timestamp: record.timestamp }
+              : record
+          );
+        }
+ 
         setEditingId(null);
         showToast(language === 'ne' ? '✅ रेकर्ड अपडेट भयो!' : '✅ Record updated!', 'success');
       } else {
-        // Add new record
-        const newRecord = {
-          id: Date.now(),
-          ...formData,
-          timestamp: new Date().toLocaleString(language === 'ne' ? 'ne-NP' : 'en-US')
-        };
-        const updatedRecords = [newRecord, ...records];
-        setRecords(updatedRecords);
-        saveToLocalStorage(updatedRecords);
+        try {
+          const response = await fetch(`${API}/health-records`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+ 
+          if (!response.ok) {
+            throw new Error('Failed to save remote health record');
+          }
+ 
+          const createdRecord = normalizeRecord(await response.json());
+          updatedRecords = [createdRecord, ...records];
+        } catch {
+          const newRecord = {
+            id: `local_${Date.now()}`,
+            ...formData,
+            timestamp: new Date().toLocaleString(language === 'ne' ? 'ne-NP' : 'en-US')
+          };
+          updatedRecords = [newRecord, ...records];
+        }
+ 
         showToast(language === 'ne' ? '✅ नयाँ रेकर्ड सेभ भयो!' : '✅ Record saved!', 'success');
       }
-
+ 
+      setRecords(updatedRecords);
+      saveToLocalStorage(updatedRecords);
+ 
       // Reset form
       setFormData({
         date: new Date().toISOString().split('T')[0],
@@ -209,7 +320,7 @@ export default function HealthTracker({ user, language }) {
     }
     setIsSubmitting(false);
   };
-
+ 
   const handleEdit = (record) => {
     setFormData({
       date: record.date,
@@ -222,15 +333,30 @@ export default function HealthTracker({ user, language }) {
     setEditingId(record.id);
     setShowForm(true);
   };
-
-  const handleDelete = (id) => {
+ 
+  const handleDelete = async (id) => {
     if (window.confirm(t.deleteConfirm)) {
-      const updatedRecords = records.filter(r => r.id !== id);
+      const updatedRecords = records.filter((record) => String(record.id) !== String(id));
+ 
+      if (isMongoId(id)) {
+        try {
+          const response = await fetch(`${API}/health-records/${id}`, {
+            method: 'DELETE',
+          });
+ 
+          if (!response.ok) {
+            throw new Error('Failed to delete remote health record');
+          }
+        } catch (error) {
+          console.error('Error deleting health record:', error);
+        }
+      }
+ 
       setRecords(updatedRecords);
       saveToLocalStorage(updatedRecords);
     }
   };
-
+ 
   const handleCancel = () => {
     setShowForm(false);
     setEditingId(null);
@@ -245,7 +371,12 @@ export default function HealthTracker({ user, language }) {
     setTouched({});
     setErrors({});
   };
-
+ 
+  useEffect(() => {
+    fetchRecords();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, user?.name]);
+ 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       {/* Toast Notification */}
@@ -256,7 +387,7 @@ export default function HealthTracker({ user, language }) {
           {toast.message}
         </div>
       )}
-
+ 
       {/* Header */}
       <header className="bg-white border-b border-slate-200">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
@@ -270,7 +401,7 @@ export default function HealthTracker({ user, language }) {
           <div style={{ width: '40px' }}></div>
         </div>
       </header>
-
+ 
       <div className="max-w-6xl mx-auto w-full px-6 py-8">
         <button 
           onClick={() => setShowForm(!showForm)}
@@ -278,7 +409,7 @@ export default function HealthTracker({ user, language }) {
         >
           {showForm ? t.cancel : t.addRecord}
         </button>
-
+ 
         {/* Form */}
         {showForm && (
           <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-8 space-y-4">
@@ -299,7 +430,7 @@ export default function HealthTracker({ user, language }) {
                 {touched.date && !errors.date && <p className="text-green-500 text-xs mt-1">✅ {language === 'ne' ? 'ठीक छ' : 'Valid'}</p>}
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">⚖️ {t.weight} <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">{t.weight} <span className="text-red-500">*</span></label>
                 <input
                   type="number"
                   name="weight"
@@ -312,14 +443,13 @@ export default function HealthTracker({ user, language }) {
                     touched.weight && errors.weight ? 'border-red-500 focus:ring-2 focus:ring-red-200' : 'border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
                   }`}
                 />
-                {touched.weight && errors.weight && <p className="text-red-500 text-xs mt-1">❌ {errors.weight}</p>}
-                {touched.weight && !errors.weight && <p className="text-green-500 text-xs mt-1">✅ {language === 'ne' ? 'ठीक छ' : 'Valid'}</p>}
+                {touched.weight && errors.weight && <p className="text-red-500 text-xs mt-1">Error: {errors.weight}</p>}
               </div>
             </div>
-
+ 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">💓 {t.systolic} <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">{t.systolic} <span className="text-red-500">*</span></label>
                 <input
                   type="number"
                   name="systolic"
@@ -331,11 +461,10 @@ export default function HealthTracker({ user, language }) {
                     touched.systolic && errors.systolic ? 'border-red-500 focus:ring-2 focus:ring-red-200' : 'border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
                   }`}
                 />
-                {touched.systolic && errors.systolic && <p className="text-red-500 text-xs mt-1">❌ {errors.systolic}</p>}
-                {touched.systolic && !errors.systolic && <p className="text-green-500 text-xs mt-1">✅ {language === 'ne' ? 'ठीक छ' : 'Valid'}</p>}
+                {touched.systolic && errors.systolic && <p className="text-red-500 text-xs mt-1">Error: {errors.systolic}</p>}
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">💓 {t.diastolic} <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">{t.diastolic} <span className="text-red-500">*</span></label>
                 <input
                   type="number"
                   name="diastolic"
@@ -347,11 +476,10 @@ export default function HealthTracker({ user, language }) {
                     touched.diastolic && errors.diastolic ? 'border-red-500 focus:ring-2 focus:ring-red-200' : 'border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200'
                   }`}
                 />
-                {touched.diastolic && errors.diastolic && <p className="text-red-500 text-xs mt-1">❌ {errors.diastolic}</p>}
-                {touched.diastolic && !errors.diastolic && <p className="text-green-500 text-xs mt-1">✅ {language === 'ne' ? 'ठीक छ' : 'Valid'}</p>}
+                {touched.diastolic && errors.diastolic && <p className="text-red-500 text-xs mt-1">Error: {errors.diastolic}</p>}
               </div>
             </div>
-
+ 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">{t.symptoms}</label>
               <textarea
@@ -363,7 +491,7 @@ export default function HealthTracker({ user, language }) {
                 className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
               />
             </div>
-
+ 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">{t.notes}</label>
               <textarea
@@ -375,7 +503,7 @@ export default function HealthTracker({ user, language }) {
                 className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
               />
             </div>
-
+ 
             <div className="flex gap-4">
               <button 
                 type="submit" 
@@ -402,7 +530,7 @@ export default function HealthTracker({ user, language }) {
             </div>
           </form>
         )}
-
+ 
         {/* Records List */}
         <div>
           <h2 className="text-2xl font-bold text-gray-800 mb-4">{t.recordsTitle}</h2>
@@ -414,11 +542,11 @@ export default function HealthTracker({ user, language }) {
                 <div key={record.id} className="bg-white rounded-lg shadow-md border-l-4 border-blue-500 p-4">
                   <div className="flex justify-between items-start mb-3">
                     <div>
-                      <span className="text-sm font-semibold text-blue-600">📅 {record.date}</span>
-                      <span className="ml-4 text-sm font-semibold text-blue-600">🕐 {record.timestamp.split(', ')[1]}</span>
+                      <span className="text-sm font-semibold text-blue-600">{record.date}</span>
+                      {record.timestamp && <span className="ml-4 text-sm font-semibold text-slate-500">{record.timestamp.split(', ')[1]}</span>}
                     </div>
                   </div>
-
+ 
                   <div className="grid grid-cols-2 gap-4 mb-3 py-2 border-y border-gray-200">
                     <div>
                       <span className="text-xs font-semibold text-gray-600">{t.weightLabel}</span>
@@ -429,21 +557,21 @@ export default function HealthTracker({ user, language }) {
                       <p className="text-lg font-bold text-gray-800">{record.systolic}/{record.diastolic} mmHg</p>
                     </div>
                   </div>
-
+ 
                   {record.symptoms && (
                     <div className="mb-2">
                       <strong className="text-xs text-gray-600">{t.symptomsLabel}</strong>
                       <p className="text-sm text-gray-700">{record.symptoms}</p>
                     </div>
                   )}
-
+ 
                   {record.notes && (
                     <div className="mb-3">
                       <strong className="text-xs text-gray-600">{t.notesLabel}</strong>
                       <p className="text-sm text-gray-700">{record.notes}</p>
                     </div>
                   )}
-
+ 
                   <div className="flex gap-2">
                     <button 
                       onClick={() => handleEdit(record)}

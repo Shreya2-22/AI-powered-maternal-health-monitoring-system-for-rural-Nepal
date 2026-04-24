@@ -1,11 +1,11 @@
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
-
+ 
 const Dashboard = ({ user, language, setLanguage, onLogout }) => {
   const [hoveredCard, setHoveredCard] = useState(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const navigate = useNavigate();
-
+ 
   const text = {
     ne: {
       welcome: 'स्वागतम्',
@@ -13,8 +13,8 @@ const Dashboard = ({ user, language, setLanguage, onLogout }) => {
       pregnancyProgress: 'गर्भावस्था प्रगति',
       weekComplete: 'हप्ता पूर्ण',
       daysRemaining: 'दिन बाकी',
-      emergency: '🚨 आपातकालीन मूल्यांकन',
-      emergencyDesc: 'आपातकालीन लक्षण मूल्यांकन करें',
+      emergency: 'आपातकालीन मूल्यांकन',
+      emergencyDesc: 'आपातकालीन लक्षण चेक गर्नुहोस्',
       chatbot: 'च्याटबट',
       chatbotDesc: 'स्वास्थ्य सलाहकार',
       health: 'स्वास्थ्य ट्र्याकर',
@@ -26,8 +26,8 @@ const Dashboard = ({ user, language, setLanguage, onLogout }) => {
       riskAssessment: 'जोखिम मूल्यांकन',
       riskAssessmentDesc: 'स्वास्थ्य विश्लेषण',
       logout: 'लग आउट',
-      language: '🇬🇧 English',
-      quickTips: 'त्वरित सुझाव',
+      language: 'English',
+      quickTips: 'स्वास्थ्य सुझाव',
       tip1: 'दैनिक ८-१० गिलास पानी पिउनुहोस्',
       tip2: 'पर्याप्त आराम र नींद लिनुहोस्',
       tip3: 'नियमित व्यायाम गर्नुहोस्'
@@ -38,8 +38,8 @@ const Dashboard = ({ user, language, setLanguage, onLogout }) => {
       pregnancyProgress: 'Pregnancy Progress',
       weekComplete: 'weeks complete',
       daysRemaining: 'days remaining',
-      emergency: '🚨 Emergency Assessment',
-      emergencyDesc: 'Assess emergency symptoms',
+      emergency: 'Emergency Assessment',
+      emergencyDesc: 'Quick symptom evaluation',
       chatbot: 'Chatbot',
       chatbotDesc: 'Health advisor',
       health: 'Health Tracker',
@@ -51,16 +51,16 @@ const Dashboard = ({ user, language, setLanguage, onLogout }) => {
       riskAssessment: 'Risk Assessment',
       riskAssessmentDesc: 'Health analysis',
       logout: 'Logout',
-      language: '🇳🇵 नेपाली',
-      quickTips: 'Quick Tips',
+      language: 'नेपाली',
+      quickTips: 'Health Tips',
       tip1: 'Drink 8-10 glasses of water daily',
       tip2: 'Get adequate rest and sleep',
       tip3: 'Exercise regularly'
     }
   };
-
+ 
   const t = text[language];
-
+ 
   // ── Calculate health summary from localStorage records ────────────────────
   const getHealthSummary = () => {
     const records = localStorage.getItem(`health_records_${user.name}`);
@@ -81,13 +81,13 @@ const Dashboard = ({ user, language, setLanguage, onLogout }) => {
       return { count: 0, latestWeight: null, latestBP: null };
     }
   };
-
+ 
   const healthSummary = getHealthSummary();
-
+ 
   const handleLogout = () => {
     setShowLogoutConfirm(true);
   };
-
+ 
   const confirmLogout = () => {
     if (onLogout) {
       onLogout();
@@ -96,7 +96,7 @@ const Dashboard = ({ user, language, setLanguage, onLogout }) => {
       window.location.reload();
     }
   };
-
+ 
   // Calculate days until due date
   const calculateDaysLeft = () => {
     if (!user.due_date) return 0;
@@ -105,11 +105,11 @@ const Dashboard = ({ user, language, setLanguage, onLogout }) => {
     const diff = dueDate - today;
     return Math.ceil(diff / (1000 * 60 * 60 * 24));
   };
-
+ 
   const daysLeft = calculateDaysLeft();
   const weeksProgress = user.weeks_pregnant || 0;
   const percentComplete = (weeksProgress / 40) * 100;
-
+ 
   const menuItems = [
     {
       title_ne: 'संवाद सेवक',
@@ -152,29 +152,32 @@ const Dashboard = ({ user, language, setLanguage, onLogout }) => {
       color: 'rose'
     }
   ];
-
+ 
   const tips = [
     { text_ne: t.tip1, text_en: text.en.tip1 },
     { text_ne: t.tip2, text_en: text.en.tip2 },
     { text_ne: t.tip3, text_en: text.en.tip3 }
   ];
-
+ 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-50 to-blue-50">
       {/* Header */}
       <header className="bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          {/* Logo */}
+          {/* Logo — same SVG heart as Login page */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-teal-600 to-teal-700 flex items-center justify-center text-white font-bold text-sm shadow-md">
-              AS
+            <div className="inline-flex items-center justify-center">
+              <svg width="36" height="36" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M28 48C28 48 8 35 8 22C8 15.373 13.373 10 20 10C23.5 10 26.5 11.5 28 14C29.5 11.5 32.5 10 36 10C42.627 10 48 15.373 48 22C48 35 28 48 28 48Z" fill="#0F766E"/>
+                <circle cx="28" cy="28" r="26" stroke="#0F766E" strokeWidth="1.5" fill="none" opacity="0.3"/>
+              </svg>
             </div>
             <div>
               <h1 className="text-base font-semibold text-slate-900 tracking-tight">AamaSuraksha</h1>
-              <p className="text-xs text-slate-500">Maternal Health</p>
+              <p className="text-xs text-slate-500">{language === 'ne' ? 'गर्भावस्था साथी' : 'Maternal Health Companion'}</p>
             </div>
           </div>
-
+ 
           {/* Right Actions */}
           <div className="flex gap-2 items-center">
             <button
@@ -218,7 +221,7 @@ const Dashboard = ({ user, language, setLanguage, onLogout }) => {
             </div>
           </div>
         )}      </header>
-
+ 
       {/* Main Content */}
       <main className="max-w-6xl mx-auto px-6 py-12">
         {/* Welcome Section */}
@@ -226,7 +229,7 @@ const Dashboard = ({ user, language, setLanguage, onLogout }) => {
           <h2 className="text-4xl font-bold text-slate-900 mb-1">{user.name}</h2>
           <p className="text-slate-600">{t.pregnancyJourney}</p>
         </section>
-
+ 
         {/* Progress Cards */}
         <section className="mb-12">
           <div className="grid grid-cols-3 gap-6">
@@ -241,7 +244,7 @@ const Dashboard = ({ user, language, setLanguage, onLogout }) => {
               </div>
               <p className="text-xs text-slate-500 mt-2">of 40 weeks</p>
             </div>
-
+ 
             <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition">
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Days Remaining</p>
               <p className="text-4xl font-bold text-blue-600 mb-2">{daysLeft}</p>
@@ -253,7 +256,7 @@ const Dashboard = ({ user, language, setLanguage, onLogout }) => {
               </div>
               <p className="text-xs text-slate-500 mt-2">until due date</p>
             </div>
-
+ 
             <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition">
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Progress</p>
               <p className="text-4xl font-bold text-indigo-600 mb-2">{Math.round(percentComplete)}%</p>
@@ -267,7 +270,7 @@ const Dashboard = ({ user, language, setLanguage, onLogout }) => {
             </div>
           </div>
         </section>
-
+ 
         {/* Health Summary */}
         <section className="mb-12">
           <h3 className="text-lg font-semibold text-slate-900 mb-4">Your Health Records</h3>
@@ -293,15 +296,15 @@ const Dashboard = ({ user, language, setLanguage, onLogout }) => {
             })()}
           </div>
         </section>
-
+ 
         {/* Emergency Alert */}
         <section className="mb-12">
           <button
             onClick={() => navigate('/emergency')}
-            className="w-full bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 rounded-xl shadow-md p-6 text-white transition group"
+            className="w-full bg-red-50 hover:bg-red-100 border-2 border-red-200 hover:border-red-300 rounded-xl p-6 text-red-900 transition shadow-sm hover:shadow-md"
           >
             <p className="font-semibold text-lg">Emergency Assessment</p>
-            <p className="text-red-100 text-sm mt-1">Quick symptom evaluation for urgent care</p>
+            <p className="text-red-700 text-sm mt-1">Assess symptoms that require immediate attention</p>
           </button>
         </section>
         {/* Quick Tips */}
@@ -328,7 +331,7 @@ const Dashboard = ({ user, language, setLanguage, onLogout }) => {
             })}
           </div>
         </section>
-
+ 
         <section className="mb-12">
           <h3 className="text-lg font-semibold text-slate-900 mb-4">Features</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -358,30 +361,30 @@ const Dashboard = ({ user, language, setLanguage, onLogout }) => {
             })}
           </div>
         </section>
-
+ 
         {/* Health Guidance */}
         <section className="mb-12 bg-white rounded-xl p-8 border border-slate-200 shadow-sm">
-          <h3 className="text-lg font-semibold text-slate-900 mb-6">Health Guidance</h3>
+          <h3 className="text-lg font-semibold text-slate-900 mb-6">Guidelines</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div>
-              <h4 className="font-semibold text-teal-900 mb-4">Nutrition</h4>
-              <ul className="space-y-3 text-sm text-slate-700">
-                <li className="flex items-start gap-3"><span className="text-teal-600 font-semibold mt-0.5">•</span> Eat leafy vegetables daily</li>
-                <li className="flex items-start gap-3"><span className="text-teal-600 font-semibold mt-0.5">•</span> Include calcium-rich foods</li>
-                <li className="flex items-start gap-3"><span className="text-teal-600 font-semibold mt-0.5">•</span> Get protein and iron</li>
+            <div className="border-l-4 border-teal-300 pl-6">
+              <h4 className="font-semibold text-slate-900 mb-4">Nutrition</h4>
+              <ul className="space-y-2 text-sm text-slate-700">
+                <li className="flex items-start gap-3"><span className="inline-block w-1.5 h-1.5 bg-teal-400 rounded-full mt-1.5 flex-shrink-0"></span> Eat leafy vegetables daily</li>
+                <li className="flex items-start gap-3"><span className="inline-block w-1.5 h-1.5 bg-teal-400 rounded-full mt-1.5 flex-shrink-0"></span> Include calcium-rich foods</li>
+                <li className="flex items-start gap-3"><span className="inline-block w-1.5 h-1.5 bg-teal-400 rounded-full mt-1.5 flex-shrink-0"></span> Get protein and iron</li>
               </ul>
             </div>
-            <div>
-              <h4 className="font-semibold text-cyan-900 mb-4">Exercise</h4>
-              <ul className="space-y-3 text-sm text-slate-700">
-                <li className="flex items-start gap-3"><span className="text-cyan-600 font-semibold mt-0.5">•</span> Light walking 30 mins</li>
-                <li className="flex items-start gap-3"><span className="text-cyan-600 font-semibold mt-0.5">•</span> Yoga and stretching</li>
-                <li className="flex items-start gap-3"><span className="text-cyan-600 font-semibold mt-0.5">•</span> Consult doctor first</li>
+            <div className="border-l-4 border-cyan-300 pl-6">
+              <h4 className="font-semibold text-slate-900 mb-4">Exercise</h4>
+              <ul className="space-y-2 text-sm text-slate-700">
+                <li className="flex items-start gap-3"><span className="inline-block w-1.5 h-1.5 bg-cyan-400 rounded-full mt-1.5 flex-shrink-0"></span> Light walking 30 minutes</li>
+                <li className="flex items-start gap-3"><span className="inline-block w-1.5 h-1.5 bg-cyan-400 rounded-full mt-1.5 flex-shrink-0"></span> Yoga and stretching</li>
+                <li className="flex items-start gap-3"><span className="inline-block w-1.5 h-1.5 bg-cyan-400 rounded-full mt-1.5 flex-shrink-0"></span> Consult doctor first</li>
               </ul>
             </div>
           </div>
         </section>
-
+ 
         {/* Footer */}
         <footer className="border-t border-slate-200 pt-8 pb-4 text-center text-xs text-slate-600">
           <p>Advisory tool for maternal health. Always consult your doctor.</p>
@@ -390,5 +393,5 @@ const Dashboard = ({ user, language, setLanguage, onLogout }) => {
     </div>
   );
 };
-
+ 
 export default Dashboard;

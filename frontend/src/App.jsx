@@ -9,7 +9,7 @@ import Emergency    from './components/Emergency.jsx';
 import RiskAssessment from './components/RiskAssessment.jsx';
 import Login        from './components/Login.jsx';
  
-export const API = 'http://localhost:8001/api';
+// API constant moved to src/constants.js
  
 function App() {
   const [language, setLanguage]           = useState('en');
@@ -79,7 +79,7 @@ function App() {
     localStorage.setItem('aamasuraksha_user', JSON.stringify(userData));
     setShowLogin(false);
   };
-
+ 
   // ── Logout function ────────────────────────────────────────────────────────
   const handleLogout = () => {
     setCurrentUser(null);
@@ -169,14 +169,14 @@ const Onboarding = ({ onComplete, onSwitchToLogin, language, setLanguage }) => {
     dueDate.setDate(dueDate.getDate() + daysRemaining);
     return dueDate.toISOString().split('T')[0];
   };
-
+ 
   // ── Helper: Validate Nepal phone number (97/98 prefix, 10 digits) ────────
   const validateNepaliPhone = (phone) => {
     const cleaned = phone.replace(/[\s-]/g, '');
     if (!/^(97|98)[0-9]{8}$/.test(cleaned)) return false;
     return true;
   };
-
+ 
   const validate = {
     name:            (v) => !v.trim() ? 'Name is required / नाम आवश्यक छ' : v.trim().length < 2 ? 'Min 2 chars / कम्तिमा २ वर्ण' : '',
     age:             (v) => !v ? 'Age is required / उमेर आवश्यक छ' : (parseInt(v) < 13 || parseInt(v) > 60) ? 'Age 13-60 / उमेर १३-६० हुनुपर्छ' : '',
@@ -184,7 +184,7 @@ const Onboarding = ({ onComplete, onSwitchToLogin, language, setLanguage }) => {
     district:        (v) => !v.trim() ? 'District is required / जिल्ला आवश्यक छ' : '',
     weeks_pregnant:  (v) => !v ? 'Required / आवश्यक छ' : (parseInt(v) < 1 || parseInt(v) > 42) ? 'Must be 1-42 / कम्तिमा १-४२' : '',
   };
-
+ 
   // Auto-calculate due_date when weeks_pregnant changes
   const handleWeeksChange = (val) => {
     setFormData(p => ({
@@ -244,7 +244,7 @@ const Onboarding = ({ onComplete, onSwitchToLogin, language, setLanguage }) => {
       {touched[key] && !errors[key] && <p className="text-green-600 text-xs mt-0.5">{language === 'ne' ? 'ठीक छ' : 'Valid'}</p>}
     </div>
   );
-
+ 
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* Language Toggle - Hover based */}
@@ -271,7 +271,7 @@ const Onboarding = ({ onComplete, onSwitchToLogin, language, setLanguage }) => {
           नेपाली
         </button>
       </div>
-
+ 
       {/* Main Content */}
       <div className="flex-1 flex items-center justify-center p-4 py-6">
         <div className="w-full max-w-2xl">
@@ -286,19 +286,19 @@ const Onboarding = ({ onComplete, onSwitchToLogin, language, setLanguage }) => {
                 <circle cx="28" cy="28" r="26" stroke="#0F766E" strokeWidth="1.5" fill="none" opacity="0.3"/>
               </svg>
             </div>
-
+ 
             {/* Branding */}
             <h1 className="text-2xl font-bold text-slate-900 mb-1">AamaSuraksha</h1>
             <p className="text-slate-500 text-xs">{t.subtitle}</p>
           </div>
-
+ 
           {/* Registration Card */}
           <div className="bg-white rounded-xl border border-slate-200 p-6">
             {/* Header */}
             <div className="mb-4">
               <h2 className="text-lg font-semibold text-slate-900">{t.welcome}</h2>
             </div>
-
+ 
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-3">
               {/* Grid for Personal Info */}
@@ -306,13 +306,13 @@ const Onboarding = ({ onComplete, onSwitchToLogin, language, setLanguage }) => {
                 {field('name', t.name, 'text', t.name)}
                 {field('age', t.age, 'number', 'e.g. 25')}
               </div>
-
+ 
               {/* Phone & District */}
               <div className="grid grid-cols-2 gap-3">
                 {field('phone', t.phone, 'tel', 'e.g. 9841234567')}
                 {field('district', t.district, 'text', t.district)}
               </div>
-
+ 
               {/* Pregnancy Info */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -333,7 +333,7 @@ const Onboarding = ({ onComplete, onSwitchToLogin, language, setLanguage }) => {
                   />
                   {touched.weeks_pregnant && errors.weeks_pregnant && <p className="text-red-500 text-xs mt-0.5">{errors.weeks_pregnant}</p>}
                 </div>
-
+ 
                 <div>
                   <label className="block text-slate-700 font-medium text-xs mb-1">
                     {t.dueDate}
@@ -347,12 +347,12 @@ const Onboarding = ({ onComplete, onSwitchToLogin, language, setLanguage }) => {
                   <p className="text-xs text-slate-500 mt-0.5">{language === 'ne' ? 'स्वतः गणना' : 'Auto-calculated'}</p>
                 </div>
               </div>
-
+ 
               {/* Disclaimer */}
               <div className="bg-slate-50 border border-slate-200 p-3 rounded-lg mt-3">
                 <p className="text-xs text-slate-700">{t.disclaimer}</p>
               </div>
-
+ 
               {/* Submit Button */}
               <button
                 type="submit"
@@ -362,7 +362,7 @@ const Onboarding = ({ onComplete, onSwitchToLogin, language, setLanguage }) => {
                 {isSubmitting ? (language === 'ne' ? 'प्रक्रिया गरिँदै...' : 'Processing...') : t.getStarted}
               </button>
             </form>
-
+ 
             {/* Already have account */}
             <div className="text-center mt-4 pt-4 border-t border-slate-200">
               <p className="text-slate-600 text-xs">
@@ -376,7 +376,7 @@ const Onboarding = ({ onComplete, onSwitchToLogin, language, setLanguage }) => {
               </p>
             </div>
           </div>
-
+ 
           {/* Footer Disclaimer */}
           <div className="text-center mt-4 px-4">
             <p className="text-slate-500 text-xs leading-relaxed">
@@ -385,7 +385,7 @@ const Onboarding = ({ onComplete, onSwitchToLogin, language, setLanguage }) => {
           </div>
         </div>
       </div>
-
+ 
       {/* Footer */}
       <div className="text-center py-4 text-slate-500 text-xs">
         <p>© 2024 AamaSuraksha</p>
