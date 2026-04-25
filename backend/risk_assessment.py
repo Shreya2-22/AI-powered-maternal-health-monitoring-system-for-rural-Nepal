@@ -32,7 +32,7 @@ class PregnancyRiskAssessment:
         self.is_trained = False
         self._load_model()
  
-    # ─────────────────────────────────────────────────────────────────────────
+
     def _load_model(self):
         """Load the pre-trained model saved from the Jupyter notebook."""
         model_path   = "models/trained_model.pkl"
@@ -53,7 +53,7 @@ class PregnancyRiskAssessment:
             print("⚠️  No model found in models/ folder. Run the Jupyter notebook first.")
             self.is_trained = False
  
-    # ─────────────────────────────────────────────────────────────────────────
+    
     def _prepare_features(self, health_records, user_age, weeks_pregnant):
         """
         Convert health records from MongoDB into the 15-feature vector
@@ -68,7 +68,7 @@ class PregnancyRiskAssessment:
         latest  = records[-1]
         first   = records[0]
 
-        # ── Core features (same as before) ───────────────────────────────────
+        
         weight_kg    = float(latest.get('weight', 52.0))
         systolic_bp  = float(latest.get('systolic', 115))
         diastolic_bp = float(latest.get('diastolic', 75))
@@ -93,12 +93,11 @@ class PregnancyRiskAssessment:
         haemoglobin       = float(latest.get('haemoglobin', 11.2))
         prev_complications = int(latest.get('prev_complications', 0))
 
-        # ── ADVANCED FEATURES (Feature Engineering) ──────────────────────────
-        # 1. BP Variability Score (lower is better)
+        
         systolic_readings = np.array([r.get('systolic', 115) for r in records])
         bp_variability = float(np.std(systolic_readings)) if len(systolic_readings) > 1 else 0.0
 
-        # 2. Weight Trajectory (trend direction and slope)
+        
         if len(records) >= 3:
             dates_for_weight = []
             weights_for_trend = []

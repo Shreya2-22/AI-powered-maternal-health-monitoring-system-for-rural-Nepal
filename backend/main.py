@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 import os
 from datetime import datetime
 from risk_assessment import PregnancyRiskAssessment
+from chat_service import PregnancyChatService
 
 # Import validation module
 try:
@@ -61,9 +62,10 @@ health_records_collection = db["health_records"]  if db is not None else None
 appointments_collection   = db["appointments"]    if db is not None else None
 saved_articles_collection = db["saved_articles"]  if db is not None else None
  
-# ── ML Model ──────────────────────────────────────────────────────────────────
+
 os.makedirs("models", exist_ok=True)
 risk_assessment = PregnancyRiskAssessment()
+pregnancy_chat = PregnancyChatService()
 
 # Import ML enhancement modules
 try:
@@ -85,9 +87,6 @@ if risk_assessment.is_trained:
 else:
     print("⚠️  ML model not found — using rule-based fallback.")
  
-# ═════════════════════════════════════════════════════════════════════════════
-# PYDANTIC MODELS
-# ═════════════════════════════════════════════════════════════════════════════
  
 class User(BaseModel):
     name: str
@@ -133,6 +132,13 @@ class FeatureAnalysisRequest(BaseModel):
     health_records: list
     user_age: int = 25
     weeks_pregnant: int = 20
+
+
+class ChatRequest(BaseModel):
+    message: str
+    language: str = "en"
+    session_id: str = "global"
+    memory_turns: int = 6
  
  
 @app.get("/")
@@ -143,10 +149,40 @@ async def root():
         "db":       "connected" if db is not None else "offline",
         "ml_model": "loaded"    if risk_assessment.is_trained else "not_loaded",
     }
+
+
+@app.post("/api/chat")
+async def chat_with_guardrails(request: ChatRequest):
+    """
+    Pregnancy-only chat endpoint with explicit safety guardrails:
+    1) Emergency escalation
+    2) Strict maternal-health topic restriction
+    """
+    try:
+        if not request.message or not request.message.strip():
+            raise HTTPException(status_code=400, detail="Message is required")
+
+        result = pregnancy_chat.answer(
+            message=request.message,
+            language=request.language,
+            session_id=request.session_id,
+            memory_turns=request.memory_turns,
+        )
+        return {
+            "reply": result.reply,
+            "intent": result.intent,
+            "restricted": result.restricted,
+            "emergency": result.emergency,
+            "confidence": result.confidence,
+            "context_used": result.context_used,
+            "memory_turns": result.memory_turns,
+            "timestamp": datetime.now().isoformat(),
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Chat endpoint error: {str(e)}")
  
-# ── Users ─────────────────────────────────────────────────────────────────────
-# ⚠️  FIX: /api/users/login must be declared BEFORE /api/users/{user_name}
-#    Otherwise FastAPI treats "login" as the {user_name} parameter.
  
 @app.post("/api/users")
 async def create_user(user: User):
