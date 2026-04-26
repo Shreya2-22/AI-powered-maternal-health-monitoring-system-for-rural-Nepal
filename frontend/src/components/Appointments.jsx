@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-
-const API = import.meta.env.VITE_API_URL || 'http://localhost:8001/api';
-
+ 
+import { API } from '../constants';
+ 
 const isMongoId = (value) => /^[a-f0-9]{24}$/i.test(String(value || ''));
-
+ 
 export default function Appointments({ user, language }) {
   const navigate = useNavigate();
   const [appointments, setAppointments] = useState([]);
@@ -23,7 +23,7 @@ export default function Appointments({ user, language }) {
   const [editingId, setEditingId] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: '' });
-
+ 
   const text = {
     ne: {
       title: 'नियुक्तिहरू',
@@ -116,21 +116,21 @@ export default function Appointments({ user, language }) {
       }
     }
   };
-
+ 
   const t = text[language];
-
+ 
   const normalizeAppointment = (appointment) => ({
     ...appointment,
     id: appointment.id || appointment._id,
     doctor_name: appointment.doctor_name || appointment.doctorName,
   });
-
+ 
   const getLocalAppointments = () => {
     if (!user?.name) return [];
     const saved = localStorage.getItem(`appointments_${user.name}`);
     return saved ? JSON.parse(saved) : [];
   };
-
+ 
   // Validation functions
   const validateDate = (date) => {
     if (!date) return t.errors.dateRequired;
@@ -143,39 +143,39 @@ export default function Appointments({ user, language }) {
     if (selectedDate > maxDate) return t.errors.dateMax;
     return '';
   };
-
+ 
   const validateTime = (time) => {
     if (!time) return t.errors.timeRequired;
     const [hours] = time.split(':').map(Number);
     if (hours < 7 || hours >= 19) return t.errors.timeValid;
     return '';
   };
-
+ 
   const validateDoctorName = (name) => {
     if (!name.trim()) return t.errors.doctorRequired;
     if (name.trim().length < 2) return t.errors.doctorLength;
     return '';
   };
-
+ 
   const validateClinic = (clinic) => {
     if (!clinic.trim()) return t.errors.clinicRequired;
     if (clinic.trim().length < 2) return t.errors.clinicLength;
     return '';
   };
-
+ 
   // Toast notification helper
   const showToast = (message, type = 'success') => {
     setToast({ show: true, message, type });
     setTimeout(() => setToast({ show: false, message: '', type: '' }), 3000);
   };
-
+ 
   // localStorage Functions (Works offline without backend)
   const fetchAppointments = async () => {
     setIsLoading(true);
     try {
       const localAppointments = getLocalAppointments();
       let remoteAppointments = [];
-
+ 
       if (user?.id) {
         try {
           const response = await fetch(`${API}/appointments/${user.id}`);
@@ -186,16 +186,16 @@ export default function Appointments({ user, language }) {
           remoteAppointments = [];
         }
       }
-
+ 
       const merged = new Map();
       [...remoteAppointments, ...localAppointments].forEach((appointment) => {
         const normalized = normalizeAppointment(appointment);
         merged.set(String(normalized.id), normalized);
       });
-
+ 
       const mergedAppointments = Array.from(merged.values());
       setAppointments(mergedAppointments);
-
+ 
       if (mergedAppointments.length > 0) {
         localStorage.setItem(`appointments_${user.name}`, JSON.stringify(mergedAppointments));
       }
@@ -205,11 +205,11 @@ export default function Appointments({ user, language }) {
       setIsLoading(false);
     }
   };
-
+ 
   const saveToLocalStorage = (appointmentsList) => {
     localStorage.setItem(`appointments_${user.name}`, JSON.stringify(appointmentsList));
   };
-
+ 
   const saveAppointment = async (appointmentData) => {
     try {
       const appointmentsList = getLocalAppointments();
@@ -225,7 +225,7 @@ export default function Appointments({ user, language }) {
       
       if (editingId) {
         const normalizedId = String(editingId);
-
+ 
         if (isMongoId(normalizedId)) {
           try {
             const response = await fetch(`${API}/appointments/${normalizedId}`, {
@@ -233,11 +233,11 @@ export default function Appointments({ user, language }) {
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(payload),
             });
-
+ 
             if (!response.ok) {
               throw new Error('Failed to update remote appointment');
             }
-
+ 
             const updatedRemote = normalizeAppointment(await response.json());
             updatedAppointments = appointmentsList.map((appointment) =>
               String(appointment.id) === normalizedId ? updatedRemote : appointment
@@ -273,11 +273,11 @@ export default function Appointments({ user, language }) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
           });
-
+ 
           if (!response.ok) {
             throw new Error('Failed to save remote appointment');
           }
-
+ 
           const createdAppointment = normalizeAppointment(await response.json());
           updatedAppointments = [...appointmentsList, createdAppointment];
         } catch {
@@ -304,20 +304,20 @@ export default function Appointments({ user, language }) {
       return false;
     }
   };
-
+ 
   const deleteAppointment = async (appointmentId) => {
     if (!window.confirm(t.deleteConfirm)) return;
     
     setDeleteLoading(appointmentId);
     try {
       let appointmentsList = getLocalAppointments();
-
+ 
       if (isMongoId(appointmentId)) {
         try {
           const response = await fetch(`${API}/appointments/${appointmentId}`, {
             method: 'DELETE',
           });
-
+ 
           if (!response.ok) {
             throw new Error('Failed to delete remote appointment');
           }
@@ -325,7 +325,7 @@ export default function Appointments({ user, language }) {
           console.error('Error deleting appointment:', error);
         }
       }
-
+ 
       appointmentsList = appointmentsList.filter((appointment) => String(appointment.id) !== String(appointmentId));
       saveToLocalStorage(appointmentsList);
       
@@ -338,13 +338,13 @@ export default function Appointments({ user, language }) {
       setDeleteLoading(null);
     }
   };
-
+ 
   // Load appointments on component mount
   useEffect(() => {
     fetchAppointments();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user.name]);
-
+ 
   // Handle input change with validation
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -361,7 +361,7 @@ export default function Appointments({ user, language }) {
       setErrors(prev => ({ ...prev, [name]: error }));
     }
   };
-
+ 
   // Handle field blur for validation
   const handleBlur = (e) => {
     const { name } = e.target;
@@ -375,7 +375,7 @@ export default function Appointments({ user, language }) {
     
     setErrors(prev => ({ ...prev, [name]: error }));
   };
-
+ 
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -387,13 +387,13 @@ export default function Appointments({ user, language }) {
       doctorName: validateDoctorName(formData.doctorName),
       clinic: validateClinic(formData.clinic)
     };
-
+ 
     setErrors(newErrors);
     setTouched({ date: true, time: true, doctorName: true, clinic: true });
-
+ 
     // Check if there are any errors
     if (Object.values(newErrors).some(error => error)) return;
-
+ 
     setIsSubmitting(true);
     const success = await saveAppointment({
       date: formData.date,
@@ -402,7 +402,7 @@ export default function Appointments({ user, language }) {
       clinic: formData.clinic,
       reason: formData.reason
     });
-
+ 
     if (success) {
       setFormData({ date: '', time: '', doctorName: '', clinic: '', reason: '' });
       setErrors({});
@@ -412,7 +412,7 @@ export default function Appointments({ user, language }) {
     }
     setIsSubmitting(false);
   };
-
+ 
   // Handle edit
   const handleEdit = (appointment) => {
     setFormData({
@@ -427,7 +427,7 @@ export default function Appointments({ user, language }) {
     setErrors({});
     setTouched({});
   };
-
+ 
   // Reset form
   const resetForm = () => {
     setFormData({ date: '', time: '', doctorName: '', clinic: '', reason: '' });
@@ -436,19 +436,19 @@ export default function Appointments({ user, language }) {
     setEditingId(null);
     setShowForm(false);
   };
-
+ 
   // Separate upcoming and past appointments
   const now = new Date();
   const upcomingAppointments = appointments.filter(a => {
     const appointmentDateTime = new Date(`${a.date}T${a.time}`);
     return appointmentDateTime > now;
   });
-
+ 
   const pastAppointments = appointments.filter(a => {
     const appointmentDateTime = new Date(`${a.date}T${a.time}`);
     return appointmentDateTime <= now;
   });
-
+ 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       {/* Header */}
@@ -464,7 +464,7 @@ export default function Appointments({ user, language }) {
           <div style={{ width: '40px' }}></div>
         </div>
       </header>
-
+ 
       {/* Toast Notification */}
       {toast.show && (
         <div className={`fixed top-4 right-4 px-6 py-3 rounded-lg text-white font-semibold shadow-lg animate-slide-in ${
@@ -473,7 +473,7 @@ export default function Appointments({ user, language }) {
           {toast.message}
         </div>
       )}
-
+ 
       <div className="max-w-4xl mx-auto w-full p-6">
         {/* Add Appointment Button */}
         <button 
@@ -483,7 +483,7 @@ export default function Appointments({ user, language }) {
         >
           {showForm ? t.cancel : t.addAppointment}
         </button>
-
+ 
         {/* Form */}
         {showForm && (
           <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6 mb-6 space-y-4">
@@ -525,7 +525,7 @@ export default function Appointments({ user, language }) {
                 )}
               </div>
             </div>
-
+ 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">{t.doctorName}</label>
               <input
@@ -545,7 +545,7 @@ export default function Appointments({ user, language }) {
                 <p className="text-red-500 text-sm mt-1">{errors.doctorName}</p>
               )}
             </div>
-
+ 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">{t.clinic}</label>
               <input
@@ -565,7 +565,7 @@ export default function Appointments({ user, language }) {
                 <p className="text-red-500 text-sm mt-1">{errors.clinic}</p>
               )}
             </div>
-
+ 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">{t.reason}</label>
               <textarea
@@ -577,7 +577,7 @@ export default function Appointments({ user, language }) {
                 className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition"
               />
             </div>
-
+ 
             <div className="flex gap-4">
               <button 
                 type="submit" 
@@ -598,14 +598,14 @@ export default function Appointments({ user, language }) {
             </div>
           </form>
         )}
-
+ 
         {/* Loading State */}
         {isLoading && (
           <div className="flex justify-center items-center py-12">
             <div className="w-8 h-8 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin"></div>
           </div>
         )}
-
+ 
         {/* Appointments List */}
         {!isLoading && appointments.length === 0 ? (
           <p className="text-gray-500 text-center py-12">{t.noAppointments}</p>
@@ -627,7 +627,7 @@ export default function Appointments({ user, language }) {
                         </div>
                         <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-full">{t.upcomingBadge}</span>
                       </div>
-
+ 
                       <div className="grid grid-cols-2 gap-4 mb-3 py-2 border-y border-gray-200">
                         <div>
                           <span className="text-xs font-semibold text-gray-600">{t.doctorLabel}</span>
@@ -638,14 +638,14 @@ export default function Appointments({ user, language }) {
                           <p className="text-gray-800">{appointment.clinic}</p>
                         </div>
                       </div>
-
+ 
                       {appointment.reason && (
                         <div className="mb-3">
                           <strong className="text-xs text-gray-600">{t.reasonLabel}</strong>
                           <p className="text-sm text-gray-700">{appointment.reason}</p>
                         </div>
                       )}
-
+ 
                       <div className="flex gap-2">
                         <button 
                           onClick={() => handleEdit(appointment)}
@@ -667,7 +667,7 @@ export default function Appointments({ user, language }) {
                 </div>
               )}
             </div>
-
+ 
             {/* Past Appointments */}
             {pastAppointments.length > 0 && (
               <div>
@@ -682,7 +682,7 @@ export default function Appointments({ user, language }) {
                         </div>
                         <span className="px-3 py-1 bg-gray-300 text-gray-700 text-xs font-bold rounded-full">{t.completedBadge}</span>
                       </div>
-
+ 
                       <div className="grid grid-cols-2 gap-4 mb-3 py-2 border-y border-gray-300">
                         <div>
                           <span className="text-xs font-semibold text-gray-600">{t.doctorLabel}</span>
@@ -693,14 +693,14 @@ export default function Appointments({ user, language }) {
                           <p className="text-gray-700">{appointment.clinic}</p>
                         </div>
                       </div>
-
+ 
                       {appointment.reason && (
                         <div className="mb-3">
                           <strong className="text-xs text-gray-600">{t.reasonLabel}</strong>
                           <p className="text-sm text-gray-700">{appointment.reason}</p>
                         </div>
                       )}
-
+ 
                       <button 
                         onClick={() => deleteAppointment(appointment.id)}
                         disabled={deleteLoading === appointment.id}

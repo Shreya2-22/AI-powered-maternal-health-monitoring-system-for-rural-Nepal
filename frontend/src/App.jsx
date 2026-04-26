@@ -1,5 +1,66 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, Component } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ERROR BOUNDARY
+// Catches JS errors anywhere in the Router tree so one broken component
+// cannot take down the entire app.
+// ═══════════════════════════════════════════════════════════════════════════
+class ErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, info) {
+    // Log to console for debugging; swap with Sentry/etc. in production
+    console.error('[ErrorBoundary]', error, info.componentStack);
+  }
+
+  handleReset = () => {
+    this.setState({ hasError: false, error: null });
+    window.location.href = '/';
+  };
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+          <div className="bg-white rounded-2xl shadow-lg border border-red-100 p-8 max-w-md w-full text-center">
+            <div className="text-5xl mb-4">⚠️</div>
+            <h1 className="text-xl font-bold text-slate-900 mb-2">
+              Something went wrong
+            </h1>
+            <p className="text-slate-500 text-sm mb-6">
+              An unexpected error occurred. Your data is safe.
+            </p>
+            {this.state.error && (
+              <details className="text-left mb-6 bg-slate-50 rounded-lg p-3">
+                <summary className="text-xs font-semibold text-slate-600 cursor-pointer">
+                  Error details
+                </summary>
+                <pre className="text-xs text-red-600 mt-2 whitespace-pre-wrap break-all">
+                  {this.state.error.message}
+                </pre>
+              </details>
+            )}
+            <button
+              onClick={this.handleReset}
+              className="w-full py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg transition text-sm"
+            >
+              Go back to home
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 import Dashboard    from './components/Dashboard.jsx';
 import ChatBot      from './components/ChatBot.jsx';
 import HealthTracker from './components/HealthTracker.jsx';
@@ -112,18 +173,20 @@ function App() {
   }
  
   return (
-    <Router>
-      <Routes>
-        <Route path="/"            element={<Dashboard     user={currentUser} language={language} setLanguage={setLanguage} onLogout={handleLogout} />} />
-        <Route path="/chat"        element={<ChatBot        user={currentUser} language={language} />} />
-        <Route path="/health"      element={<HealthTracker  user={currentUser} language={language} />} />
-        <Route path="/appointments" element={<Appointments  user={currentUser} language={language} />} />
-        <Route path="/education"   element={<Education      user={currentUser} language={language} />} />
-        <Route path="/emergency"   element={<Emergency      user={currentUser} language={language} />} />
-        <Route path="/risk"        element={<RiskAssessment user={currentUser} language={language} />} />
-        <Route path="*"            element={<Navigate to="/" replace />} />
-      </Routes>
-    </Router>
+    <ErrorBoundary>
+      <Router>
+        <Routes>
+          <Route path="/"            element={<Dashboard     user={currentUser} language={language} setLanguage={setLanguage} onLogout={handleLogout} />} />
+          <Route path="/chat"        element={<ChatBot        user={currentUser} language={language} />} />
+          <Route path="/health"      element={<HealthTracker  user={currentUser} language={language} />} />
+          <Route path="/appointments" element={<Appointments  user={currentUser} language={language} />} />
+          <Route path="/education"   element={<Education      user={currentUser} language={language} />} />
+          <Route path="/emergency"   element={<Emergency      user={currentUser} language={language} />} />
+          <Route path="/risk"        element={<RiskAssessment user={currentUser} language={language} />} />
+          <Route path="*"            element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
+    </ErrorBoundary>
   );
 }
  
@@ -303,19 +366,19 @@ const Onboarding = ({ onComplete, onSwitchToLogin, language, setLanguage }) => {
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-3">
               {/* Grid for Personal Info */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {field('name', t.name, 'text', t.name)}
                 {field('age', t.age, 'number', 'e.g. 25')}
               </div>
  
               {/* Phone & District */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {field('phone', t.phone, 'tel', 'e.g. 9841234567')}
                 {field('district', t.district, 'text', t.district)}
               </div>
  
               {/* Pregnancy Info */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-slate-700 font-medium text-xs mb-1">
                     {t.weeks} <span className="text-red-500">*</span>

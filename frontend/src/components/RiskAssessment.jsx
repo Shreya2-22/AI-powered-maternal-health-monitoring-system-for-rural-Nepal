@@ -7,6 +7,7 @@ export default function RiskAssessment({ user, language }) {
   const [riskData, setRiskData]   = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError]         = useState('');
+  const [lastUpdated, setLastUpdated] = useState(null);
  
   const text = {
     ne: {
@@ -60,11 +61,27 @@ export default function RiskAssessment({ user, language }) {
   const t = text[language] || text['en'];
  
   // ── Fetch risk from backend ────────────────────────────────────────────────
-  const fetchRisk = useCallback(async () => {
+  const fetchRisk = useCallback(async (forceRefresh = false) => {
+    // ── sessionStorage cache ─────────────────────────────────────────────
+    // Key includes a hash of current health records so the cache is
+    // invalidated automatically whenever new records are added.
+    const storedRecordsRaw = localStorage.getItem(`health_records_${user.name}`);
+    const cacheKey = `risk_cache_${user.name}_${storedRecordsRaw ? storedRecordsRaw.length : 0}`;
+ 
+    if (!forceRefresh) {
+      try {
+        const cached = sessionStorage.getItem(cacheKey);
+        if (cached) {
+          setRiskData(JSON.parse(cached));
+          return; // use cache — skip the API call
+        }
+      } catch { /* ignore */ }
+    }
+ 
     try {
       setIsLoading(true);
       setError('');
-      
+ 
       // Handle both user.id (from backend) and user._id (from localStorage)
       const userId = user.id || user._id;
       
@@ -92,6 +109,9 @@ export default function RiskAssessment({ user, language }) {
       }
       const data = await res.json();
       setRiskData(data);
+      setLastUpdated(new Date());
+      // Cache result — invalidated next time health records change
+      try { sessionStorage.setItem(cacheKey, JSON.stringify(data)); } catch { /* ignore */ }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -135,7 +155,7 @@ export default function RiskAssessment({ user, language }) {
     <div className="min-h-screen bg-slate-50 flex flex-col">
       {/* Header */}
       <header className="bg-white border-b border-slate-200">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <button 
             onClick={() => navigate('/')}
             className="text-slate-600 hover:text-slate-900 font-medium text-sm transition"
@@ -146,8 +166,8 @@ export default function RiskAssessment({ user, language }) {
           <div style={{ width: '40px' }}></div>
         </div>
       </header>
-
-      <div className="max-w-6xl mx-auto w-full px-6 py-8">
+ 
+      <div className="max-w-6xl mx-auto w-full px-4 sm:px-6 py-6 sm:py-8">
  
       {/* Loading */}
       {isLoading && (
@@ -176,8 +196,24 @@ export default function RiskAssessment({ user, language }) {
       {!isLoading && !error && riskData && riskData.model_used !== 'no_data' && (
         <div className="max-w-2xl mx-auto space-y-5">
  
-          {/* Model badge */}
-          <div className="flex justify-end">
+          {/* Model badge + Last updated */}
+          <div className="flex justify-between items-center">
+            <span className="text-xs text-slate-500">
+              {lastUpdated && (
+                <>
+                  {language === 'ne' ? 'अन्तिम अपडेट: ' : 'Last updated: '}
+                  <span className="font-medium text-slate-700">
+                    {lastUpdated.toLocaleTimeString(language === 'ne' ? 'ne-NP' : 'en-US', {
+                      hour: '2-digit', minute: '2-digit', second: '2-digit'
+                    })}
+                    {' · '}
+                    {lastUpdated.toLocaleDateString(language === 'ne' ? 'ne-NP' : 'en-US')}
+                  </span>
+                  {' '}
+                  <span title="Result is cached — recalculate to refresh" className="text-green-600">✓ cached</span>
+                </>
+              )}
+            </span>
             <span className={`text-xs font-semibold px-3 py-1 rounded-full ${
               riskData.model_used === 'ml'
                 ? 'bg-purple-100 text-purple-700'
@@ -192,7 +228,7 @@ export default function RiskAssessment({ user, language }) {
             <h2 className="text-base font-semibold text-gray-600 mb-4">{t.yourRisk}</h2>
             <div className="flex items-center justify-between">
               <div>
-                <p className={`text-5xl font-extrabold ${riskText(riskData.risk_level)}`}>
+                <p className={`text-3xl sm:text-5xl font-extrabold ${riskText(riskData.risk_level)}`}>
                   {riskLabel(riskData.risk_level).toUpperCase()}
                 </p>
                 <p className="text-sm text-gray-500 mt-1">
@@ -252,7 +288,7 @@ export default function RiskAssessment({ user, language }) {
  
           {/* Recalculate */}
           <button
-            onClick={fetchRisk}
+            onClick={() => fetchRisk(true)}
             className="w-full bg-pink-600 hover:bg-pink-700 active:scale-95 text-white font-semibold py-3 rounded-xl transition-all"
           >
             🔄 {t.recalculate}

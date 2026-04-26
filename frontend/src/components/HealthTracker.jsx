@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
  
-const API = import.meta.env.VITE_API_URL || 'http://localhost:8001/api';
+import { API } from '../constants';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
  
 const isMongoId = (value) => /^[a-f0-9]{24}$/i.test(String(value || ''));
  
@@ -390,7 +391,7 @@ export default function HealthTracker({ user, language }) {
  
       {/* Header */}
       <header className="bg-white border-b border-slate-200">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <button 
             onClick={() => navigate('/')}
             className="text-slate-600 hover:text-slate-900 font-medium text-sm transition"
@@ -402,7 +403,7 @@ export default function HealthTracker({ user, language }) {
         </div>
       </header>
  
-      <div className="max-w-6xl mx-auto w-full px-6 py-8">
+      <div className="max-w-6xl mx-auto w-full px-4 sm:px-6 py-6 sm:py-8">
         <button 
           onClick={() => setShowForm(!showForm)}
           className="mb-8 px-6 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg transition shadow-sm hover:shadow-md"
@@ -531,10 +532,90 @@ export default function HealthTracker({ user, language }) {
           </form>
         )}
  
+ 
+        {/* ── Trend Charts ──────────────────────────────────────────── */}
+        {records.length >= 2 && (
+          <div className="mb-8 space-y-6">
+            <h2 className="text-2xl font-bold text-gray-800">
+              {language === 'ne' ? 'स्वास्थ्य प्रवृत्ति' : 'Health Trends'}
+            </h2>
+ 
+            {/* Weight chart */}
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+              <p className="text-sm font-semibold text-slate-700 mb-4">
+                {language === 'ne' ? '⚖️ वजन प्रवृत्ति (किलो)' : '⚖️ Weight Trend (kg)'}
+              </p>
+              <ResponsiveContainer width="100%" height={180}>
+                <LineChart data={[...records].reverse().map(r => ({
+                  date: r.date ? r.date.slice(5) : '—',
+                  weight: Number(r.weight),
+                }))}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9"/>
+                  <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#94a3b8' }} tickLine={false}/>
+                  <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} tickLine={false} axisLine={false} domain={['auto','auto']}/>
+                  <Tooltip contentStyle={{ borderRadius:'8px', border:'1px solid #e2e8f0', fontSize:'12px' }}/>
+                  <Line type="monotone" dataKey="weight" stroke="#0F766E" strokeWidth={2.5} dot={{ r:4, fill:'#0F766E' }} activeDot={{ r:6 }}/>
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+ 
+            {/* Blood pressure chart */}
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+              <p className="text-sm font-semibold text-slate-700 mb-4">
+                {language === 'ne' ? '🩺 रक्तचाप प्रवृत्ति (mmHg)' : '🩺 Blood Pressure Trend (mmHg)'}
+              </p>
+              <ResponsiveContainer width="100%" height={180}>
+                <LineChart data={[...records].reverse().map(r => ({
+                  date: r.date ? r.date.slice(5) : '—',
+                  systolic:  Number(r.systolic),
+                  diastolic: Number(r.diastolic),
+                }))}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9"/>
+                  <XAxis dataKey="date" tick={{ fontSize:11, fill:'#94a3b8' }} tickLine={false}/>
+                  <YAxis tick={{ fontSize:11, fill:'#94a3b8' }} tickLine={false} axisLine={false} domain={['auto','auto']}/>
+                  <Tooltip contentStyle={{ borderRadius:'8px', border:'1px solid #e2e8f0', fontSize:'12px' }}/>
+                  <Line type="monotone" dataKey="systolic"  stroke="#ef4444" strokeWidth={2.5} dot={{ r:4, fill:'#ef4444' }} name="Systolic"/>
+                  <Line type="monotone" dataKey="diastolic" stroke="#f97316" strokeWidth={2} strokeDasharray="4 2" dot={{ r:3, fill:'#f97316' }} name="Diastolic"/>
+                </LineChart>
+              </ResponsiveContainer>
+              <div className="flex gap-4 mt-2">
+                <span className="flex items-center gap-1.5 text-xs text-slate-500"><span className="inline-block w-4 h-0.5 bg-red-500 rounded"/>{language === 'ne' ? 'सिस्टोलिक' : 'Systolic'}</span>
+                <span className="flex items-center gap-1.5 text-xs text-slate-500"><span className="inline-block w-4 h-0.5 bg-orange-400 rounded"/>{language === 'ne' ? 'डायस्टोलिक' : 'Diastolic'}</span>
+              </div>
+            </div>
+          </div>
+        )}
+ 
         {/* Records List */}
         <div>
           <h2 className="text-2xl font-bold text-gray-800 mb-4">{t.recordsTitle}</h2>
-          {records.length === 0 ? (
+          {isLoading ? (
+            /* Loading Skeleton */
+            <div className="space-y-4" aria-busy="true" aria-label="Loading health records">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="bg-white rounded-lg shadow-md border-l-4 border-slate-200 p-4 animate-pulse">
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="h-4 bg-slate-200 rounded w-24" />
+                    <div className="flex gap-2">
+                      <div className="h-7 bg-slate-200 rounded w-14" />
+                      <div className="h-7 bg-slate-200 rounded w-16" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 mb-3 py-2 border-y border-gray-100">
+                    <div>
+                      <div className="h-3 bg-slate-200 rounded w-12 mb-1" />
+                      <div className="h-6 bg-slate-200 rounded w-20" />
+                    </div>
+                    <div>
+                      <div className="h-3 bg-slate-200 rounded w-16 mb-1" />
+                      <div className="h-6 bg-slate-200 rounded w-24" />
+                    </div>
+                  </div>
+                  <div className="h-3 bg-slate-200 rounded w-3/4" />
+                </div>
+              ))}
+            </div>
+          ) : records.length === 0 ? (
             <p className="text-gray-500 text-center py-12">{t.noRecords}</p>
           ) : (
             <div className="space-y-4">

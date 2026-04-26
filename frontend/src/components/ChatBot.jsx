@@ -1,14 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { API } from '../constants';
-
+ 
 export default function ChatBot({ user, language }) {
   const navigate = useNavigate();
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
-
+ 
   // Load chat history from localStorage on mount
   useEffect(() => {
     const savedMessages = localStorage.getItem(`chat_${user.name}`);
@@ -17,7 +17,7 @@ export default function ChatBot({ user, language }) {
         setMessages([]);
         return;
       }
-
+ 
       try {
         setMessages(JSON.parse(savedMessages));
       } catch {
@@ -25,12 +25,12 @@ export default function ChatBot({ user, language }) {
       }
     });
   }, [user.name]);
-
+ 
   // Auto-scroll to latest message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
-
+ 
   const text = {
     ne: {
       title: 'च्याटबट',
@@ -49,29 +49,29 @@ export default function ChatBot({ user, language }) {
       welcome: 'Hello! I\'m here to answer your pregnancy-related questions. Please tell me about your concern.'
     }
   };
-
+ 
   const normalizeInput = (value) =>
     String(value || '')
       .toLowerCase()
       .replace(/[^\p{L}\p{N}\s]/gu, ' ')
       .replace(/\s+/g, ' ')
       .trim();
-
+ 
   const tokenize = (value) => normalizeInput(value).split(' ').filter(Boolean);
-
+ 
   const getTopScoredCategories = (scores, limit = 3) =>
     Object.entries(scores)
       .sort((a, b) => b[1] - a[1])
       .filter(([, score]) => score > 0)
       .slice(0, limit)
       .map(([category]) => category);
-
+ 
   // Intelligent NLP-based chatbot with scoring algorithm
   const getResponse = (userInput) => {
     const input = normalizeInput(userInput);
     const inputTokens = tokenize(userInput);
     const lang = language;
-
+ 
     // MEGA Enhanced keyword mapping - covers ALL pregnancy questions
     const keywords = {
       ne: {
@@ -137,7 +137,7 @@ export default function ChatBot({ user, language }) {
         breastfeeding: ['breast', 'nursing', 'breastfeed', 'milk', 'nipple']
       }
     };
-
+ 
     // Dynamic responses based on context
     const getAnswers = () => ({
       ne: {
@@ -202,7 +202,7 @@ export default function ChatBot({ user, language }) {
         breastfeeding: '🍼 BREASTFEEDING PREP: Take a breastfeeding class before baby arrives. Prepare nipples (avoid harsh soaps, massage gently). Get proper nursing bras (2-3). Have lanolin cream or nipple balm ready. Practice latch position. After birth, try to feed within first hour - this is critical! First milk is colostrum (thin yellow liquid) - very valuable for baby\'s immunity! Expect breast engorgement on day 2-3. Use warm compress to help. If feeding is painful, consult a lactation consultant immediately.'
       }
     });
-
+ 
     const smallTalk = {
       ne: {
         thanks: 'धन्यवाद! म सधैं मद्दत गर्न तयार छु। तपाईं अर्को प्रश्न सोध्न सक्नुहुन्छ।',
@@ -215,7 +215,7 @@ export default function ChatBot({ user, language }) {
         identity: 'I am the AamaSuraksha chat assistant. I provide general pregnancy guidance, but for emergencies you should contact a doctor immediately.'
       }
     };
-
+ 
     // Fuzzy matching to handle typos (Levenshtein-like similarity)
     const getSimilarityScore = (str1, str2) => {
       const longer = str1.length > str2.length ? str1 : str2;
@@ -226,7 +226,7 @@ export default function ChatBot({ user, language }) {
       const editDistance = getEditDistance(longer, shorter);
       return ((longer.length - editDistance) / longer.length) * 100;
     };
-
+ 
     const getEditDistance = (s1, s2) => {
       const costs = [];
       for (let i = 0; i <= s1.length; i++) {
@@ -246,7 +246,7 @@ export default function ChatBot({ user, language }) {
       }
       return costs[s2.length];
     };
-
+ 
     const detectSmallTalk = () => {
       const thanksPatterns = lang === 'ne'
         ? ['धन्यवाद', 'थ्यांक', 'thank', 'thanks']
@@ -257,36 +257,36 @@ export default function ChatBot({ user, language }) {
       const identityPatterns = lang === 'ne'
         ? ['तिमी को', 'तपाईं को', 'को हौ', 'तपाईं के हो']
         : ['who are you', 'what are you', 'are you ai', 'bot'];
-
+ 
       if (thanksPatterns.some((p) => input.includes(p))) return 'thanks';
       if (byePatterns.some((p) => input.includes(p))) return 'bye';
       if (identityPatterns.some((p) => input.includes(p))) return 'identity';
       return null;
     };
-
+ 
     const detectTrimesterByMonth = () => {
       const monthMatch = input.match(/(\d{1,2})\s*(month|months|mahina|महिना)/i);
       if (!monthMatch) return null;
-
+ 
       const monthNumber = Number(monthMatch[1]);
       if (monthNumber >= 1 && monthNumber <= 6) return 'trimester1';
       if (monthNumber >= 7 && monthNumber <= 9) return 'trimester3';
       return null;
     };
-
+ 
     const hasEmergencyPattern = () => {
       const emergencySignals = lang === 'ne'
         ? ['गम्भीर', 'सास फेर्न गारो', 'बेहोस', 'धेरै रक्तस्राव', 'अत्यधिक दर्द', 'तुरंत']
         : ['severe', 'faint', 'unconscious', 'heavy bleeding', 'can\'t breathe', 'chest pain', 'urgent'];
-
+ 
       return emergencySignals.some((signal) => input.includes(signal));
     };
-
+ 
     // Category scoring on phrase, token, and typo similarity
     const scoreCategories = () => {
       const scores = {};
       const keywordSet = keywords[lang];
-
+ 
       for (const [category, keywordList] of Object.entries(keywordSet)) {
         let categoryScore = 0;
         
@@ -295,22 +295,22 @@ export default function ChatBot({ user, language }) {
             categoryScore += keyword.includes(' ') ? 18 : 12;
           } else {
             const keywordTokens = tokenize(keyword);
-
+ 
             for (const token of inputTokens) {
               if (keywordTokens.includes(token)) {
                 categoryScore += 8;
               }
-
+ 
               if (token.length >= 4 && keyword.startsWith(token)) {
                 categoryScore += 4;
               }
-
+ 
               const similarity = getSimilarityScore(token, keyword);
               if (similarity >= 82) {
                 categoryScore += similarity / 8;
               }
             }
-
+ 
             const phraseSimilarity = getSimilarityScore(input, keyword);
             if (phraseSimilarity >= 74) {
               categoryScore += phraseSimilarity / 14;
@@ -325,35 +325,35 @@ export default function ChatBot({ user, language }) {
         
         scores[category] = categoryScore;
       }
-
+ 
       return scores;
     };
-
+ 
     const scores = scoreCategories();
     const bestMatch = Object.entries(scores).reduce((best, [key, value]) => 
       value > best.score ? { category: key, score: value } : best, 
       { category: null, score: 0 }
     );
-
+ 
     const answers = getAnswers()[lang];
-
+ 
     // Small-talk support for human-like interaction
     const smallTalkIntent = detectSmallTalk();
     if (smallTalkIntent) {
       return smallTalk[lang][smallTalkIntent];
     }
-
+ 
     // Safety-first behavior for urgent signals
     if (hasEmergencyPattern() && (bestMatch.category === 'bleeding' || bestMatch.category === 'pain' || bestMatch.category === 'breathing' || bestMatch.category === 'emergency')) {
       return answers.emergency;
     }
-
+ 
     // Month-based understanding (e.g., "8 months")
     const detectedTrimester = detectTrimesterByMonth();
     if (detectedTrimester && answers[detectedTrimester]) {
       return answers[detectedTrimester];
     }
-
+ 
     // Return pregnancy advice based on strongest intent
     if (bestMatch.score > 6 || input.includes('pregnant') || input.includes('pregnancy') || input.includes('trimester')) {
       // Explicit trimester keywords
@@ -368,7 +368,7 @@ export default function ChatBot({ user, language }) {
         return answers[bestMatch.category];
       }
     }
-
+ 
     // Default response with smart suggestions based on top matched intents
     const topMatches = getTopScoredCategories(scores, 3);
     if (lang === 'ne') {
@@ -379,7 +379,7 @@ export default function ChatBot({ user, language }) {
       return `❓ I did not fully understand that. Please rephrase your question in one sentence. I can help with: ${prompts.join(', ')}`;
     }
   };
-
+ 
   const fetchBackendResponse = async (userInput) => {
     try {
       const response = await fetch(`${API}/chat`, {
@@ -394,30 +394,30 @@ export default function ChatBot({ user, language }) {
           memory_turns: 6
         })
       });
-
+ 
       if (!response.ok) {
         throw new Error(`Backend chat failed with ${response.status}`);
       }
-
+ 
       const data = await response.json();
       if (typeof data?.reply === 'string' && data.reply.trim()) {
         return data.reply;
       }
-
+ 
       return getResponse(userInput);
     } catch {
       // Fallback keeps chatbot usable even if backend is temporarily unavailable.
       return getResponse(userInput);
     }
   };
-
+ 
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!inputValue.trim()) return;
-
+ 
     // Save input before clearing
     const originalInput = inputValue;
-
+ 
     // Add user message
     const userMessage = {
       id: Date.now(),
@@ -428,14 +428,14 @@ export default function ChatBot({ user, language }) {
         minute: '2-digit'
       })
     };
-
+ 
     const updatedMessages = [...messages, userMessage];
     setMessages(updatedMessages);
     setInputValue('');
-
+ 
     setIsLoading(true);
     const botResponse = await fetchBackendResponse(originalInput);
-
+ 
       const botMessage = {
         id: Date.now() + 1,
         text: botResponse,
@@ -450,16 +450,16 @@ export default function ChatBot({ user, language }) {
     localStorage.setItem(`chat_${user.name}`, JSON.stringify(finalMessages));
     setIsLoading(false);
   };
-
+ 
   const handleClearChat = () => {
     if (confirm(language === 'ne' ? 'क्या तपाई चैट साफ गर्न चाहनुहुन्छ?' : 'Clear all messages?')) {
       setMessages([]);
       localStorage.removeItem(`chat_${user.name}`);
     }
   };
-
+ 
   const t = text[language];
-
+ 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
       {/* Header */}
@@ -480,7 +480,7 @@ export default function ChatBot({ user, language }) {
           </button>
         </div>
       </header>
-
+ 
       {/* Messages Area */}
       <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full px-6 py-8">
         <div className="flex-1 overflow-y-auto bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6 space-y-4">
@@ -513,7 +513,7 @@ export default function ChatBot({ user, language }) {
           )}
           <div ref={messagesEndRef} />
         </div>
-
+ 
         {/* Input Form */}
         <form className="flex gap-3" onSubmit={handleSendMessage}>
           <input
