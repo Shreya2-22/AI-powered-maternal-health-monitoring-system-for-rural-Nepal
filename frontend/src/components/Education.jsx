@@ -1,10 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function Education({ user, language }) {
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState('nutrition');
-  const [savedArticles, setSavedArticles] = useState([]);
+  const [savedArticles, setSavedArticles] = useState(() => {
+    const saved = localStorage.getItem(`saved_articles_${user?.name}`);
+    return saved ? JSON.parse(saved) : [];
+  });
 
   const currentWeek = user?.weeks_pregnant || 20;
 
@@ -239,14 +242,6 @@ export default function Education({ user, language }) {
       ]
     }
   };
-
-  // Load saved articles from localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem(`saved_articles_${user?.name}`);
-    if (saved) {
-      setSavedArticles(JSON.parse(saved));
-    }
-  }, [user?.name]);
 
   // Save article to localStorage
   const handleSaveArticle = (article) => {

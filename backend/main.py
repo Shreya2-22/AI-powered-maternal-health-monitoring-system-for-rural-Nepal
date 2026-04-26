@@ -1,11 +1,12 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from pymongo import MongoClient
 from bson import ObjectId
 from dotenv import load_dotenv
 import os
 from datetime import datetime
+from typing import List, Optional
 from risk_assessment import PregnancyRiskAssessment
 from chat_service import PregnancyChatService
 
@@ -61,6 +62,7 @@ users_collection          = db["users"]           if db is not None else None
 health_records_collection = db["health_records"]  if db is not None else None
 appointments_collection   = db["appointments"]    if db is not None else None
 saved_articles_collection = db["saved_articles"]  if db is not None else None
+chat_logs_collection      = db["chat_logs"]       if db is not None else None
  
 
 os.makedirs("models", exist_ok=True)
@@ -139,6 +141,18 @@ class ChatRequest(BaseModel):
     language: str = "en"
     session_id: str = "global"
     memory_turns: int = 6
+
+
+class EmergencyAssessmentRequest(BaseModel):
+    language: str = "en"
+    selected_symptoms: List[str] = Field(default_factory=list)
+    weeks_pregnant: int = 20
+    duration_hours: Optional[int] = None
+    pain_scale: Optional[int] = None
+    temperature_c: Optional[float] = None
+    systolic_bp: Optional[int] = None
+    diastolic_bp: Optional[int] = None
+    reduced_fetal_movement: bool = False
  
  
 @app.get("/")
@@ -168,7 +182,8 @@ async def chat_with_guardrails(request: ChatRequest):
             session_id=request.session_id,
             memory_turns=request.memory_turns,
         )
-        return {
+
+        response_payload = {
             "reply": result.reply,
             "intent": result.intent,
             "restricted": result.restricted,
@@ -176,12 +191,180 @@ async def chat_with_guardrails(request: ChatRequest):
             "confidence": result.confidence,
             "context_used": result.context_used,
             "memory_turns": result.memory_turns,
+            "top_intents": result.top_intents or [],
+            "model_used": result.model_used,
+            "safety_path": result.safety_path,
             "timestamp": datetime.now().isoformat(),
         }
+
+        # Best practice for healthcare bots: keep audit logs when DB is available.
+        if chat_logs_collection is not None:
+            try:
+                chat_logs_collection.insert_one(
+                    {
+                        "session_id": request.session_id,
+                        "language": request.language,
+                        "message": request.message,
+                        "reply": result.reply,
+                        "intent": result.intent,
+                        "confidence": float(result.confidence),
+                        "restricted": bool(result.restricted),
+                        "emergency": bool(result.emergency),
+                        "context_used": bool(result.context_used),
+                        "model_used": result.model_used,
+                        "safety_path": result.safety_path,
+                        "created_at": datetime.now().isoformat(),
+                    }
+                )
+            except Exception:
+                # Logging should never break patient-facing chat responses.
+                pass
+
+        return response_payload
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Chat endpoint error: {str(e)}")
+
+
+@app.post("/api/emergency-assessment")
+async def emergency_assessment(request: EmergencyAssessmentRequest):
+    """Advanced triage endpoint combining symptoms, vitals, and pregnancy context."""
+    try:
+        lang = "ne" if str(request.language).lower().startswith("ne") else "en"
+
+        symptom_weights = {
+            "bleeding": 5,
+            "severe_pain": 5,
+            "fever": 3,
+            "swelling": 3,
+            "headache": 3,
+            "dizziness": 2,
+            "nausea": 1,
+        }
+
+        score = 0
+        reasons: List[str] = []
+        emergency_flags: List[str] = []
+        urgent_flags: List[str] = []
+
+        symptoms = set(request.selected_symptoms)
+        for symptom_id in symptoms:
+            score += symptom_weights.get(symptom_id, 0)
+
+        if "bleeding" in symptoms and "severe_pain" in symptoms:
+            emergency_flags.append("bleeding_with_pain")
+            reasons.append("Heavy bleeding with severe pain")
+
+        if request.reduced_fetal_movement and request.weeks_pregnant >= 28:
+            emergency_flags.append("reduced_fetal_movement")
+            reasons.append("Reduced fetal movement in late pregnancy")
+
+        if request.temperature_c is not None:
+            if request.temperature_c >= 39.0:
+                urgent_flags.append("high_fever")
+                reasons.append("High fever >= 39C")
+                score += 2
+            elif request.temperature_c >= 38.0:
+                urgent_flags.append("fever")
+                reasons.append("Fever >= 38C")
+                score += 1
+
+        if request.systolic_bp is not None and request.diastolic_bp is not None:
+            if request.systolic_bp >= 160 or request.diastolic_bp >= 110:
+                emergency_flags.append("very_high_bp")
+                reasons.append("Very high blood pressure")
+            elif request.systolic_bp >= 140 or request.diastolic_bp >= 90:
+                urgent_flags.append("high_bp")
+                reasons.append("High blood pressure")
+                score += 2
+
+        if request.pain_scale is not None:
+            if request.pain_scale >= 9:
+                urgent_flags.append("extreme_pain")
+                reasons.append("Extreme pain level")
+                score += 2
+            elif request.pain_scale >= 7:
+                urgent_flags.append("high_pain")
+                reasons.append("High pain level")
+                score += 1
+
+        if request.duration_hours is not None and request.duration_hours >= 24:
+            urgent_flags.append("persistent_symptoms")
+            reasons.append("Symptoms lasting 24+ hours")
+            score += 1
+
+        score = min(score, 10)
+
+        if emergency_flags:
+            level = "emergency"
+        elif urgent_flags or score >= 6:
+            level = "urgent"
+        else:
+            level = "self_care"
+
+        next_steps = {
+            "en": {
+                "emergency": "Go to the nearest hospital immediately and call your doctor now.",
+                "urgent": "Contact your doctor today and seek same-day evaluation.",
+                "self_care": "Monitor symptoms closely, hydrate, rest, and re-check in 6-12 hours.",
+            },
+            "ne": {
+                "emergency": "तुरुन्त नजिकको अस्पताल जानुहोस् र अहिले नै डाक्टरलाई सम्पर्क गर्नुहोस्।",
+                "urgent": "आजै डाक्टरलाई सम्पर्क गर्नुहोस् र सोही दिन जाँच गराउनुहोस्।",
+                "self_care": "लक्षण नजिकबाट हेर्नुहोस्, पानी पिउनुहोस्, आराम गर्नुहोस्, र ६-१२ घण्टामा पुनः जाँच गर्नुहोस्।",
+            },
+        }
+
+        action_plans = {
+            "en": {
+                "emergency": [
+                    "Do not wait at home if bleeding, severe pain, or very high BP is present.",
+                    "Carry prior reports and medication list.",
+                    "Ask a family member to accompany you.",
+                ],
+                "urgent": [
+                    "Check blood pressure and temperature again within 1 hour.",
+                    "Avoid heavy activity and keep hydration up.",
+                    "Call your clinic and describe current symptoms.",
+                ],
+                "self_care": [
+                    "Track symptoms every 4-6 hours.",
+                    "Escalate if symptoms worsen or new red flags appear.",
+                    "Discuss persistent discomfort at your next prenatal visit.",
+                ],
+            },
+            "ne": {
+                "emergency": [
+                    "रक्तस्राव, अत्यधिक दुखाइ, वा धेरै उच्च BP भए घरमै नबस्नुहोस्।",
+                    "पुराना रिपोर्ट र औषधि सूची साथमा लिनुहोस्।",
+                    "सम्भव भए परिवारको सदस्यसँग जानुहोस्।",
+                ],
+                "urgent": [
+                    "१ घण्टाभित्र BP र तापक्रम फेरि जाँच गर्नुहोस्।",
+                    "भारी काम नगर्नुहोस् र पर्याप्त पानी पिउनुहोस्।",
+                    "क्लिनिकमा फोन गरेर हालको लक्षण बताउनुहोस्।",
+                ],
+                "self_care": [
+                    "प्रत्येक ४-६ घण्टामा लक्षण नोट गर्नुहोस्।",
+                    "लक्षण बढे वा नयाँ जोखिम संकेत आए तुरुन्त escalate गर्नुहोस्।",
+                    "लामो समय असहजता रहे अर्को prenatal visit मा डाक्टरसँग छलफल गर्नुहोस्।",
+                ],
+            },
+        }
+
+        return {
+            "level": level,
+            "score": score,
+            "reasons": reasons,
+            "red_flags": emergency_flags,
+            "urgent_flags": urgent_flags,
+            "next_step": next_steps[lang][level],
+            "actions": action_plans[lang][level],
+            "timestamp": datetime.now().isoformat(),
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Emergency assessment error: {str(e)}")
  
  
 @app.post("/api/users")

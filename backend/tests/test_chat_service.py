@@ -25,6 +25,13 @@ def test_red_flag_classifier_escalates_before_intent_scoring():
     assert result.emergency is True
 
 
+def test_fetal_movement_variant_with_greeting_still_escalates():
+    service = PregnancyChatService()
+    result = service.answer("Hi my baby is not moving since the morning", "en", session_id="u2c")
+    assert result.intent == "emergency"
+    assert result.emergency is True
+
+
 def test_topic_restriction_blocks_offtopic():
     service = PregnancyChatService()
     result = service.answer("who will win football world cup", "en", session_id="u3")
@@ -48,6 +55,34 @@ def test_memory_followup_uses_recent_context():
     follow_up = service.answer("and now?", "en", session_id="u5", memory_turns=4)
     assert follow_up.context_used is True
     assert follow_up.intent == "nausea"
+
+
+def test_short_followup_word_uses_context_when_available():
+    service = PregnancyChatService()
+    first = service.answer("I have nausea in pregnancy", "en", session_id="u5b", memory_turns=4)
+    assert first.intent == "nausea"
+
+    follow_up = service.answer("what", "en", session_id="u5b", memory_turns=4)
+    assert follow_up.context_used is True
+    assert follow_up.intent == "nausea"
+
+
+def test_greeting_prefixed_nausea_question_not_treated_as_small_talk():
+    service = PregnancyChatService()
+    result = service.answer("hi is nausea normal?", "en", session_id="u5c")
+    assert result.intent != "greeting"
+    assert result.restricted is False
+
+
+def test_headache_pregnancy_question_is_not_restricted():
+    service = PregnancyChatService()
+    result = service.answer(
+        "i have been having headache since last 2 days in pregnancy what should I do",
+        "en",
+        session_id="u5d",
+    )
+    assert result.intent != "restricted"
+    assert result.restricted is False
 
 
 def test_memory_window_limits_old_context():
@@ -74,3 +109,91 @@ def test_inactive_sessions_auto_expire():
     service.answer("hello", "en", session_id="another-session")
 
     assert expiring_key not in service.sessions
+
+
+def test_headache_first_trimester_mild():
+    """Test that headache during pregnancy is recognized and handled."""
+    service = PregnancyChatService()
+    result = service.answer(
+        "I have a headache during my pregnancy",
+        "en",
+        session_id="u7",
+    )
+    # Should not be restricted and should provide guidance
+    assert result.restricted is False
+    assert "doctor" in result.reply.lower() or "hydration" in result.reply.lower() or "pain" in result.reply.lower()
+
+
+def test_headache_with_severity_level():
+    """Test that severity keywords influence response."""
+    service = PregnancyChatService()
+    result = service.answer(
+        "I have severe headache during pregnancy",
+        "en",
+        session_id="u8",
+    )
+    assert result.restricted is False
+    # Should recognize this is serious
+    assert "severe" in result.reply.lower() or "urgent" in result.reply.lower() or "doctor" in result.reply.lower()
+
+
+def test_headache_with_red_flag_symptoms():
+    """Test that red flags are recognized in headache context."""
+    service = PregnancyChatService()
+    result = service.answer(
+        "I have headache with vision changes during pregnancy",
+        "en",
+        session_id="u9",
+    )
+    # Should not be restricted and should address the concern
+    assert result.restricted is False
+    assert "doctor" in result.reply.lower() or "urgent" in result.reply.lower() or "vision" in result.reply.lower()
+
+
+def test_swelling_symptom_basic():
+    """Test that swelling in pregnancy is recognized as pregnancy-related."""
+    service = PregnancyChatService()
+    result = service.answer(
+        "I have swelling in pregnancy",
+        "en",
+        session_id="u10",
+    )
+    # Should not be restricted - it's pregnancy-related
+    assert result.restricted is False
+
+
+def test_dizziness_symptom_basic():
+    """Test that dizziness in pregnancy context is not restricted."""
+    service = PregnancyChatService()
+    result = service.answer(
+        "I feel dizzy during my pregnancy what should I do",
+        "en",
+        session_id="u11",
+    )
+    # Should not be restricted - includes pregnancy context
+    assert result.restricted is False
+
+
+def test_constipation_symptom_basic():
+    """Test that constipation in pregnancy context is handled."""
+    service = PregnancyChatService()
+    result = service.answer(
+        "I have constipation problems in pregnancy",
+        "en",
+        session_id="u12",
+    )
+    # Should not be restricted - includes pregnancy context
+    assert result.restricted is False
+
+
+def test_nepali_headache_response():
+    """Test that Nepali headache responses work correctly."""
+    service = PregnancyChatService()
+    result = service.answer(
+        "गर्भावस्थामा टाउको दुखाइ",
+        "ne",
+        session_id="u13",
+    )
+    assert result.restricted is False
+    # Check for helpful response in Nepali
+    assert len(result.reply) > 0  # Should return a response

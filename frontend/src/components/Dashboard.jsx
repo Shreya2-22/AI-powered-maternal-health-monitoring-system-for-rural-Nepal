@@ -74,7 +74,7 @@ const Dashboard = ({ user, language, setLanguage, onLogout }) => {
       return {
         count: parsed.length,
         latestWeight: latest.weight || null,
-        latestBP: `${latest.systolic}/${latest.diastolic}` || null,
+        latestBP: (latest.systolic && latest.diastolic) ? `${latest.systolic}/${latest.diastolic}` : null,
         avgWeight: (parsed.reduce((sum, r) => sum + (parseFloat(r.weight) || 0), 0) / parsed.length).toFixed(1)
       };
     } catch {

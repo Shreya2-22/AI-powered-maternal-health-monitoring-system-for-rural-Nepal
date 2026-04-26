@@ -46,7 +46,7 @@ class PregnancyChatIntentModel:
                 "bleeding during pregnancy", "spotting in pregnancy", "blood coming out", "light bleeding after pregnancy", "heavy bleeding while pregnant", "गर्भावस्थामा रगत आयो", "रक्तस्राव भएको छ", "धेरै रगत बगिरहेको छ",
             ],
             "pain": [
-                "stomach pain in pregnancy", "severe abdominal pain", "cramps during pregnancy", "lower belly pain", "pain in pregnancy", "पेट दुखेको छ", "अत्यधिक दुखाइ", "पेट धेरै दुख्यो",
+                "stomach pain in pregnancy", "severe abdominal pain", "cramps during pregnancy", "lower belly pain", "pain in pregnancy", "headache in pregnancy", "migraine during pregnancy", "पेट दुखेको छ", "अत्यधिक दुखाइ", "पेट धेरै दुख्यो", "टाउको दुखाइ",
             ],
             "fever": [
                 "fever during pregnancy", "high temperature while pregnant", "I have fever", "jeworo in pregnancy", "temperature above 38", "ज्वरो आएको छ", "गर्भावस्थामा ज्वरो",
@@ -65,6 +65,18 @@ class PregnancyChatIntentModel:
             ],
             "breastfeeding": [
                 "breastfeeding tips", "how to latch baby", "milk after birth", "breastfeed support", "nursing help", "स्तनपान कसरी गर्ने", "दूध कसरी आउँछ", "निप्पल दुख्यो",
+            ],
+            "postpartum": [
+                "after delivery care", "postnatal recovery", "newborn care", "mother recovery after delivery", "postpartum concerns", "सुत्केरी हेरचाह", "नवजात हेरचाह",
+            ],
+            "swelling": [
+                "swelling in pregnancy", "edema during pregnancy", "swollen feet and legs", "puffiness in pregnancy", "गर्भावस्थामा सूजन", "खुट्टा सूजिएको छ",
+            ],
+            "dizziness": [
+                "dizzy during pregnancy", "dizziness while pregnant", "feeling lightheaded", "vertigo in pregnancy", "गर्भावस्थामा चक्कर", "हल्का हुन थाल्यो",
+            ],
+            "constipation": [
+                "constipation in pregnancy", "difficulty with bowels while pregnant", "hard stool during pregnancy", "गर्भावस्थामा कब्ज", "पाइखाना कठिन",
             ],
         }
 

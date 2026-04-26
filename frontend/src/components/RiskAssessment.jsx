@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { API } from '../constants';
  
@@ -60,7 +60,7 @@ export default function RiskAssessment({ user, language }) {
   const t = text[language] || text['en'];
  
   // ── Fetch risk from backend ────────────────────────────────────────────────
-  const fetchRisk = async () => {
+  const fetchRisk = useCallback(async () => {
     try {
       setIsLoading(true);
       setError('');
@@ -97,9 +97,9 @@ export default function RiskAssessment({ user, language }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]);
  
-  useEffect(() => { fetchRisk(); }, [user]);
+  useEffect(() => { fetchRisk(); }, [fetchRisk]);
  
   // ── Colours ────────────────────────────────────────────────────────────────
   const riskBg   = (lvl) => lvl === 'low' ? 'bg-green-50 border-green-400'

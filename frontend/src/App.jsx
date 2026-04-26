@@ -8,6 +8,7 @@ import Education    from './components/Education.jsx';
 import Emergency    from './components/Emergency.jsx';
 import RiskAssessment from './components/RiskAssessment.jsx';
 import Login        from './components/Login.jsx';
+import { API } from './constants';
  
 // API constant moved to src/constants.js
  
