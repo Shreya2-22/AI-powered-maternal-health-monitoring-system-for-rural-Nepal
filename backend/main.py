@@ -125,7 +125,7 @@ class SavedArticle(BaseModel):
  
 class RiskAssessmentRequest(BaseModel):
     user_id: str
-    health_records: list = []   # frontend sends localStorage records here
+    health_records: List[dict] = Field(default_factory=list)   # frontend sends localStorage records here
 
 class ModelTrainingRequest(BaseModel):
     action: str  # "train", "evaluate", "stats"
@@ -137,10 +137,15 @@ class FeatureAnalysisRequest(BaseModel):
 
 
 class ChatRequest(BaseModel):
-    message: str
+    message: str = Field(min_length=1, max_length=1000)
     language: str = "en"
     session_id: str = "global"
-    memory_turns: int = 6
+    memory_turns: int = Field(default=6, ge=1, le=10)
+
+
+class LoginRequest(BaseModel):
+    name: str = Field(min_length=1, max_length=100)
+    phone: str = Field(min_length=7, max_length=20)
 
 
 class EmergencyAssessmentRequest(BaseModel):
@@ -173,11 +178,12 @@ async def chat_with_guardrails(request: ChatRequest):
     2) Strict maternal-health topic restriction
     """
     try:
-        if not request.message or not request.message.strip():
+        cleaned_message = request.message.strip()
+        if not cleaned_message:
             raise HTTPException(status_code=400, detail="Message is required")
 
         result = pregnancy_chat.answer(
-            message=request.message,
+            message=cleaned_message,
             language=request.language,
             session_id=request.session_id,
             memory_turns=request.memory_turns,
@@ -204,7 +210,7 @@ async def chat_with_guardrails(request: ChatRequest):
                     {
                         "session_id": request.session_id,
                         "language": request.language,
-                        "message": request.message,
+                        "message": cleaned_message,
                         "reply": result.reply,
                         "intent": result.intent,
                         "confidence": float(result.confidence),
@@ -375,7 +381,7 @@ async def create_user(user: User):
     try:
         # Validate user data
         if VALIDATION_AVAILABLE:
-            is_valid, error_msg = UserValidator.validate_user_registration(user.dict())
+            is_valid, error_msg = UserValidator.validate_user_registration(user.model_dump())
             if not is_valid:
                 raise HTTPException(status_code=400, detail=f"Invalid registration: {error_msg}")
             
@@ -389,7 +395,7 @@ async def create_user(user: User):
             existing["id"] = str(existing.pop("_id"))
             return existing
         
-        data = user.dict()
+        data = user.model_dump()
         data["phone"] = normalized_phone
         data["created_at"] = datetime.now().isoformat()
         result  = users_collection.insert_one(data)
@@ -403,14 +409,21 @@ async def create_user(user: User):
  
 # ✅ Login route BEFORE the /{user_name} route (critical order!)
 @app.post("/api/users/login")
-async def login_user(login_data: dict):
+async def login_user(login_data: LoginRequest):
     if users_collection is None:
         raise HTTPException(status_code=503, detail="Database offline. Login from localStorage only.")
     try:
-        name  = login_data.get("name",  "").strip()
-        phone = login_data.get("phone", "").strip()
+        name = login_data.name.strip()
+        phone = login_data.phone.strip()
         if not name or not phone:
             raise HTTPException(status_code=400, detail="Name and phone are required")
+
+        if VALIDATION_AVAILABLE:
+            is_valid, error_msg = UserValidator.validate_nepali_phone(phone)
+            if not is_valid:
+                raise HTTPException(status_code=400, detail=error_msg)
+            phone = DataSanitizer.normalize_phone(phone)
+
         user = users_collection.find_one({"name": name, "phone": phone})
         if not user:
             raise HTTPException(status_code=404, detail="User not found. Please register first.")
@@ -445,15 +458,15 @@ async def create_health_record(record: HealthRecord):
     try:
         # Validate record
         if VALIDATION_AVAILABLE:
-            is_valid, error_msg = HealthRecordValidator.validate_health_record(record.dict())
+            is_valid, error_msg = HealthRecordValidator.validate_health_record(record.model_dump())
             if not is_valid:
                 raise HTTPException(status_code=400, detail=f"Invalid health record: {error_msg}")
             
             # Normalize record
-            normalized_data = DataSanitizer.normalize_health_record(record.dict())
+            normalized_data = DataSanitizer.normalize_health_record(record.model_dump())
             data = normalized_data
         else:
-            data = record.dict()
+            data = record.model_dump()
         
         data["created_at"] = datetime.now().isoformat()
         result  = health_records_collection.insert_one(data)
@@ -482,16 +495,22 @@ async def update_health_record(record_id: str, record: HealthRecord):
     if health_records_collection is None:
         raise HTTPException(status_code=503, detail="Database offline")
     try:
-        data = record.dict()
+        if not ObjectId.is_valid(record_id):
+            raise HTTPException(status_code=400, detail="Invalid record id format")
+
+        data = record.model_dump()
         data["updated_at"] = datetime.now().isoformat()
+        oid = ObjectId(record_id)
         result = health_records_collection.update_one(
-            {"_id": ObjectId(record_id)}, {"$set": data}
+            {"_id": oid}, {"$set": data}
         )
         if result.matched_count == 0:
             raise HTTPException(status_code=404, detail="Record not found")
-        updated = health_records_collection.find_one({"_id": ObjectId(record_id)})
+        updated = health_records_collection.find_one({"_id": oid})
         updated["id"] = str(updated.pop("_id"))
         return updated
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
  
@@ -500,10 +519,15 @@ async def delete_health_record(record_id: str):
     if health_records_collection is None:
         raise HTTPException(status_code=503, detail="Database offline")
     try:
+        if not ObjectId.is_valid(record_id):
+            raise HTTPException(status_code=400, detail="Invalid record id format")
+
         result = health_records_collection.delete_one({"_id": ObjectId(record_id)})
         if result.deleted_count == 0:
             raise HTTPException(status_code=404, detail="Record not found")
         return {"status": "deleted", "message": "Health record deleted successfully"}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
  
@@ -514,7 +538,7 @@ async def create_appointment(appointment: Appointment):
     if appointments_collection is None:
         raise HTTPException(status_code=503, detail="Database offline")
     try:
-        data = appointment.dict()
+        data = appointment.model_dump()
         data["created_at"] = datetime.now().isoformat()
         result  = appointments_collection.insert_one(data)
         created = appointments_collection.find_one({"_id": result.inserted_id})
@@ -540,16 +564,22 @@ async def update_appointment(appointment_id: str, appointment: Appointment):
     if appointments_collection is None:
         raise HTTPException(status_code=503, detail="Database offline")
     try:
-        data = appointment.dict()
+        if not ObjectId.is_valid(appointment_id):
+            raise HTTPException(status_code=400, detail="Invalid appointment id format")
+
+        data = appointment.model_dump()
         data["updated_at"] = datetime.now().isoformat()
+        oid = ObjectId(appointment_id)
         result = appointments_collection.update_one(
-            {"_id": ObjectId(appointment_id)}, {"$set": data}
+            {"_id": oid}, {"$set": data}
         )
         if result.matched_count == 0:
             raise HTTPException(status_code=404, detail="Appointment not found")
-        updated = appointments_collection.find_one({"_id": ObjectId(appointment_id)})
+        updated = appointments_collection.find_one({"_id": oid})
         updated["id"] = str(updated.pop("_id"))
         return updated
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
  
@@ -558,10 +588,15 @@ async def delete_appointment(appointment_id: str):
     if appointments_collection is None:
         raise HTTPException(status_code=503, detail="Database offline")
     try:
+        if not ObjectId.is_valid(appointment_id):
+            raise HTTPException(status_code=400, detail="Invalid appointment id format")
+
         result = appointments_collection.delete_one({"_id": ObjectId(appointment_id)})
         if result.deleted_count == 0:
             raise HTTPException(status_code=404, detail="Appointment not found")
         return {"status": "deleted", "message": "Appointment deleted successfully"}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
  
@@ -774,7 +809,7 @@ async def save_article(article: SavedArticle):
     if saved_articles_collection is None:
         raise HTTPException(status_code=503, detail="Database offline")
     try:
-        data = article.dict()
+        data = article.model_dump()
         data["created_at"] = datetime.now().isoformat()
         result  = saved_articles_collection.insert_one(data)
         created = saved_articles_collection.find_one({"_id": result.inserted_id})
@@ -801,10 +836,15 @@ async def delete_saved_article(article_id: str):
     if saved_articles_collection is None:
         raise HTTPException(status_code=503, detail="Database offline")
     try:
+        if not ObjectId.is_valid(article_id):
+            raise HTTPException(status_code=400, detail="Invalid article id format")
+
         result = saved_articles_collection.delete_one({"_id": ObjectId(article_id)})
         if result.deleted_count == 0:
             raise HTTPException(status_code=404, detail="Article not found")
         return {"status": "deleted", "message": "Article removed from saved"}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
  

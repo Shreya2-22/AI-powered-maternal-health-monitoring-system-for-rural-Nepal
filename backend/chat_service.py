@@ -298,7 +298,22 @@ class PregnancyChatService:
         return "ne" if str(language).lower().startswith("ne") else "en"
 
     def _match_any(self, message: str, patterns: List[str]) -> bool:
-        return any(pattern in message for pattern in patterns)
+        tokens = set(self._tokens(message))
+        for pattern in patterns:
+            p = str(pattern or "").strip().lower()
+            if not p:
+                continue
+
+            if " " in p:
+                if self._contains_phrase(message, p):
+                    return True
+                continue
+
+            # Allow short stems like "pregnan" to match full token prefixes (pregnancy/pregnant).
+            if p in tokens or any(token.startswith(p) for token in tokens):
+                return True
+
+        return False
 
     def _contains_phrase(self, message: str, phrase: str) -> bool:
         escaped = re.escape(phrase)

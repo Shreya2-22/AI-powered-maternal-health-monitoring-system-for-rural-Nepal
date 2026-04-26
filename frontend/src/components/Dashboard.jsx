@@ -1,10 +1,31 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+
+const getHealthSummaryFromStorage = (userName) => {
+  try {
+    const raw = localStorage.getItem(`health_records_${userName}`);
+    if (!raw) return { count: 0, latestWeight: null, latestBP: null };
+
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      return { count: 0, latestWeight: null, latestBP: null };
+    }
+
+    const latest = parsed[parsed.length - 1];
+    return {
+      count: parsed.length,
+      latestWeight: latest.weight || null,
+      latestBP: (latest.systolic && latest.diastolic) ? `${latest.systolic}/${latest.diastolic}` : null,
+    };
+  } catch {
+    return { count: 0, latestWeight: null, latestBP: null };
+  }
+};
  
 const Dashboard = ({ user, language, setLanguage, onLogout }) => {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [currentTip, setCurrentTip]               = useState(0);
-  const [healthSummary, setHealthSummary]         = useState({ count: 0, latestWeight: null, latestBP: null });
+  const [healthSummary]                            = useState(() => getHealthSummaryFromStorage(user.name));
   const navigate = useNavigate();
  
   const t = {
@@ -41,21 +62,6 @@ const Dashboard = ({ user, language, setLanguage, onLogout }) => {
       open:'Open', addFirst:'Add first →',
     },
   }[language] || {};
- 
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(`health_records_${user.name}`);
-      if (!raw) return;
-      const parsed = JSON.parse(raw);
-      if (!parsed.length) return;
-      const latest = parsed[parsed.length - 1];
-      setHealthSummary({
-        count:        parsed.length,
-        latestWeight: latest.weight || null,
-        latestBP:     (latest.systolic && latest.diastolic) ? `${latest.systolic}/${latest.diastolic}` : null,
-      });
-    } catch { /* ignore */ }
-  }, [user.name]);
  
   useEffect(() => {
     const id = setInterval(() => setCurrentTip(p => (p + 1) % 3), 4000);

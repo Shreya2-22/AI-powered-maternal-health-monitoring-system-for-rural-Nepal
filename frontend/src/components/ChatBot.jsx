@@ -381,6 +381,10 @@ export default function ChatBot({ user, language }) {
   };
  
   const fetchBackendResponse = async (userInput) => {
+    const safeOfflineFallback = language === 'ne'
+      ? 'अहिले च्याट सेवा उपलब्ध छैन। कृपया केही समयपछि फेरि प्रयास गर्नुहोस्। यदि गम्भीर लक्षण छन् भने तुरुन्त डाक्टर वा नजिकको अस्पतालमा सम्पर्क गर्नुहोस्।'
+      : 'Chat service is temporarily unavailable. Please try again shortly. If you have severe symptoms, contact your doctor or the nearest hospital immediately.';
+
     try {
       const response = await fetch(`${API}/chat`, {
         method: 'POST',
@@ -404,10 +408,10 @@ export default function ChatBot({ user, language }) {
         return data.reply;
       }
  
-      return getResponse(userInput);
+      return safeOfflineFallback;
     } catch {
-      // Fallback keeps chatbot usable even if backend is temporarily unavailable.
-      return getResponse(userInput);
+      // Keep fallback medical-safe: do not generate unverified treatment advice on client.
+      return safeOfflineFallback;
     }
   };
  
@@ -469,7 +473,7 @@ export default function ChatBot({ user, language }) {
             onClick={() => navigate('/')}
             className="text-slate-600 hover:text-slate-900 font-medium text-sm transition"
           >
-            Back
+            {t.back}
           </button>
           <h1 className="text-xl font-semibold text-slate-900">{t.title}</h1>
           <button 
