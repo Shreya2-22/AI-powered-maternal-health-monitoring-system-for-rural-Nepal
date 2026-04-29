@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { API } from '../constants';
 
 const getHealthSummaryFromStorage = (userName) => {
   try {
@@ -24,8 +25,10 @@ const getHealthSummaryFromStorage = (userName) => {
  
 const Dashboard = ({ user, language, setLanguage, onLogout }) => {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [currentTip, setCurrentTip]               = useState(0);
-  const [healthSummary]                            = useState(() => getHealthSummaryFromStorage(user.name));
+  const [currentInsightIndex, setCurrentInsightIndex] = useState(0);
+  const [healthSummary] = useState(() => getHealthSummaryFromStorage(user.name));
+  const [insights, setInsights] = useState([]);
+  const [insightsLoading, setInsightsLoading] = useState(false);
   const navigate = useNavigate();
  
   const t = {
@@ -64,11 +67,42 @@ const Dashboard = ({ user, language, setLanguage, onLogout }) => {
   }[language] || {};
  
   useEffect(() => {
-    const id = setInterval(() => setCurrentTip(p => (p + 1) % 3), 4000);
+    // Fetch personalized insights
+    const fetchInsights = async () => {
+      setInsightsLoading(true);
+      try {
+        const healthRecords = JSON.parse(localStorage.getItem(`health_records_${user.name}`) || '[]');
+        const response = await fetch(`${API}/personalized-insights`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: user.id || user.name,
+            health_records: healthRecords,
+            user_age: user.age,
+            weeks_pregnant: user.weeks_pregnant,
+            language,
+            limit: 3
+          })
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setInsights(data.insights || []);
+        }
+      } catch (err) {
+        console.log('Could not fetch insights');
+      }
+      setInsightsLoading(false);
+    };
+
+    fetchInsights();
+  }, [user, language]);
+
+  // Auto-rotate insights every 5 seconds
+  useEffect(() => {
+    if (insights.length === 0) return;
+    const id = setInterval(() => setCurrentInsightIndex(p => (p + 1) % insights.length), 5000);
     return () => clearInterval(id);
-  }, []);
- 
-  const tips = [t.tip1, t.tip2, t.tip3];
+  }, [insights.length]);
   const weeksProgress   = user.weeks_pregnant || 0;
   const percentComplete = Math.min(100, (weeksProgress / 40) * 100);
   const daysLeft        = (() => {
@@ -306,19 +340,31 @@ const Dashboard = ({ user, language, setLanguage, onLogout }) => {
           </button>
         </section>
  
-        {/* ── SECTION 5: ROTATING TIP ─────────────────────────────────────── */}
+        {/* ── SECTION 5: PERSONALIZED INSIGHTS ──────────────────────────────── */}
         <section className="mb-8">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-4">{t.tips}</h2>
-          <div className="relative bg-teal-700 rounded-2xl p-5 overflow-hidden min-h-[80px] flex items-center">
-            <div className="absolute -top-6 -right-6 w-28 h-28 rounded-full bg-teal-600 opacity-40"/>
-            <div className="absolute -bottom-8 -left-4 w-20 h-20 rounded-full bg-teal-800 opacity-30"/>
-            <p className="relative text-white font-medium text-sm leading-relaxed">{tips[currentTip]}</p>
-            <div className="absolute bottom-3 right-4 flex gap-1.5">
-              {tips.map((_,i) => (
-                <div key={i} className="w-1.5 h-1.5 rounded-full transition-all duration-300"
-                  style={{ background: i === currentTip ? '#fff' : 'rgba(255,255,255,0.35)' }}/>
-              ))}
-            </div>
+          <h2 className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-4">{language === 'en' ? 'Your Health Insights' : 'तपाईंको स्वास्थ्य सुझावहरू'}</h2>
+          <div className="relative bg-gradient-to-br from-teal-600 to-teal-700 rounded-2xl p-5 overflow-hidden min-h-[90px] flex items-center">
+            <div className="absolute -top-6 -right-6 w-28 h-28 rounded-full bg-teal-500 opacity-30"/>
+            <div className="absolute -bottom-8 -left-4 w-20 h-20 rounded-full bg-teal-800 opacity-20"/>
+            
+            {insightsLoading ? (
+              <p className="relative text-teal-100 text-sm">{language === 'en' ? 'Loading insights...' : 'सुझाव लोड हो रहेको छ...'}</p>
+            ) : insights.length > 0 ? (
+              <>
+                <div className="relative flex-1">
+                  <p className="text-white font-bold text-sm">{insights[currentInsightIndex]?.title}</p>
+                  <p className="text-teal-50 text-xs mt-2 leading-relaxed">{insights[currentInsightIndex]?.content}</p>
+                </div>
+                <div className="absolute bottom-3 right-4 flex gap-1.5">
+                  {insights.map((_, i) => (
+                    <div key={i} className="w-1.5 h-1.5 rounded-full transition-all duration-300"
+                      style={{ background: i === currentInsightIndex ? '#fff' : 'rgba(255,255,255,0.35)' }} />
+                  ))}
+                </div>
+              </>
+            ) : (
+              <p className="relative text-teal-100 text-sm">{language === 'en' ? 'Log health records to see personalized insights' : 'व्यक्तिगत सुझावहरू देखनको लागि स्वास्थ्य रेकर्डहरू लग गर्नुहोस्'}</p>
+            )}
           </div>
         </section>
  

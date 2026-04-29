@@ -18,7 +18,7 @@ try:
     )
     VALIDATION_AVAILABLE = True
 except ImportError:
-    print("⚠️ Validation module not available - proceeding without validation")
+    print("WARN - Validation module not available - proceeding without validation")
     VALIDATION_AVAILABLE = False
  
 load_dotenv()
@@ -49,9 +49,9 @@ try:
     )
     client.admin.command('ping')
     db = client["aama_suraksha"]
-    print("✅ MongoDB Atlas connected successfully")
+    print("OK - MongoDB Atlas connected successfully")
 except Exception as e:
-    print(f"⚠️  MongoDB connection failed: {e}")
+    print(f"WARN - MongoDB connection failed: {e}")
     print("    FIX: Go to MongoDB Atlas → Security → Network Access → Add your IP address")
     print("    Running in localStorage-only mode.")
     client = None
@@ -74,20 +74,27 @@ try:
     from ml_analyzer import MLAnalyzer, FeatureEngineering
     ml_analyzer = MLAnalyzer()
 except ImportError:
-    print("⚠️ ml_analyzer module not available")
+    print("WARN - ml_analyzer module not available")
     ml_analyzer = None
 
 try:
     from train_model import ModelTrainer
     model_trainer = ModelTrainer(db) if db is not None else None
 except ImportError:
-    print("⚠️ ModelTrainer not available")
+    print("WARN - ModelTrainer not available")
     model_trainer = None
+
+try:
+    from personalized_insights import PersonalizedInsightsGenerator
+    insights_gen = PersonalizedInsightsGenerator()
+except ImportError:
+    print("WARN - Personalized insights generator not available")
+    insights_gen = None
  
 if risk_assessment.is_trained:
-    print("🤖 ML model loaded — using Random Forest for risk predictions.")
+    print("[ML] Model loaded - using Random Forest for risk predictions.")
 else:
-    print("⚠️  ML model not found — using rule-based fallback.")
+    print("WARN - ML model not found - using rule-based fallback.")
  
  
 class User(BaseModel):
@@ -158,6 +165,15 @@ class EmergencyAssessmentRequest(BaseModel):
     systolic_bp: Optional[int] = None
     diastolic_bp: Optional[int] = None
     reduced_fetal_movement: bool = False
+
+
+class PersonalizedInsightsRequest(BaseModel):
+    user_id: str
+    health_records: List[dict] = Field(default_factory=list)
+    user_age: int = 25
+    weeks_pregnant: int = 20
+    language: str = "en"
+    limit: int = Field(default=3, le=5)
  
  
 @app.get("/")
@@ -168,6 +184,39 @@ async def root():
         "db":       "connected" if db is not None else "offline",
         "ml_model": "loaded"    if risk_assessment.is_trained else "not_loaded",
     }
+
+
+@app.post("/api/personalized-insights")
+async def get_personalized_insights(request: PersonalizedInsightsRequest):
+    """
+    Generate personalized health insights based on user data.
+    Returns contextual, non-generic recommendations based on:
+    - Weeks pregnant (trimester)
+    - Logged symptoms and health trends
+    - Age and risk factors
+    """
+    try:
+        if insights_gen is None:
+            raise HTTPException(status_code=503, detail="Insights generator not available")
+        
+        result = insights_gen.generate_insights(
+            user_age=request.user_age,
+            weeks_pregnant=request.weeks_pregnant,
+            health_records=request.health_records,
+            language=request.language,
+            limit=request.limit,
+        )
+        
+        return {
+            "insights": result.get("insights", []),
+            "summary": result.get("summary", ""),
+            "count": result.get("count", 0),
+            "timestamp": datetime.now().isoformat(),
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Insights generation error: {str(e)}")
 
 
 @app.post("/api/chat")

@@ -45,12 +45,12 @@ class PregnancyRiskAssessment:
                 with open(encoder_path, 'rb') as f:
                     self.encoder = pickle.load(f)
                 self.is_trained = True
-                print("✅ Pre-trained ML model loaded successfully!")
+                print("OK - Pre-trained ML model loaded successfully!")
             except Exception as e:
-                print(f"⚠️  Could not load model: {e}  →  using rule-based fallback.")
+                print(f"WARN - Could not load model: {e}  ->  using rule-based fallback.")
                 self.is_trained = False
         else:
-            print("⚠️  No model found in models/ folder. Run the Jupyter notebook first.")
+            print("WARN - No model found in models/ folder. Run the Jupyter notebook first.")
             self.is_trained = False
  
     
