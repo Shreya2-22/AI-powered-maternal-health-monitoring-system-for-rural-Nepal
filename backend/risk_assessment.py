@@ -70,11 +70,11 @@ class PregnancyRiskAssessment:
         latest  = records[-1]
         first   = records[0]
  
-        weight_kg    = float(latest.get('weight', 52.0))
-        systolic_bp  = float(latest.get('systolic', 115))
-        diastolic_bp = float(latest.get('diastolic', 75))
- 
-        first_weight   = float(first.get('weight', weight_kg))
+        weight_kg    = float(latest.get('weight') or 52.0)
+        systolic_bp  = float(latest.get('systolic') or 115)
+        diastolic_bp = float(latest.get('diastolic') or 75)
+
+        first_weight   = float(first.get('weight') or weight_kg)
         weight_gain_kg = round(weight_kg - first_weight, 1)
  
         days_between_visits = 14  # safe default
@@ -86,35 +86,44 @@ class PregnancyRiskAssessment:
             except Exception:
                 pass
  
-        avg_systolic  = float(np.mean([r.get('systolic',  115) for r in records]))
-        avg_diastolic = float(np.mean([r.get('diastolic',  75) for r in records]))
+        # Safely convert systolic/diastolic to float before averaging
+        def safe_float(val, default):
+            try:
+                return float(val) if val is not None else default
+            except (ValueError, TypeError):
+                return default
+        
+        avg_systolic  = float(np.mean([safe_float(r.get('systolic'), 115) for r in records]))
+        avg_diastolic = float(np.mean([safe_float(r.get('diastolic'), 75) for r in records]))
  
         # Nepal-specific features — validate input, use safe defaults if missing
         # Blood sugar: if entered, use it; otherwise default to normal fasting
+        blood_sugar = 4.9  # default
         bs_input = latest.get('blood_sugar')
-        if bs_input is not None and str(bs_input).strip():
+        if bs_input is not None:
             try:
-                blood_sugar = float(bs_input)
-                # Validate range (fasting glucose typically 3.5-12 mmol/L)
-                if blood_sugar < 2.5 or blood_sugar > 15:
-                    blood_sugar = 4.9  # default to normal if out of reasonable range
+                bs_value = float(bs_input)
+                # Validate range (fasting glucose typically 2.5-15 mmol/L)
+                if 2.5 <= bs_value <= 15.0:
+                    blood_sugar = bs_value
+                else:
+                    blood_sugar = 4.9  # default to normal if out of range
             except (ValueError, TypeError):
                 blood_sugar = 4.9
-        else:
-            blood_sugar = 4.9  # mmol/L - normal fasting
         
         # Haemoglobin: if entered, use it; otherwise default to normal
+        haemoglobin = 11.2  # default
         hb_input = latest.get('haemoglobin')
-        if hb_input is not None and str(hb_input).strip():
+        if hb_input is not None:
             try:
-                haemoglobin = float(hb_input)
-                # Validate range (Hb typically 5-18 g/dL for testing)
-                if haemoglobin < 3 or haemoglobin > 20:
-                    haemoglobin = 11.2  # default to normal if out of reasonable range
+                hb_value = float(hb_input)
+                # Validate range (Hb typically 3-20 g/dL for testing)
+                if 3.0 <= hb_value <= 20.0:
+                    haemoglobin = hb_value
+                else:
+                    haemoglobin = 11.2  # default to normal if out of range
             except (ValueError, TypeError):
                 haemoglobin = 11.2
-        else:
-            haemoglobin = 11.2  # g/dL - normal
         
         # Previous complications: check if field exists and is truthy
         prev_complications = 1 if latest.get('prev_complications') else 0
@@ -248,24 +257,37 @@ class PregnancyRiskAssessment:
     # ─── Rule helpers ─────────────────────────────────────────────────────────
  
     def _bp_score(self, records):
+        """Calculate BP risk score. Higher is worse."""
         recent = records[-3:] if len(records) >= 3 else records
-        bad = sum(
-            1 for r in recent
-            if r.get('systolic', 0) > 140 or r.get('diastolic', 0) > 90
-            or r.get('systolic', 0) < 85  or r.get('diastolic', 0) < 50
-        )
-        return (bad / len(recent)) * 100
+        bad = 0
+        for r in recent:
+            try:
+                sys = float(r.get('systolic') or 120)
+                dia = float(r.get('diastolic') or 80)
+                if sys > 140 or dia > 90 or sys < 85 or dia < 50:
+                    bad += 1
+            except (ValueError, TypeError):
+                pass
+        return (bad / len(recent)) * 100 if recent else 0
  
     def _weight_score(self, records, weeks_pregnant):
         if len(records) < 2: return 20
-        first = float(records[0].get('weight', 0))
-        last  = float(records[-1].get('weight', 0))
+        try:
+            first = float(records[0].get('weight') or 0)
+            last  = float(records[-1].get('weight') or 0)
+        except (ValueError, TypeError):
+            return 20
         if first == 0: return 20
         expected = (weeks_pregnant / 40) * 13.0
         diff = abs(last - first - expected)
         return min((diff / max(expected, 1)) * 100, 100)
  
     def _age_score(self, age):
+        try:
+            age = float(age)
+        except (ValueError, TypeError):
+            age = 28  # safe default
+        
         if age < 18:         return 70
         if 18 <= age <= 35:  return 10
         if 35 < age <= 40:   return 35
@@ -295,12 +317,16 @@ class PregnancyRiskAssessment:
         Default: 11.2 g/dL (normal) when haemoglobin not recorded.
         """
         latest = records[-1]
-        hb = float(latest.get('haemoglobin', 11.2))
+        try:
+            hb = float(latest.get('haemoglobin') or 11.2)
+        except (ValueError, TypeError):
+            hb = 11.2
+        
         if hb >= 11.0:  return 10   # Normal
         if hb >= 10.0:  return 30   # Mild anaemia
         if hb >= 7.0:   return 65   # Moderate anaemia
         return 90                   # Severe anaemia
- 
+    
     def _blood_sugar_score(self, records):
         """
         Gestational diabetes scoring (fasting blood sugar, mmol/L).
@@ -310,7 +336,11 @@ class PregnancyRiskAssessment:
         Default: 4.9 mmol/L (normal) when blood_sugar not recorded.
         """
         latest = records[-1]
-        bs = float(latest.get('blood_sugar', 4.9))
+        try:
+            bs = float(latest.get('blood_sugar') or 4.9)
+        except (ValueError, TypeError):
+            bs = 4.9
+        
         if bs <= 5.5:   return 10   # Normal fasting
         if bs <= 7.0:   return 40   # Elevated — possible GDM
         return 80                   # GDM threshold exceeded
@@ -339,12 +369,27 @@ class PregnancyRiskAssessment:
  
         if health_records:
             latest = sorted(health_records, key=lambda r: r.get('date', ''))[-1]
-            if latest.get('systolic', 0) > 140 or latest.get('diastolic', 0) > 90:
-                recs.append('🩺 High blood pressure detected — report to your doctor immediately.')
-            if float(latest.get('haemoglobin', 11.2)) < 10.0:
-                recs.append('💊 Low haemoglobin detected — ask your doctor about iron supplements.')
-            if float(latest.get('blood_sugar', 4.9)) > 7.0:
-                recs.append('🍬 Elevated blood sugar — follow your doctor\'s dietary advice carefully.')
+            try:
+                sys = float(latest.get('systolic') or 120)
+                dia = float(latest.get('diastolic') or 80)
+                if sys > 140 or dia > 90:
+                    recs.append('🩺 High blood pressure detected — report to your doctor immediately.')
+            except (ValueError, TypeError):
+                pass
+            
+            try:
+                hb = float(latest.get('haemoglobin') or 11.2)
+                if hb < 10.0:
+                    recs.append('💊 Low haemoglobin detected — ask your doctor about iron supplements.')
+            except (ValueError, TypeError):
+                pass
+            
+            try:
+                bs = float(latest.get('blood_sugar') or 4.9)
+                if bs > 7.0:
+                    recs.append('🍬 Elevated blood sugar — follow your doctor\'s dietary advice carefully.')
+            except (ValueError, TypeError):
+                pass
  
         return recs
  

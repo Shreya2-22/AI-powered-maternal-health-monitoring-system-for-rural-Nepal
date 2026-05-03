@@ -98,6 +98,9 @@ export default function HealthTracker({ user, language }) {
     weight: Number(record.weight),
     systolic: Number(record.systolic),
     diastolic: Number(record.diastolic),
+    blood_sugar: record.blood_sugar ? Number(record.blood_sugar) : undefined,
+    haemoglobin: record.haemoglobin ? Number(record.haemoglobin) : undefined,
+    prev_complications: Boolean(record.prev_complications),
     // Ensure timestamp exists for display — DB records use created_at
     timestamp: record.timestamp || (record.created_at
       ? new Date(record.created_at).toLocaleString(language === 'ne' ? 'ne-NP' : 'en-US')
@@ -320,6 +323,9 @@ export default function HealthTracker({ user, language }) {
         weight: '',
         systolic: '',
         diastolic: '',
+        blood_sugar: '',
+        haemoglobin: '',
+        prev_complications: false,
         symptoms: '',
         notes: ''
       });
@@ -338,6 +344,9 @@ export default function HealthTracker({ user, language }) {
       weight: record.weight,
       systolic: record.systolic,
       diastolic: record.diastolic,
+      blood_sugar: record.blood_sugar || '',
+      haemoglobin: record.haemoglobin || '',
+      prev_complications: Boolean(record.prev_complications),
       symptoms: record.symptoms,
       notes: record.notes
     });
@@ -387,6 +396,9 @@ export default function HealthTracker({ user, language }) {
       weight: '',
       systolic: '',
       diastolic: '',
+      blood_sugar: '',
+      haemoglobin: '',
+      prev_complications: false,
       symptoms: '',
       notes: ''
     });

@@ -83,7 +83,7 @@ export default function HealthInsights({ user, language }) {
             user_age: user.age || 25,
             weeks_pregnant: user.weeks_pregnant || 20,
             language: language,
-            limit: 10
+            limit: 3
           })
         });
 

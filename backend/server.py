@@ -442,13 +442,16 @@ async def create_user(user: User):
         else:
             normalized_phone = user.phone
         
-        existing = users_collection.find_one({"phone": normalized_phone})
+        # Store name in lowercase for case-insensitive search during login
+        normalized_name = user.name.strip().lower()
+        existing = users_collection.find_one({"name_lower": normalized_name, "phone": normalized_phone})
         if existing:
             existing["id"] = str(existing.pop("_id"))
             return existing
         
         data = user.model_dump()
         data["phone"] = normalized_phone
+        data["name_lower"] = normalized_name  # For case-insensitive search
         data["created_at"] = datetime.now().isoformat()
         result  = users_collection.insert_one(data)
         created = users_collection.find_one({"_id": result.inserted_id})
@@ -476,7 +479,9 @@ async def login_user(login_data: LoginRequest):
                 raise HTTPException(status_code=400, detail=error_msg)
             phone = DataSanitizer.normalize_phone(phone)
 
-        user = users_collection.find_one({"name": name, "phone": phone})
+        # Use lowercase name for case-insensitive search
+        name_lower = name.lower()
+        user = users_collection.find_one({"name_lower": name_lower, "phone": phone})
         if not user:
             raise HTTPException(status_code=404, detail="User not found. Please register first.")
         user["id"] = str(user.pop("_id"))
@@ -491,7 +496,8 @@ async def get_user(user_name: str):
     if users_collection is None:
         raise HTTPException(status_code=503, detail="Database offline")
     try:
-        user = users_collection.find_one({"name": user_name})
+        # Use lowercase name for case-insensitive search
+        user = users_collection.find_one({"name_lower": user_name.strip().lower()})
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
         user["id"] = str(user.pop("_id"))
