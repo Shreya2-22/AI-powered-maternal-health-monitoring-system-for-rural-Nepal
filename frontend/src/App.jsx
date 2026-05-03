@@ -65,7 +65,7 @@ import Dashboard    from './components/Dashboard.jsx';
 import ChatBot      from './components/ChatBot.jsx';
 import HealthTracker from './components/HealthTracker.jsx';
 import Appointments from './components/Appointments.jsx';
-import Education    from './components/Education.jsx';
+import HealthInsights from './components/HealthInsights.jsx';
 import Emergency    from './components/Emergency.jsx';
 import RiskAssessment from './components/RiskAssessment.jsx';
 import Login        from './components/Login.jsx';
@@ -180,7 +180,7 @@ function App() {
           <Route path="/chat"        element={<ChatBot        user={currentUser} language={language} />} />
           <Route path="/health"      element={<HealthTracker  user={currentUser} language={language} />} />
           <Route path="/appointments" element={<Appointments  user={currentUser} language={language} />} />
-          <Route path="/education"   element={<Education      user={currentUser} language={language} />} />
+          <Route path="/education"   element={<HealthInsights      user={currentUser} language={language} />} />
           <Route path="/emergency"   element={<Emergency      user={currentUser} language={language} />} />
           <Route path="/risk"        element={<RiskAssessment user={currentUser} language={language} />} />
           <Route path="*"            element={<Navigate to="/" replace />} />
@@ -314,7 +314,7 @@ const Onboarding = ({ onComplete, onSwitchToLogin, language, setLanguage }) => {
       {/* Language Toggle - Hover based */}
       <div className="absolute top-8 right-8 flex gap-3 z-10">
         <button
-          onMouseEnter={() => setLanguage('en')}
+          onClick={() => setLanguage('en')}
           className={`px-3 py-1.5 text-sm font-medium transition ${
             language === 'en'
               ? 'text-teal-600 border-b-2 border-teal-600'
@@ -325,7 +325,7 @@ const Onboarding = ({ onComplete, onSwitchToLogin, language, setLanguage }) => {
         </button>
         <span className="text-slate-300">/</span>
         <button
-          onMouseEnter={() => setLanguage('ne')}
+          onClick={() => setLanguage('ne')}
           className={`px-3 py-1.5 text-sm font-medium transition ${
             language === 'ne'
               ? 'text-teal-600 border-b-2 border-teal-600'
@@ -452,7 +452,7 @@ const Onboarding = ({ onComplete, onSwitchToLogin, language, setLanguage }) => {
  
       {/* Footer */}
       <div className="text-center py-4 text-slate-500 text-xs">
-        <p>© 2024 AamaSuraksha</p>
+        <p>© 2026 AamaSuraksha</p>
       </div>
     </div>
   );

@@ -28,7 +28,7 @@ app = FastAPI(title="AamaSuraksha API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=["http://localhost:5173", "http://localhost:5174", "http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -112,6 +112,9 @@ class HealthRecord(BaseModel):
     weight: float
     systolic: int
     diastolic: int
+    blood_sugar: float = None  # mmol/L - optional, for GDM screening
+    haemoglobin: float = None  # g/dL - optional, for anaemia screening
+    prev_complications: bool = False  # Previous obstetric complications flag
     symptoms: str = ""
     notes: str = ""
  

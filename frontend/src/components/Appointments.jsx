@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
  
 import { API } from '../constants';
@@ -22,6 +22,7 @@ export default function Appointments({ user, language }) {
   const [deleteLoading, setDeleteLoading] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const formRef = useRef(null);
   const [toast, setToast] = useState({ show: false, message: '', type: '' });
  
   const text = {
@@ -116,9 +117,9 @@ export default function Appointments({ user, language }) {
       }
     }
   };
- 
+
   const t = text[language];
- 
+
   const normalizeAppointment = (appointment) => ({
     ...appointment,
     id: appointment.id || appointment._id,
@@ -427,6 +428,17 @@ export default function Appointments({ user, language }) {
     setErrors({});
     setTouched({});
   };
+
+  // Scroll to the form whenever edit mode is activated and the form is mounted.
+  // Using useEffect (instead of setTimeout) guarantees the form's DOM node
+  // already exists — avoiding races when `showForm` flips from false to true.
+  useEffect(() => {
+    if (editingId && showForm && formRef.current) {
+      requestAnimationFrame(() => {
+        formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
+  }, [editingId, showForm]);
  
   // Reset form
   const resetForm = () => {
@@ -452,16 +464,18 @@ export default function Appointments({ user, language }) {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       {/* Header */}
-      <header className="bg-white border-b border-slate-200">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <button 
-            onClick={() => navigate('/')}
-            className="text-slate-600 hover:text-slate-900 font-medium text-sm transition"
-          >
-            Back
-          </button>
-          <h1 className="text-xl font-semibold text-slate-900">{t.title}</h1>
-          <div style={{ width: '40px' }}></div>
+      <header className="bg-gradient-to-r from-purple-600 to-pink-500 shadow-md">
+        <div className="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => navigate('/')}
+              className="p-2 hover:bg-pink-500 hover:bg-opacity-50 rounded-lg transition text-white"
+              title="Go back"
+            >
+              <span className="text-xl">←</span>
+            </button>
+            <h1 className="text-3xl font-bold text-white">{t.title}</h1>
+          </div>
         </div>
       </header>
  
@@ -474,20 +488,26 @@ export default function Appointments({ user, language }) {
         </div>
       )}
  
-      <div className="max-w-4xl mx-auto w-full p-6">
-        {/* Add Appointment Button */}
-        <button 
-          onClick={() => setShowForm(!showForm)}
-          disabled={isLoading}
-          className="mb-6 px-6 py-3 bg-linear-to-r from-purple-600 to-pink-500 text-white font-semibold rounded-lg hover:shadow-lg transition-all disabled:opacity-50"
-        >
-          {showForm ? t.cancel : t.addAppointment}
-        </button>
+      <div className="max-w-7xl mx-auto w-full px-6 py-8">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">Manage Appointments</h2>
+            <p className="text-gray-600 text-sm mt-1">Schedule and track your checkup appointments</p>
+          </div>
+          <button 
+            onClick={() => setShowForm(!showForm)}
+            disabled={isLoading}
+            className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-pink-500 text-white font-semibold text-sm rounded-lg hover:shadow-lg transition disabled:opacity-50 leading-normal"
+          >
+            {showForm ? '✕ Cancel' : '+ New Appointment'}
+          </button>
+        </div>
  
         {/* Form */}
         {showForm && (
-          <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6 mb-6 space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <form ref={formRef} onSubmit={handleSubmit} className="bg-white rounded-xl shadow-md border border-gray-200 p-8 mb-10">
+            <h3 className="text-lg font-bold text-gray-900 mb-6">Schedule New Appointment</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">{t.date}</label>
                 <input
@@ -496,14 +516,14 @@ export default function Appointments({ user, language }) {
                   value={formData.date}
                   onChange={handleInputChange}
                   onBlur={handleBlur}
-                  className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 outline-none transition ${
+                  className={`w-full px-4 py-2.5 border-2 rounded-lg focus:ring-2 outline-none transition text-sm ${
                     touched.date && errors.date
                       ? 'border-red-500 focus:border-red-500 focus:ring-red-200'
                       : 'border-gray-300 focus:border-purple-500 focus:ring-purple-200'
                   }`}
                 />
                 {touched.date && errors.date && (
-                  <p className="text-red-500 text-sm mt-1">{errors.date}</p>
+                  <p className="text-red-500 text-xs mt-1">{errors.date}</p>
                 )}
               </div>
               <div>
@@ -514,19 +534,19 @@ export default function Appointments({ user, language }) {
                   value={formData.time}
                   onChange={handleInputChange}
                   onBlur={handleBlur}
-                  className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 outline-none transition ${
+                  className={`w-full px-4 py-2.5 border-2 rounded-lg focus:ring-2 outline-none transition text-sm ${
                     touched.time && errors.time
                       ? 'border-red-500 focus:border-red-500 focus:ring-red-200'
                       : 'border-gray-300 focus:border-purple-500 focus:ring-purple-200'
                   }`}
                 />
                 {touched.time && errors.time && (
-                  <p className="text-red-500 text-sm mt-1">{errors.time}</p>
+                  <p className="text-red-500 text-xs mt-1">{errors.time}</p>
                 )}
               </div>
             </div>
  
-            <div>
+            <div className="mt-6">
               <label className="block text-sm font-semibold text-gray-700 mb-2">{t.doctorName}</label>
               <input
                 type="text"
@@ -535,18 +555,18 @@ export default function Appointments({ user, language }) {
                 value={formData.doctorName}
                 onChange={handleInputChange}
                 onBlur={handleBlur}
-                className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 outline-none transition ${
+                className={`w-full px-4 py-2.5 border-2 rounded-lg focus:ring-2 outline-none transition text-sm ${
                   touched.doctorName && errors.doctorName
                     ? 'border-red-500 focus:border-red-500 focus:ring-red-200'
                     : 'border-gray-300 focus:border-purple-500 focus:ring-purple-200'
                 }`}
               />
               {touched.doctorName && errors.doctorName && (
-                <p className="text-red-500 text-sm mt-1">{errors.doctorName}</p>
+                <p className="text-red-500 text-xs mt-1">{errors.doctorName}</p>
               )}
             </div>
  
-            <div>
+            <div className="mt-6">
               <label className="block text-sm font-semibold text-gray-700 mb-2">{t.clinic}</label>
               <input
                 type="text"
@@ -555,18 +575,18 @@ export default function Appointments({ user, language }) {
                 value={formData.clinic}
                 onChange={handleInputChange}
                 onBlur={handleBlur}
-                className={`w-full px-4 py-2 border-2 rounded-lg focus:ring-2 outline-none transition ${
+                className={`w-full px-4 py-2.5 border-2 rounded-lg focus:ring-2 outline-none transition text-sm ${
                   touched.clinic && errors.clinic
                     ? 'border-red-500 focus:border-red-500 focus:ring-red-200'
                     : 'border-gray-300 focus:border-purple-500 focus:ring-purple-200'
                 }`}
               />
               {touched.clinic && errors.clinic && (
-                <p className="text-red-500 text-sm mt-1">{errors.clinic}</p>
+                <p className="text-red-500 text-xs mt-1">{errors.clinic}</p>
               )}
             </div>
  
-            <div>
+            <div className="mt-6">
               <label className="block text-sm font-semibold text-gray-700 mb-2">{t.reason}</label>
               <textarea
                 name="reason"
@@ -574,26 +594,25 @@ export default function Appointments({ user, language }) {
                 value={formData.reason}
                 onChange={handleInputChange}
                 rows="3"
-                className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition"
+                className="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 outline-none transition text-sm"
               />
             </div>
  
-            <div className="flex gap-4">
-              <button 
-                type="submit" 
-                disabled={isSubmitting}
-                className="flex-1 py-2 bg-linear-to-r from-purple-600 to-pink-500 text-white font-semibold rounded-lg hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {isSubmitting && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
-                {editingId ? t.update : t.save}
-              </button>
+            <div className="flex gap-3 mt-8 justify-end">
               <button 
                 type="button" 
                 onClick={resetForm}
                 disabled={isSubmitting}
-                className="flex-1 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold rounded-lg transition-all disabled:opacity-50"
+                className="px-6 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-900 font-semibold text-sm rounded-lg transition disabled:opacity-50 leading-normal"
               >
-                {t.cancel}
+                Cancel
+              </button>
+              <button 
+                type="submit" 
+                disabled={isSubmitting}
+                className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-pink-500 text-white font-semibold text-sm rounded-lg hover:shadow-lg transition disabled:opacity-50 leading-normal"
+              >
+                {editingId ? t.update : t.save}
               </button>
             </div>
           </form>
@@ -608,57 +627,63 @@ export default function Appointments({ user, language }) {
  
         {/* Appointments List */}
         {!isLoading && appointments.length === 0 ? (
-          <p className="text-gray-500 text-center py-12">{t.noAppointments}</p>
+          <div className="text-center py-16">
+            <p className="text-gray-500 text-lg">{t.noAppointments}</p>
+          </div>
         ) : !isLoading && (
-          <div className="space-y-8">
+          <div className="space-y-10">
             {/* Upcoming Appointments */}
             <div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">{t.upcomingTitle}</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">{t.upcomingTitle}</h2>
               {upcomingAppointments.length === 0 ? (
                 <p className="text-gray-500 text-center py-8">{t.noUpcoming}</p>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-5">
                   {upcomingAppointments.map(appointment => (
-                    <div key={appointment.id} className="bg-white rounded-lg shadow-md border-l-4 border-blue-500 p-4">
-                      <div className="flex justify-between items-start mb-3">
+                    <div key={appointment.id} className="bg-white rounded-xl shadow-md border-l-4 border-purple-500 p-6 hover:shadow-lg transition">
+                      <div className="flex justify-between items-start mb-5">
                         <div>
-                          <span className="text-sm font-semibold text-blue-600">📅 {appointment.date}</span>
-                          <span className="ml-4 text-sm font-semibold text-blue-600">🕐 {appointment.time}</span>
+                          <h3 className="text-lg font-bold text-gray-900">{appointment.doctor_name}</h3>
+                          <p className="text-sm text-gray-600 mt-1">{appointment.clinic}</p>
                         </div>
-                        <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-full">{t.upcomingBadge}</span>
+                        <span className="px-4 py-1.5 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 text-xs font-bold rounded-full">{t.upcomingBadge}</span>
                       </div>
  
-                      <div className="grid grid-cols-2 gap-4 mb-3 py-2 border-y border-gray-200">
-                        <div>
-                          <span className="text-xs font-semibold text-gray-600">{t.doctorLabel}</span>
-                          <p className="text-gray-800">{appointment.doctor_name}</p>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 py-5 border-y border-gray-200">
+                        <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4">
+                          <p className="text-xs font-semibold text-gray-600 mb-1">📅 Date</p>
+                          <p className="text-base font-bold text-gray-900">{appointment.date}</p>
                         </div>
-                        <div>
-                          <span className="text-xs font-semibold text-gray-600">{t.clinicLabel}</span>
-                          <p className="text-gray-800">{appointment.clinic}</p>
+                        <div className="bg-gradient-to-br from-pink-50 to-pink-100 rounded-lg p-4">
+                          <p className="text-xs font-semibold text-gray-600 mb-1">🕐 Time</p>
+                          <p className="text-base font-bold text-gray-900">{appointment.time}</p>
+                        </div>
+                        <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4">
+                          <p className="text-xs font-semibold text-gray-600 mb-1">Status</p>
+                          <p className="text-base font-bold text-blue-700">Scheduled</p>
                         </div>
                       </div>
  
                       {appointment.reason && (
-                        <div className="mb-3">
-                          <strong className="text-xs text-gray-600">{t.reasonLabel}</strong>
-                          <p className="text-sm text-gray-700">{appointment.reason}</p>
+                        <div className="mt-5">
+                          <p className="text-xs font-semibold text-gray-600 mb-2">{t.reasonLabel}</p>
+                          <p className="text-sm text-gray-700 bg-gray-50 rounded-lg p-3">{appointment.reason}</p>
                         </div>
                       )}
  
-                      <div className="flex gap-2">
+                      <div className="flex gap-3 mt-6 justify-end">
                         <button 
                           onClick={() => handleEdit(appointment)}
-                          className="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-all"
+                          className="px-4 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-700 font-semibold text-sm rounded-lg transition"
                         >
                           {t.edit}
                         </button>
                         <button 
                           onClick={() => deleteAppointment(appointment.id)}
                           disabled={deleteLoading === appointment.id}
-                          className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                          className="px-4 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 font-semibold text-sm rounded-lg transition disabled:opacity-50 flex items-center gap-2"
                         >
-                          {deleteLoading === appointment.id && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                          {deleteLoading === appointment.id && <div className="w-3 h-3 border-2 border-red-700 border-t-transparent rounded-full animate-spin" />}
                           {t.delete}
                         </button>
                       </div>
@@ -671,44 +696,50 @@ export default function Appointments({ user, language }) {
             {/* Past Appointments */}
             {pastAppointments.length > 0 && (
               <div>
-                <h2 className="text-2xl font-bold text-gray-800 mb-4">{t.pastTitle}</h2>
-                <div className="space-y-4">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">{t.pastTitle}</h2>
+                <div className="space-y-5">
                   {pastAppointments.map(appointment => (
-                    <div key={appointment.id} className="bg-gray-100 rounded-lg shadow-md border-l-4 border-gray-400 p-4">
-                      <div className="flex justify-between items-start mb-3">
+                    <div key={appointment.id} className="bg-gray-50 rounded-xl shadow-md border-l-4 border-gray-400 p-6 hover:shadow-lg transition">
+                      <div className="flex justify-between items-start mb-5">
                         <div>
-                          <span className="text-sm font-semibold text-gray-600">📅 {appointment.date}</span>
-                          <span className="ml-4 text-sm font-semibold text-gray-600">🕐 {appointment.time}</span>
+                          <h3 className="text-lg font-bold text-gray-800">{appointment.doctor_name}</h3>
+                          <p className="text-sm text-gray-500 mt-1">{appointment.clinic}</p>
                         </div>
-                        <span className="px-3 py-1 bg-gray-300 text-gray-700 text-xs font-bold rounded-full">{t.completedBadge}</span>
+                        <span className="px-4 py-1.5 bg-gray-200 text-gray-700 text-xs font-bold rounded-full">{t.completedBadge}</span>
                       </div>
  
-                      <div className="grid grid-cols-2 gap-4 mb-3 py-2 border-y border-gray-300">
-                        <div>
-                          <span className="text-xs font-semibold text-gray-600">{t.doctorLabel}</span>
-                          <p className="text-gray-700">{appointment.doctor_name}</p>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 py-5 border-y border-gray-300">
+                        <div className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg p-4">
+                          <p className="text-xs font-semibold text-gray-600 mb-1">📅 Date</p>
+                          <p className="text-base font-bold text-gray-800">{appointment.date}</p>
                         </div>
-                        <div>
-                          <span className="text-xs font-semibold text-gray-600">{t.clinicLabel}</span>
-                          <p className="text-gray-700">{appointment.clinic}</p>
+                        <div className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg p-4">
+                          <p className="text-xs font-semibold text-gray-600 mb-1">🕐 Time</p>
+                          <p className="text-base font-bold text-gray-800">{appointment.time}</p>
+                        </div>
+                        <div className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg p-4">
+                          <p className="text-xs font-semibold text-gray-600 mb-1">Status</p>
+                          <p className="text-base font-bold text-gray-600">Completed</p>
                         </div>
                       </div>
  
                       {appointment.reason && (
-                        <div className="mb-3">
-                          <strong className="text-xs text-gray-600">{t.reasonLabel}</strong>
-                          <p className="text-sm text-gray-700">{appointment.reason}</p>
+                        <div className="mt-5">
+                          <p className="text-xs font-semibold text-gray-600 mb-2">{t.reasonLabel}</p>
+                          <p className="text-sm text-gray-600 bg-white rounded-lg p-3">{appointment.reason}</p>
                         </div>
                       )}
  
-                      <button 
-                        onClick={() => deleteAppointment(appointment.id)}
-                        disabled={deleteLoading === appointment.id}
-                        className="w-full px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-                      >
-                        {deleteLoading === appointment.id && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
-                        {t.delete}
-                      </button>
+                      <div className="flex gap-3 mt-6 justify-end">
+                        <button 
+                          onClick={() => deleteAppointment(appointment.id)}
+                          disabled={deleteLoading === appointment.id}
+                          className="px-4 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 font-semibold text-sm rounded-lg transition disabled:opacity-50 flex items-center gap-2"
+                        >
+                          {deleteLoading === appointment.id && <div className="w-3 h-3 border-2 border-red-700 border-t-transparent rounded-full animate-spin" />}
+                          {t.delete}
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>

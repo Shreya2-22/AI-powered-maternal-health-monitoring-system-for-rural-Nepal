@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { API } from '../constants';
-
-export default function Emergency({ language }) {
+ 
+// FIX (Bug 1): Accept `user` prop from App.jsx instead of reading
+// the wrong localStorage key ('currentUser' → 'aamasuraksha_user').
+export default function Emergency({ user, language }) {
   const navigate = useNavigate();
   const [selectedSymptoms, setSelectedSymptoms] = useState([]);
   const [analysis, setAnalysis] = useState(null);
@@ -14,7 +16,7 @@ export default function Emergency({ language }) {
   const [systolicBp, setSystolicBp] = useState('');
   const [diastolicBp, setDiastolicBp] = useState('');
   const [reducedFetalMovement, setReducedFetalMovement] = useState(false);
-
+ 
   const symptoms = {
     ne: [
       { id: 'bleeding', label: 'भारी रक्तस्राव', severity: 'critical' },
@@ -35,7 +37,7 @@ export default function Emergency({ language }) {
       { id: 'dizziness', label: 'Dizziness', severity: 'mild' }
     ]
   };
-
+ 
   const text = {
     ne: {
       title: 'आपातकालीन मूल्यांकन',
@@ -80,28 +82,25 @@ export default function Emergency({ language }) {
       disclaimer: 'This is an advisory tool. Always consult a doctor.'
     }
   };
-
+ 
   const t = text[language];
   const symp = symptoms[language];
-
+ 
   const getResultBgColor = () => {
     if (analysis?.level === 'emergency') return 'bg-red-50 border-red-500';
     if (analysis?.level === 'urgent') return 'bg-yellow-50 border-yellow-500';
     return 'bg-green-50 border-green-500';
   };
-
-  const getStoredUser = () => {
-    const active = localStorage.getItem('currentUser');
-    if (active) {
-      return JSON.parse(active);
-    }
-    return null;
-  };
-
+ 
+  // FIX (Bug 1): Removed the broken getStoredUser() function that read from
+  // localStorage key 'currentUser'. The correct user object is now passed in
+  // as a prop from App.jsx (which saves under 'aamasuraksha_user').
+  // weeks_pregnant is now read directly from the prop.
+ 
   const fallbackAssess = () => {
     let score = 0;
     const reasons = [];
-
+ 
     selectedSymptoms.forEach((id) => {
       const weights = {
         bleeding: 5,
@@ -114,7 +113,7 @@ export default function Emergency({ language }) {
       };
       score += weights[id] || 0;
     });
-
+ 
     if (selectedSymptoms.includes('bleeding') && selectedSymptoms.includes('severe_pain')) {
       reasons.push(language === 'ne' ? 'रक्तस्रावसँग अत्यधिक दुखाइ' : 'Bleeding with severe pain');
       score += 2;
@@ -131,7 +130,7 @@ export default function Emergency({ language }) {
       reasons.push(language === 'ne' ? 'उच्च रक्तचाप' : 'High blood pressure');
       score += 2;
     }
-
+ 
     const level = score >= 8 ? 'emergency' : score >= 5 ? 'urgent' : 'self_care';
     return {
       level,
@@ -149,13 +148,14 @@ export default function Emergency({ language }) {
           : [language === 'ne' ? 'आराम गर्नुहोस् र पानी पिउनुहोस्।' : 'Rest and hydrate.'],
     };
   };
-
+ 
   const assessRisk = async () => {
     setAnalysisError('');
     setIsAnalyzing(true);
-    const user = getStoredUser();
+ 
+    // FIX (Bug 1): Use the `user` prop directly instead of broken getStoredUser()
     const weeksPregnant = Number(user?.weeks_pregnant || 20);
-
+ 
     const payload = {
       language,
       selected_symptoms: selectedSymptoms,
@@ -167,18 +167,18 @@ export default function Emergency({ language }) {
       diastolic_bp: diastolicBp ? Number(diastolicBp) : null,
       reduced_fetal_movement: reducedFetalMovement,
     };
-
+ 
     try {
       const res = await fetch(`${API}/emergency-assessment`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-
+ 
       if (!res.ok) {
         throw new Error('Backend emergency assessment failed');
       }
-
+ 
       const data = await res.json();
       setAnalysis(data);
     } catch (error) {
@@ -188,7 +188,7 @@ export default function Emergency({ language }) {
       setIsAnalyzing(false);
     }
   };
-
+ 
   const toggleSymptom = (id) => {
     setSelectedSymptoms(prev =>
       prev.includes(id)
@@ -196,40 +196,40 @@ export default function Emergency({ language }) {
         : [...prev, id]
     );
   };
-
+ 
   const getResultTextColor = () => {
     if (analysis?.level === 'emergency') return 'text-red-600';
     if (analysis?.level === 'urgent') return 'text-yellow-600';
     return 'text-green-600';
   };
-
+ 
   const getResultText = () => {
     if (analysis?.level === 'emergency') return t.emergency;
     if (analysis?.level === 'urgent') return t.urgent;
     return t.selfCare;
   };
-
+ 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       {/* Header */}
       <header className="bg-white border-b border-slate-200">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <button 
+          <button
             onClick={() => navigate('/')}
-            className="text-slate-600 hover:text-slate-900 font-medium text-sm transition"
+            className="px-5 py-3 text-blue-700 hover:text-blue-900 font-bold text-base bg-stone-100 hover:bg-stone-200 rounded-lg transition min-w-fit leading-normal"
           >
-            Back
+            {t.back}
           </button>
           <h1 className="text-xl font-semibold text-slate-900">{t.title}</h1>
           <div style={{ width: '40px' }}></div>
         </div>
       </header>
-
+ 
       <div className="max-w-4xl mx-auto w-full p-6">
         <p className="text-gray-600 mb-6 text-base">
           {t.instruction}
         </p>
-
+ 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           {symp.map(symptom => (
             <label key={symptom.id} className="flex items-center p-3 bg-white border-2 border-gray-200 rounded-lg hover:border-pink-300 cursor-pointer transition-all">
@@ -251,10 +251,10 @@ export default function Emergency({ language }) {
             </label>
           ))}
         </div>
-
+ 
         <div className="bg-white border border-slate-200 rounded-xl p-4 mb-6">
           <h3 className="text-sm font-semibold text-slate-900 mb-4">{t.advanced}</h3>
-
+ 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <label className="text-sm text-slate-600">
               {t.duration}
@@ -267,7 +267,7 @@ export default function Emergency({ language }) {
                 className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
               />
             </label>
-
+ 
             <label className="text-sm text-slate-600">
               {t.painScale}
               <input
@@ -279,7 +279,7 @@ export default function Emergency({ language }) {
                 className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
               />
             </label>
-
+ 
             <label className="text-sm text-slate-600">
               {t.temp}
               <input
@@ -291,7 +291,7 @@ export default function Emergency({ language }) {
                 placeholder="e.g. 38.6"
               />
             </label>
-
+ 
             <label className="text-sm text-slate-600">
               {t.bpSys}
               <input
@@ -302,7 +302,7 @@ export default function Emergency({ language }) {
                 placeholder="e.g. 140"
               />
             </label>
-
+ 
             <label className="text-sm text-slate-600">
               {t.bpDia}
               <input
@@ -313,7 +313,7 @@ export default function Emergency({ language }) {
                 placeholder="e.g. 90"
               />
             </label>
-
+ 
             <label className="flex items-center gap-2 text-sm text-slate-700 mt-6 md:mt-0">
               <input
                 type="checkbox"
@@ -325,19 +325,19 @@ export default function Emergency({ language }) {
             </label>
           </div>
         </div>
-
-        <button 
+ 
+        <button
           onClick={assessRisk}
           disabled={selectedSymptoms.length === 0 || isAnalyzing}
-          className="w-full py-3 bg-linear-to-r from-pink-500 to-purple-600 text-white font-bold rounded-lg hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all mb-6"
+          className="w-full py-3 px-4 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold rounded-lg hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all mb-6 break-words"
         >
           {isAnalyzing ? t.analyzing : t.checkBtn}
         </button>
-
+ 
         {analysisError && (
           <p className="text-xs text-amber-700 mb-3">{analysisError}</p>
         )}
-
+ 
         {analysis && (
           <div className={`border-l-4 p-6 rounded ${getResultBgColor()}`}>
             <h2 className={`text-xl font-bold mb-2 ${getResultTextColor()}`}>
@@ -346,7 +346,7 @@ export default function Emergency({ language }) {
             <p className="text-sm text-slate-700 mb-3">
               {t.score}: <span className="font-semibold">{analysis.score ?? 0}/10</span>
             </p>
-
+ 
             {Array.isArray(analysis.reasons) && analysis.reasons.length > 0 && (
               <div className="mb-3">
                 <p className="text-sm font-semibold text-slate-800 mb-1">{t.reasons}</p>
@@ -357,11 +357,11 @@ export default function Emergency({ language }) {
                 </ul>
               </div>
             )}
-
+ 
             {analysis.next_step && (
               <p className="text-sm text-slate-800 font-medium mb-2">{analysis.next_step}</p>
             )}
-
+ 
             {Array.isArray(analysis.actions) && analysis.actions.length > 0 && (
               <div className="mb-2">
                 <p className="text-sm font-semibold text-slate-800 mb-1">{t.steps}</p>
@@ -372,7 +372,7 @@ export default function Emergency({ language }) {
                 </ul>
               </div>
             )}
-
+ 
             <p className="text-gray-600 text-sm">
               {t.disclaimer}
             </p>

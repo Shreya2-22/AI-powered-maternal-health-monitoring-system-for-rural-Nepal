@@ -11,41 +11,38 @@ export default function Education({ user, language }) {
 
   const currentWeek = user?.weeks_pregnant || 20;
 
-  const text = {
-    ne: {
-      title: 'शिक्षा',
-      back: 'फिर्ता',
-      thisWeek: 'यस हप्ताको सलाह',
-      categories: {
-        nutrition: 'पोषण',
-        exercise: 'व्यायाम',
-        symptoms: 'लक्षणहरू',
-        delivery: 'प्रसव तयारी'
-      },
-      readMore: 'अधिक पढ्नुहोस्',
-      save: 'सेभ गर्नुहोस्',
-      saved: 'सेभ भयो',
-      unsave: 'अनसेभ गर्नुहोस्',
-      savedArticles: 'सेभ गरिएका लेखहरू',
-      noSaved: 'कुनै सेभ गरिएको लेख छैन'
+  const text = language === 'ne' ? {
+    title: 'शिक्षा',
+    back: 'फिर्ता',
+    thisWeek: 'यस हप्ताको सलाह',
+    categories: {
+      nutrition: 'पोषण',
+      exercise: 'व्यायाम',
+      symptoms: 'लक्षणहरू',
+      delivery: 'प्रसव तयारी'
     },
-    en: {
-      title: 'Education',
-      back: 'Back',
-      thisWeek: 'This Week\'s Tips',
-      categories: {
-        nutrition: 'Nutrition',
-        exercise: 'Exercise',
-        symptoms: 'Symptoms',
-        delivery: 'Delivery Prep'
-      },
-      readMore: 'Read More',
-      save: 'Save', 
-      saved: 'Saved',
-      unsave: 'Unsave',
-      savedArticles: 'Saved Articles',
-      noSaved: 'No saved articles yet'
-    }
+    readMore: 'अधिक पढ्नुहोस्',
+    save: 'सेभ गर्नुहोस्',
+    saved: 'सेभ भयो',
+    unsave: 'अनसेभ गर्नुहोस्',
+    savedArticles: 'सेभ गरिएका लेखहरू',
+    noSaved: 'कुनै सेभ गरिएको लेख छैन'
+  } : {
+    title: 'Education',
+    back: 'Back',
+    thisWeek: 'This Week\'s Tips',
+    categories: {
+      nutrition: 'Nutrition',
+      exercise: 'Exercise',
+      symptoms: 'Symptoms',
+      delivery: 'Delivery Prep'
+    },
+    readMore: 'Read More',
+    save: 'Save',
+    saved: 'Saved',
+    unsave: 'Unsave',
+    savedArticles: 'Saved Articles',
+    noSaved: 'No saved articles yet'
   };
 
   const articles = {
@@ -265,7 +262,7 @@ export default function Education({ user, language }) {
     return savedArticles.some(a => a.id === articleId);
   };
 
-  const t = text[language];
+  const t = text;
   const categoryArticles = articles[selectedCategory][language];
 
   return (
@@ -275,7 +272,7 @@ export default function Education({ user, language }) {
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <button 
             onClick={() => navigate('/')}
-            className="text-slate-600 hover:text-slate-900 font-medium text-sm transition"
+            className="px-5 py-3 text-blue-700 hover:text-blue-900 font-bold text-base bg-stone-100 hover:bg-stone-200 rounded-lg transition min-w-fit leading-normal"
           >
             Back
           </button>
@@ -285,7 +282,7 @@ export default function Education({ user, language }) {
       </header>
 
       <div className="max-w-4xl mx-auto w-full p-6">
-        <div className="bg-linear-to-r from-green-100 to-teal-100 border-2 border-green-500 rounded-lg p-6 mb-6">
+        <div className="bg-gradient-to-r from-green-100 to-teal-100 border-2 border-green-500 rounded-lg p-6 mb-6">
           <h2 className="text-xl font-bold text-green-800 mb-2">📅 {t.thisWeek} ({currentWeek} हप्ता)</h2>
           <p className="text-green-900">
             {currentWeek <= 16 && (language === 'ne' 
@@ -308,10 +305,10 @@ export default function Education({ user, language }) {
             <button
               key={key}
               onClick={() => setSelectedCategory(key)}
-              className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+              className={`px-5 py-3 rounded-lg font-bold text-base transition-all leading-normal ${
                 selectedCategory === key
-                  ? 'bg-linear-to-r from-green-500 to-teal-600 text-white shadow-lg'
-                  : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                  ? 'bg-gradient-to-r from-green-500 to-teal-600 text-white shadow-lg'
+                  : 'bg-gray-200 text-gray-900 hover:bg-gray-300'
               }`}
             >
               {label}
@@ -326,10 +323,10 @@ export default function Education({ user, language }) {
                 <h3 className="text-xl font-bold text-gray-800 flex-1">{article.title}</h3>
                 <button
                   onClick={() => handleSaveArticle(article)}
-                  className={`ml-4 px-4 py-2 rounded-lg font-semibold whitespace-nowrap transition-all ${
+                  className={`ml-4 px-5 py-3 rounded-lg font-bold text-base transition-all leading-normal ${
                     isSaved(article.id)
                       ? 'bg-green-500 text-white'
-                      : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                      : 'bg-gray-200 text-gray-900 hover:bg-gray-300'
                   }`}
                 >
                   {isSaved(article.id) ? t.saved : t.save}
@@ -361,11 +358,11 @@ export default function Education({ user, language }) {
             <h2 className="text-2xl font-bold text-gray-800 mb-4">{t.savedArticles}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {savedArticles.map(article => (
-                <div key={article.id} className="bg-linear-to-br from-green-100 to-teal-100 rounded-lg shadow-md p-4 border-2 border-green-500">
+                <div key={article.id} className="bg-gradient-to-br from-green-100 to-teal-100 rounded-lg shadow-md p-4 border-2 border-green-500">
                   <h4 className="font-bold text-gray-800 mb-3">{article.title}</h4>
                   <button
                     onClick={() => handleSaveArticle(article)}
-                    className="w-full px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-all"
+                    className="w-full px-5 py-3 bg-red-500 hover:bg-red-600 text-white font-bold text-base rounded-lg transition-all leading-normal"
                   >
                     {t.unsave}
                   </button>

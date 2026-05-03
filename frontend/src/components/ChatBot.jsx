@@ -31,23 +31,20 @@ export default function ChatBot({ user, language }) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
  
-  const text = {
-    ne: {
-      title: 'च्याटबट',
-      back: 'फिर्ता',
-      placeholder: 'तपाईंको प्रश्न लेख्नुहोस्...',
-      sendBtn: 'पठाउनुहोस्',
-      clearBtn: 'साफ गर्नुहोस्',
-      welcome: 'नमस्ते! गर्भावस्था सम्बन्धि कुनै पनि प्रश्न गर्नुहोस्। मैले तपाईंलाई मदत गर्न खुसी छु।'
-    },
-    en: {
-      title: 'Chatbot',
-      back: 'Back',
-      placeholder: 'Ask your question...',
-      sendBtn: 'Send',
-      clearBtn: 'Clear',
-      welcome: 'Hello! I\'m here to answer your pregnancy-related questions. Please tell me about your concern.'
-    }
+  const text = language === 'ne' ? {
+    title: 'च्याटबट',
+    back: 'फिर्ता',
+    placeholder: 'तपाईंको प्रश्न लेख्नुहोस्...',
+    sendBtn: 'पठाउनुहोस्',
+    clearBtn: 'साफ गर्नुहोस्',
+    welcome: 'नमस्ते! गर्भावस्था सम्बन्धि कुनै पनि प्रश्न गर्नुहोस्। मैले तपाईंलाई मदत गर्न खुसी छु।'
+  } : {
+    title: 'Chatbot',
+    back: 'Back',
+    placeholder: 'Ask your question...',
+    sendBtn: 'Send',
+    clearBtn: 'Clear',
+    welcome: 'Hello! I\'m here to answer your pregnancy-related questions. Please tell me about your concern.'
   };
  
   const normalizeInput = (value) =>
@@ -461,9 +458,9 @@ export default function ChatBot({ user, language }) {
       localStorage.removeItem(`chat_${user.name}`);
     }
   };
- 
-  const t = text[language];
- 
+
+  const t = text;
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
       {/* Header */}
@@ -471,14 +468,14 @@ export default function ChatBot({ user, language }) {
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <button 
             onClick={() => navigate('/')}
-            className="text-slate-600 hover:text-slate-900 font-medium text-sm transition"
+            className="px-5 py-2.5 text-blue-700 hover:text-blue-900 font-bold text-base bg-stone-100 hover:bg-stone-200 rounded-lg transition min-w-fit leading-normal"
           >
             {t.back}
           </button>
           <h1 className="text-xl font-semibold text-slate-900">{t.title}</h1>
           <button 
             onClick={handleClearChat}
-            className="text-red-600 hover:text-red-700 font-medium text-sm transition"
+            className="px-5 py-2.5 text-red-700 hover:text-red-900 font-bold text-base bg-red-100 hover:bg-red-200 rounded-lg transition min-w-fit leading-normal"
           >
             {t.clearBtn}
           </button>
@@ -531,7 +528,7 @@ export default function ChatBot({ user, language }) {
           <button 
             type="submit"
             disabled={!inputValue.trim() || isLoading}
-            className="px-6 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg hover:shadow-md disabled:opacity-50 transition"
+            className="px-6 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-bold text-base rounded-lg hover:shadow-md disabled:opacity-50 transition min-w-fit leading-normal"
           >
             {t.sendBtn}
           </button>

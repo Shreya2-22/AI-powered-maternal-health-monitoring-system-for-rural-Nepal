@@ -58,7 +58,7 @@ export default function RiskAssessment({ user, language }) {
     }
   };
  
-  const t = text[language] || text['en'];
+  const t = text[language];
  
   // ── Fetch risk from backend ────────────────────────────────────────────────
   const fetchRisk = useCallback(async (forceRefresh = false) => {
@@ -158,7 +158,7 @@ export default function RiskAssessment({ user, language }) {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <button 
             onClick={() => navigate('/')}
-            className="text-slate-600 hover:text-slate-900 font-medium text-sm transition"
+            className="px-5 py-3 text-blue-700 hover:text-blue-900 font-bold text-base bg-stone-100 hover:bg-stone-200 rounded-lg transition min-w-fit leading-normal"
           >
             Back
           </button>
@@ -289,7 +289,7 @@ export default function RiskAssessment({ user, language }) {
           {/* Recalculate */}
           <button
             onClick={() => fetchRisk(true)}
-            className="w-full bg-pink-600 hover:bg-pink-700 active:scale-95 text-white font-semibold py-3 rounded-xl transition-all"
+            className="w-full bg-pink-600 hover:bg-pink-700 active:scale-95 text-white font-semibold py-2.5 rounded-xl transition-all"
           >
             🔄 {t.recalculate}
           </button>

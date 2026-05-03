@@ -162,11 +162,11 @@ const Dashboard = ({ user, language, setLanguage, onLogout }) => {
     },
     {
       path:    '/education',
-      icon:    '📖',
-      label_ne:'शिक्षा',
-      label_en:'Education',
-      desc_ne: 'स्वास्थ्य जानकारी र लेखहरू',
-      desc_en: 'Health articles & resources',
+      icon:    '❤️',
+      label_ne:'स्वास्थ्य अन्तर्दृष्टि',
+      label_en:'Health Insights',
+      desc_ne: 'व्यक्तिगत स्वास्थ्य सुझाव',
+      desc_en: 'Personalized health guidance',
       accent:  '#B45309',
       bg:      '#FFFBEB',
       border:  '#FDE68A',
@@ -194,11 +194,11 @@ const Dashboard = ({ user, language, setLanguage, onLogout }) => {
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => setLanguage(language === 'en' ? 'ne' : 'en')}
-              className="px-3 py-1.5 text-xs font-semibold text-stone-600 bg-stone-100 hover:bg-stone-200 rounded-lg transition-colors">
+              className="px-5 py-2.5 text-base font-bold text-blue-700 bg-stone-100 hover:bg-stone-200 rounded-lg transition-colors min-w-fit leading-normal">
               {language === 'en' ? 'नेपाली' : 'English'}
             </button>
             <button onClick={() => setShowLogoutConfirm(true)}
-              className="px-3 py-1.5 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">
+              className="px-5 py-2.5 text-base font-bold text-red-700 bg-red-50 hover:bg-red-100 rounded-lg transition-colors min-w-fit leading-normal">
               {t.logout}
             </button>
           </div>
@@ -409,7 +409,7 @@ const Dashboard = ({ user, language, setLanguage, onLogout }) => {
  
         <footer className="border-t border-stone-200 pt-6 text-center">
           <p className="text-[11px] text-stone-400 leading-relaxed max-w-sm mx-auto">{t.disclaimer}</p>
-          <p className="text-[10px] text-stone-300 mt-2">© 2025 AamaSuraksha</p>
+          <p className="text-[10px] text-stone-300 mt-2">© 2026 AamaSuraksha</p>
         </footer>
       </main>
  
