@@ -423,7 +423,7 @@ export default function HealthTracker({ user, language }) {
       )}
  
       {/* Header */}
-      <header className="bg-gradient-to-r from-teal-600 to-teal-700 shadow-md">
+      <header className="bg-linear-to-r from-teal-600 to-teal-700 shadow-md">
         <div className="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button 
@@ -722,19 +722,19 @@ export default function HealthTracker({ user, language }) {
                   </div>
  
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-4 border-y border-gray-200">
-                    <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4">
+                    <div className="bg-linear-to-br from-blue-50 to-blue-100 rounded-lg p-4">
                       <p className="text-xs font-semibold text-gray-600 mb-1">{t.weightLabel}</p>
                       <p className="text-2xl font-bold text-gray-900">{record.weight}<span className="text-sm ml-1">kg</span></p>
                     </div>
-                    <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-lg p-4">
+                    <div className="bg-linear-to-br from-red-50 to-red-100 rounded-lg p-4">
                       <p className="text-xs font-semibold text-gray-600 mb-1">Systolic</p>
                       <p className="text-2xl font-bold text-gray-900">{record.systolic}<span className="text-sm ml-1">mmHg</span></p>
                     </div>
-                    <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-4">
+                    <div className="bg-linear-to-br from-orange-50 to-orange-100 rounded-lg p-4">
                       <p className="text-xs font-semibold text-gray-600 mb-1">Diastolic</p>
                       <p className="text-2xl font-bold text-gray-900">{record.diastolic}<span className="text-sm ml-1">mmHg</span></p>
                     </div>
-                    <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4">
+                    <div className="bg-linear-to-br from-purple-50 to-purple-100 rounded-lg p-4">
                       <p className="text-xs font-semibold text-gray-600 mb-1">{t.bpLabel}</p>
                       <p className="text-xl font-bold text-gray-900">{record.systolic}/{record.diastolic}</p>
                     </div>

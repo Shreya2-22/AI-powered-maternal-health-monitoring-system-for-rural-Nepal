@@ -291,7 +291,7 @@ class FeatureEngineering:
             'haemoglobin_trend': float(hb_levels[-1] - hb_levels[0]) if len(hb_levels) > 1 else 0,
             'avg_blood_sugar': float(np.mean(blood_sugar)) if blood_sugar else 4.9,
             'has_prev_complications': int(prev_complications),
-            'anaemia_risk_level': self._assess_anaemia_risk(hb_levels),
+            'anaemia_risk_level': FeatureEngineering._assess_anaemia_risk(hb_levels),
         }
         return features
 

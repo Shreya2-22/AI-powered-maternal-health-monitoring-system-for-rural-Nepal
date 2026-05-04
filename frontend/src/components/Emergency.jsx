@@ -10,31 +10,42 @@ export default function Emergency({ user, language }) {
   const [analysis, setAnalysis] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState('');
-  const [durationHours, setDurationHours] = useState(6);
-  const [painScale, setPainScale] = useState(4);
-  const [temperatureC, setTemperatureC] = useState('');
-  const [systolicBp, setSystolicBp] = useState('');
-  const [diastolicBp, setDiastolicBp] = useState('');
-  const [reducedFetalMovement, setReducedFetalMovement] = useState(false);
+
  
   const symptoms = {
     ne: [
       { id: 'bleeding', label: 'भारी रक्तस्राव', severity: 'critical' },
       { id: 'severe_pain', label: 'गम्भीर पेट दर्द', severity: 'critical' },
+      { id: 'chest_pain', label: 'छाती दुख्ने', severity: 'critical' },
+      { id: 'difficulty_breathing', label: 'सास लिन गाह्रो', severity: 'critical' },
+      { id: 'loss_fetal_movement', label: 'बच्चाको चाल नभएको', severity: 'critical' },
+      { id: 'seizure', label: 'बेहोस/दौरा पर्ने', severity: 'critical' },
+      { id: 'severe_vomiting', label: 'गम्भीर उल्टी', severity: 'urgent' },
       { id: 'fever', label: 'बुखार (39°C+)', severity: 'urgent' },
-      { id: 'swelling', label: 'अत्यधिक सूजन', severity: 'urgent' },
-      { id: 'headache', label: 'गम्भीर सिरदर्द', severity: 'urgent' },
-      { id: 'nausea', label: 'मितली', severity: 'mild' },
-      { id: 'dizziness', label: 'चक्कर आना', severity: 'mild' }
+      { id: 'vaginal_discharge', label: 'असामान्य योनि स्राव/पानी', severity: 'urgent' },
+      { id: 'blurred_vision', label: 'धमिलो देखिने', severity: 'urgent' },
+      { id: 'severe_headache', label: 'गम्भीर टाउको दुखाइ', severity: 'urgent' },
+      { id: 'swelling_face_hands', label: 'अनुहार वा हात धेरै सुन्निने', severity: 'urgent' },
+      { id: 'reduced_fetal_movement', label: 'बच्चाको चाल कम भएको', severity: 'urgent' },
+      { id: 'nausea', label: 'हल्का वाकवाकी', severity: 'mild' },
+      { id: 'dizziness', label: 'हल्का चक्कर', severity: 'mild' }
     ],
     en: [
       { id: 'bleeding', label: 'Heavy Bleeding', severity: 'critical' },
       { id: 'severe_pain', label: 'Severe Abdominal Pain', severity: 'critical' },
+      { id: 'chest_pain', label: 'Chest Pain', severity: 'critical' },
+      { id: 'difficulty_breathing', label: 'Difficulty Breathing', severity: 'critical' },
+      { id: 'loss_fetal_movement', label: 'No Fetal Movement', severity: 'critical' },
+      { id: 'seizure', label: 'Seizure/Fainting', severity: 'critical' },
+      { id: 'severe_vomiting', label: 'Severe Vomiting', severity: 'urgent' },
       { id: 'fever', label: 'High Fever (39°C+)', severity: 'urgent' },
-      { id: 'swelling', label: 'Severe Swelling', severity: 'urgent' },
-      { id: 'headache', label: 'Severe Headache', severity: 'urgent' },
-      { id: 'nausea', label: 'Nausea', severity: 'mild' },
-      { id: 'dizziness', label: 'Dizziness', severity: 'mild' }
+      { id: 'vaginal_discharge', label: 'Abnormal Vaginal Discharge/Leakage', severity: 'urgent' },
+      { id: 'blurred_vision', label: 'Blurred Vision', severity: 'urgent' },
+      { id: 'severe_headache', label: 'Severe Headache', severity: 'urgent' },
+      { id: 'swelling_face_hands', label: 'Severe Face/Hand Swelling', severity: 'urgent' },
+      { id: 'reduced_fetal_movement', label: 'Reduced Fetal Movement', severity: 'urgent' },
+      { id: 'nausea', label: 'Mild Nausea', severity: 'mild' },
+      { id: 'dizziness', label: 'Mild Dizziness', severity: 'mild' }
     ]
   };
  
@@ -100,52 +111,133 @@ export default function Emergency({ user, language }) {
   const fallbackAssess = () => {
     let score = 0;
     const reasons = [];
- 
-    selectedSymptoms.forEach((id) => {
-      const weights = {
-        bleeding: 5,
-        severe_pain: 5,
-        fever: 3,
-        swelling: 3,
-        headache: 3,
-        dizziness: 2,
-        nausea: 1,
-      };
-      score += weights[id] || 0;
-    });
- 
-    if (selectedSymptoms.includes('bleeding') && selectedSymptoms.includes('severe_pain')) {
-      reasons.push(language === 'ne' ? 'रक्तस्रावसँग अत्यधिक दुखाइ' : 'Bleeding with severe pain');
-      score += 2;
+    let isEmergency = false;
+    let urgentCount = 0;
+    let mildCount = 0;
+
+    // Critical immediate-action symptoms (any = emergency)
+    const criticalSymptoms = [
+      'bleeding',
+      'severe_pain',
+      'chest_pain',
+      'difficulty_breathing',
+      'loss_fetal_movement',
+      'seizure',
+    ];
+    
+    // Urgent symptoms (escalate to hospital visit)
+    const urgentSymptoms = [
+      'severe_vomiting',
+      'fever',
+      'vaginal_discharge',
+      'blurred_vision',
+      'severe_headache',
+      'swelling_face_hands',
+      'reduced_fetal_movement',
+    ];
+
+    const mildSymptoms = ['nausea', 'dizziness'];
+
+    // Check for critical symptoms (any = emergency)
+    for (const symptom of criticalSymptoms) {
+      if (selectedSymptoms.includes(symptom)) {
+        isEmergency = true;
+        break;
+      }
     }
-    if (reducedFetalMovement) {
-      reasons.push(language === 'ne' ? 'बच्चाको चाल कम' : 'Reduced fetal movement');
-      score += 2;
+
+    // Add specific reasons for critical symptoms
+    if (selectedSymptoms.includes('bleeding')) {
+      reasons.push(language === 'ne' ? 'भारी रक्तस्राव - तुरुन्त अस्पताल' : 'Heavy bleeding - go to hospital');
     }
-    if (Number(temperatureC) >= 39) {
-      reasons.push(language === 'ne' ? 'उच्च ज्वरो (>=39°C)' : 'High fever (>=39C)');
-      score += 2;
+    if (selectedSymptoms.includes('severe_pain')) {
+      reasons.push(language === 'ne' ? 'गम्भीर दर्द - तुरुन्त मूल्यांकन' : 'Severe pain - needs immediate care');
     }
-    if (Number(systolicBp) >= 140 || Number(diastolicBp) >= 90) {
-      reasons.push(language === 'ne' ? 'उच्च रक्तचाप' : 'High blood pressure');
-      score += 2;
+    if (selectedSymptoms.includes('chest_pain')) {
+      reasons.push(language === 'ne' ? 'छाती दुखाइ - आपातकालीन अवस्था' : 'Chest pain - emergency warning');
     }
- 
-    const level = score >= 8 ? 'emergency' : score >= 5 ? 'urgent' : 'self_care';
+    if (selectedSymptoms.includes('difficulty_breathing')) {
+      reasons.push(language === 'ne' ? 'सास लिन गाह्रो - तुरुन्त' : 'Breathing difficulty - immediate');
+    }
+    if (selectedSymptoms.includes('loss_fetal_movement')) {
+      reasons.push(language === 'ne' ? 'बच्चाको चाल नभएको' : 'No fetal movement');
+    }
+    if (selectedSymptoms.includes('seizure')) {
+      reasons.push(language === 'ne' ? 'दौरा/बेहोस - तुरुन्त अस्पताल' : 'Seizure/fainting - immediate hospital care');
+    }
+
+    // If not emergency, check urgent symptoms
+    if (!isEmergency) {
+      for (const symptom of selectedSymptoms) {
+        if (urgentSymptoms.includes(symptom)) {
+          urgentCount += 1;
+        }
+        if (mildSymptoms.includes(symptom)) mildCount += 1;
+      }
+
+      // Add specific urgent reasons
+      if (selectedSymptoms.includes('severe_vomiting')) {
+        reasons.push(language === 'ne' ? 'गम्भीर उल्टी - डाक्टर सम्पर्क गर्नुहोस्' : 'Severe vomiting - see doctor');
+      }
+      if (selectedSymptoms.includes('fever')) {
+        reasons.push(language === 'ne' ? 'उच्च ज्वरो - संक्रमण संभव' : 'High fever - possible infection');
+      }
+      if (selectedSymptoms.includes('vaginal_discharge')) {
+        reasons.push(language === 'ne' ? 'असामान्य योनि स्राव/पानी' : 'Abnormal discharge or leakage');
+      }
+      if (selectedSymptoms.includes('blurred_vision')) {
+        reasons.push(language === 'ne' ? 'धमिलो देखिने - खतरा संकेत हुन सक्छ' : 'Blurred vision - possible danger sign');
+      }
+      if (selectedSymptoms.includes('severe_headache')) {
+        reasons.push(language === 'ne' ? 'गम्भीर टाउको दुखाइ' : 'Severe headache');
+      }
+      if (selectedSymptoms.includes('swelling_face_hands')) {
+        reasons.push(language === 'ne' ? 'अनुहार/हात अत्यधिक सुन्निने' : 'Severe face or hand swelling');
+      }
+      if (selectedSymptoms.includes('reduced_fetal_movement')) {
+        reasons.push(language === 'ne' ? 'बच्चाको चाल कम भएको' : 'Reduced fetal movement');
+      }
+      if (selectedSymptoms.includes('nausea')) {
+        reasons.push(language === 'ne' ? 'हल्का वाकवाकी - पानी पिउनुहोस्' : 'Mild nausea - hydrate and monitor');
+      }
+      if (selectedSymptoms.includes('dizziness')) {
+        reasons.push(language === 'ne' ? 'हल्का चक्कर - आराम गर्नुहोस्' : 'Mild dizziness - rest and monitor');
+      }
+    }
+
+    // Determine level
+    let level;
+    if (isEmergency) {
+      level = 'emergency';
+      score = 10;
+    } else if (urgentCount >= 3) {
+      level = 'emergency';
+      score = 9;
+    } else if (urgentCount > 0) {
+      level = 'urgent';
+      score = Math.max(5, urgentCount * 3);
+    } else {
+      level = 'self_care';
+      score = mildCount > 0 ? Math.min(3, mildCount) : 0;
+    }
+
     return {
       level,
       score: Math.min(score, 10),
       reasons,
       next_step: level === 'emergency'
-        ? (language === 'ne' ? 'तुरुन्त अस्पताल जानुहोस्।' : 'Go to hospital immediately.')
+        ? (language === 'ne' ? 'तुरुन्त अस्पताल जानुहोस्' : 'Go to hospital immediately')
         : level === 'urgent'
-          ? (language === 'ne' ? 'आजै डाक्टरसँग सम्पर्क गर्नुहोस्।' : 'Contact your doctor today.')
-          : (language === 'ne' ? 'लक्षणहरू निगरानी गर्नुहोस्।' : 'Monitor your symptoms closely.'),
+          ? (language === 'ne' ? 'आज चिकित्सकसँग सम्पर्क गर्नुहोस्' : 'Contact your doctor today')
+          : (language === 'ne' ? 'लक्षणहरू निगरानी गर्नुहोस्' : 'Monitor symptoms and rest'),
       actions: level === 'emergency'
-        ? [language === 'ne' ? 'परिवारसँग तुरुन्त अस्पताल जानुहोस्।' : 'Go to hospital now with someone.']
+        ? [language === 'ne' ? 'तुरुन्त अस्पताल जानुहोस्' : 'Go to hospital immediately', 
+           language === 'ne' ? 'परिवार सदस्यसँग जानुहोस्' : 'Go with family member']
         : level === 'urgent'
-          ? [language === 'ne' ? '१ घण्टाभित्र BP/तापक्रम फेरि जाँच गर्नुहोस्।' : 'Re-check BP/temperature within 1 hour.']
-          : [language === 'ne' ? 'आराम गर्नुहोस् र पानी पिउनुहोस्।' : 'Rest and hydrate.'],
+          ? [language === 'ne' ? 'डाक्टरलाई फोन गर्नुहोस्' : 'Call your doctor', 
+             language === 'ne' ? 'आराम गर्नुहोस्' : 'Get rest']
+          : [language === 'ne' ? 'आराम र पानी' : 'Rest and hydrate', 
+             language === 'ne' ? 'लक्षण बढ्दा डाक्टर सम्पर्क गर्नुहोस्' : 'Contact doctor if symptoms worsen'],
     };
   };
  
@@ -160,14 +252,11 @@ export default function Emergency({ user, language }) {
       language,
       selected_symptoms: selectedSymptoms,
       weeks_pregnant: weeksPregnant,
-      duration_hours: Number(durationHours),
-      pain_scale: Number(painScale),
-      temperature_c: temperatureC ? Number(temperatureC) : null,
-      systolic_bp: systolicBp ? Number(systolicBp) : null,
-      diastolic_bp: diastolicBp ? Number(diastolicBp) : null,
-      reduced_fetal_movement: reducedFetalMovement,
+
     };
  
+    const localAssessment = fallbackAssess();
+
     try {
       const res = await fetch(`${API}/emergency-assessment`, {
         method: 'POST',
@@ -180,10 +269,28 @@ export default function Emergency({ user, language }) {
       }
  
       const data = await res.json();
-      setAnalysis(data);
+      const levelRank = { self_care: 0, urgent: 1, emergency: 2 };
+      const backendLevel = data?.level || 'self_care';
+      const localLevel = localAssessment.level;
+
+      // Never allow backend to downgrade dangerous symptom combinations.
+      if ((levelRank[backendLevel] ?? 0) < (levelRank[localLevel] ?? 0)) {
+        setAnalysis(localAssessment);
+        setAnalysisError(language === 'ne'
+          ? 'सुरक्षाका लागि स्थानीय आपतकालीन नियम प्रयोग गरिएको छ।'
+          : 'Using safer local emergency rules for selected symptoms.');
+      } else {
+        setAnalysis({
+          ...data,
+          reasons: Array.isArray(data?.reasons) && data.reasons.length > 0 ? data.reasons : localAssessment.reasons,
+          actions: Array.isArray(data?.actions) && data.actions.length > 0 ? data.actions : localAssessment.actions,
+          next_step: data?.next_step || localAssessment.next_step,
+          score: typeof data?.score === 'number' ? data.score : localAssessment.score,
+        });
+      }
     } catch (error) {
       setAnalysisError(error.message);
-      setAnalysis(fallbackAssess());
+      setAnalysis(localAssessment);
     } finally {
       setIsAnalyzing(false);
     }
@@ -252,84 +359,10 @@ export default function Emergency({ user, language }) {
           ))}
         </div>
  
-        <div className="bg-white border border-slate-200 rounded-xl p-4 mb-6">
-          <h3 className="text-sm font-semibold text-slate-900 mb-4">{t.advanced}</h3>
- 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <label className="text-sm text-slate-600">
-              {t.duration}
-              <input
-                type="number"
-                min="1"
-                max="168"
-                value={durationHours}
-                onChange={(e) => setDurationHours(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
-              />
-            </label>
- 
-            <label className="text-sm text-slate-600">
-              {t.painScale}
-              <input
-                type="number"
-                min="0"
-                max="10"
-                value={painScale}
-                onChange={(e) => setPainScale(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
-              />
-            </label>
- 
-            <label className="text-sm text-slate-600">
-              {t.temp}
-              <input
-                type="number"
-                step="0.1"
-                value={temperatureC}
-                onChange={(e) => setTemperatureC(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
-                placeholder="e.g. 38.6"
-              />
-            </label>
- 
-            <label className="text-sm text-slate-600">
-              {t.bpSys}
-              <input
-                type="number"
-                value={systolicBp}
-                onChange={(e) => setSystolicBp(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
-                placeholder="e.g. 140"
-              />
-            </label>
- 
-            <label className="text-sm text-slate-600">
-              {t.bpDia}
-              <input
-                type="number"
-                value={diastolicBp}
-                onChange={(e) => setDiastolicBp(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
-                placeholder="e.g. 90"
-              />
-            </label>
- 
-            <label className="flex items-center gap-2 text-sm text-slate-700 mt-6 md:mt-0">
-              <input
-                type="checkbox"
-                checked={reducedFetalMovement}
-                onChange={(e) => setReducedFetalMovement(e.target.checked)}
-                className="w-4 h-4 accent-pink-500"
-              />
-              {t.movement}
-            </label>
-          </div>
-        </div>
- 
         <button
           onClick={assessRisk}
           disabled={selectedSymptoms.length === 0 || isAnalyzing}
-          className="w-full py-3 px-4 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold rounded-lg hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all mb-6 break-words"
+          className="w-full py-3 px-4 bg-linear-to-r from-pink-500 to-purple-600 text-white font-bold rounded-lg hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all mb-6 wrap-break-word"
         >
           {isAnalyzing ? t.analyzing : t.checkBtn}
         </button>

@@ -143,7 +143,7 @@ export default function ChatBot({ user, language }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-cyan-50">
+    <div className="min-h-screen bg-linear-to-br from-blue-50 to-cyan-50">
       {/* Header */}
       <div className="sticky top-0 z-40 bg-white border-b-2 border-blue-100 shadow-sm">
         <div className="max-w-full px-4 py-3 flex items-center gap-3">
@@ -154,7 +154,7 @@ export default function ChatBot({ user, language }) {
             ← {text.back}
           </button>
           <div className="flex-1">
-            <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+            <h1 className="text-xl font-bold bg-linear-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
               {text.title}
             </h1>
             <p className="text-xs text-slate-500">{text.subtitle}</p>
@@ -183,7 +183,7 @@ export default function ChatBot({ user, language }) {
                   <div
                     className={`max-w-xs px-4 py-2 rounded-lg text-sm ${
                       msg.type === 'user'
-                        ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-br-none'
+                        ? 'bg-linear-to-r from-blue-600 to-cyan-600 text-white rounded-br-none'
                         : 'bg-slate-200 text-slate-900 rounded-bl-none'
                     }`}
                   >
@@ -216,7 +216,7 @@ export default function ChatBot({ user, language }) {
             <button
               onClick={handleSendMessage}
               disabled={isLoading}
-              className="px-5 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-bold rounded-lg hover:shadow-lg active:scale-95 transition disabled:opacity-50"
+              className="px-5 py-2 bg-linear-to-r from-blue-600 to-cyan-600 text-white font-bold rounded-lg hover:shadow-lg active:scale-95 transition disabled:opacity-50"
             >
               {text.send}
             </button>
@@ -234,7 +234,7 @@ export default function ChatBot({ user, language }) {
         {/* Right: Info Panel (1/3) */}
         <div className="w-1/3 flex flex-col gap-3 overflow-y-auto">
           {/* Suggested Questions */}
-          <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-4 border-2 border-blue-200 shadow-md">
+          <div className="bg-linear-to-br from-blue-50 to-cyan-50 rounded-xl p-4 border-2 border-blue-200 shadow-md">
             <h3 className="font-bold text-blue-700 mb-3 text-sm">{text.suggested}</h3>
             <div className="space-y-2">
               {suggestedQuestions.map((q, idx) => (
@@ -250,12 +250,12 @@ export default function ChatBot({ user, language }) {
           </div>
 
           {/* How to Use */}
-          <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-4 border-2 border-purple-200 shadow-md">
+          <div className="bg-linear-to-br from-purple-50 to-pink-50 rounded-xl p-4 border-2 border-purple-200 shadow-md">
             <h3 className="font-bold text-purple-700 mb-3 text-sm">{text.howToUse}</h3>
             <ol className="space-y-2">
               {text.steps.map((step, idx) => (
                 <li key={idx} className="flex gap-2 items-start text-xs">
-                  <span className="inline-flex items-center justify-center w-5 h-5 bg-purple-500 text-white rounded-full font-bold text-xs flex-shrink-0">
+                  <span className="inline-flex items-center justify-center w-5 h-5 bg-purple-500 text-white rounded-full font-bold text-xs shrink-0">
                     {idx + 1}
                   </span>
                   <span className="text-slate-700 pt-0.5">{step}</span>
@@ -265,7 +265,7 @@ export default function ChatBot({ user, language }) {
           </div>
 
           {/* FAQ */}
-          <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border-2 border-green-200 shadow-md">
+          <div className="bg-linear-to-br from-green-50 to-emerald-50 rounded-xl p-4 border-2 border-green-200 shadow-md">
             <h3 className="font-bold text-green-700 mb-3 text-sm">{text.faq}</h3>
             <div className="space-y-2 max-h-64 overflow-y-auto">
               {faqItems.map((item, idx) => (

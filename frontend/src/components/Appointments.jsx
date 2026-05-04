@@ -464,7 +464,7 @@ export default function Appointments({ user, language }) {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       {/* Header */}
-      <header className="bg-gradient-to-r from-purple-600 to-pink-500 shadow-md">
+      <header className="bg-linear-to-r from-purple-600 to-pink-500 shadow-md">
         <div className="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button 
@@ -497,7 +497,7 @@ export default function Appointments({ user, language }) {
           <button 
             onClick={() => setShowForm(!showForm)}
             disabled={isLoading}
-            className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-pink-500 text-white font-semibold text-sm rounded-lg hover:shadow-lg transition disabled:opacity-50 leading-normal"
+            className="px-6 py-2.5 bg-linear-to-r from-purple-600 to-pink-500 text-white font-semibold text-sm rounded-lg hover:shadow-lg transition disabled:opacity-50 leading-normal"
           >
             {showForm ? '✕ Cancel' : '+ New Appointment'}
           </button>
@@ -610,7 +610,7 @@ export default function Appointments({ user, language }) {
               <button 
                 type="submit" 
                 disabled={isSubmitting}
-                className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-pink-500 text-white font-semibold text-sm rounded-lg hover:shadow-lg transition disabled:opacity-50 leading-normal"
+                className="px-6 py-2.5 bg-linear-to-r from-purple-600 to-pink-500 text-white font-semibold text-sm rounded-lg hover:shadow-lg transition disabled:opacity-50 leading-normal"
               >
                 {editingId ? t.update : t.save}
               </button>
@@ -646,19 +646,19 @@ export default function Appointments({ user, language }) {
                           <h3 className="text-lg font-bold text-gray-900">{appointment.doctor_name}</h3>
                           <p className="text-sm text-gray-600 mt-1">{appointment.clinic}</p>
                         </div>
-                        <span className="px-4 py-1.5 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 text-xs font-bold rounded-full">{t.upcomingBadge}</span>
+                        <span className="px-4 py-1.5 bg-linear-to-r from-purple-100 to-pink-100 text-purple-700 text-xs font-bold rounded-full">{t.upcomingBadge}</span>
                       </div>
  
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 py-5 border-y border-gray-200">
-                        <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4">
+                        <div className="bg-linear-to-br from-purple-50 to-purple-100 rounded-lg p-4">
                           <p className="text-xs font-semibold text-gray-600 mb-1">📅 Date</p>
                           <p className="text-base font-bold text-gray-900">{appointment.date}</p>
                         </div>
-                        <div className="bg-gradient-to-br from-pink-50 to-pink-100 rounded-lg p-4">
+                        <div className="bg-linear-to-br from-pink-50 to-pink-100 rounded-lg p-4">
                           <p className="text-xs font-semibold text-gray-600 mb-1">🕐 Time</p>
                           <p className="text-base font-bold text-gray-900">{appointment.time}</p>
                         </div>
-                        <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4">
+                        <div className="bg-linear-to-br from-blue-50 to-blue-100 rounded-lg p-4">
                           <p className="text-xs font-semibold text-gray-600 mb-1">Status</p>
                           <p className="text-base font-bold text-blue-700">Scheduled</p>
                         </div>
@@ -709,15 +709,15 @@ export default function Appointments({ user, language }) {
                       </div>
  
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 py-5 border-y border-gray-300">
-                        <div className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg p-4">
+                        <div className="bg-linear-to-br from-gray-100 to-gray-200 rounded-lg p-4">
                           <p className="text-xs font-semibold text-gray-600 mb-1">📅 Date</p>
                           <p className="text-base font-bold text-gray-800">{appointment.date}</p>
                         </div>
-                        <div className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg p-4">
+                        <div className="bg-linear-to-br from-gray-100 to-gray-200 rounded-lg p-4">
                           <p className="text-xs font-semibold text-gray-600 mb-1">🕐 Time</p>
                           <p className="text-base font-bold text-gray-800">{appointment.time}</p>
                         </div>
-                        <div className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg p-4">
+                        <div className="bg-linear-to-br from-gray-100 to-gray-200 rounded-lg p-4">
                           <p className="text-xs font-semibold text-gray-600 mb-1">Status</p>
                           <p className="text-base font-bold text-gray-600">Completed</p>
                         </div>

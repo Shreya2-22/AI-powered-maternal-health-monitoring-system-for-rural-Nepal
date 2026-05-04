@@ -85,6 +85,7 @@ function AIInsightBox({ riskData, language }) {
   useEffect(() => {
     if (!riskData || riskData.model_used === 'no_data') return;
  
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     setInsight(null);
  

@@ -335,69 +335,65 @@ const Dashboard = ({ user, language, setLanguage, onLogout }) => {
  
         {/* ── SECTION 5: PERSONALIZED INSIGHTS ──────────────────────────────── */}
         <section className="mb-8">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-4">{language === 'en' ? '💡 Your Health Insights' : '💡 तपाईंको स्वास्थ्य सुझावहरू'}</h2>
+          <h2 className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-4">{language === 'en' ? 'Your Health Insights' : 'तपाईंको स्वास्थ्य सुझावहरू'}</h2>
           
           {insightsLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="bg-white rounded-2xl p-5 border border-stone-200 animate-pulse">
-                  <div className="h-5 bg-stone-200 rounded w-3/4 mb-4"></div>
-                  <div className="h-3 bg-stone-100 rounded w-full mb-2"></div>
-                  <div className="h-3 bg-stone-100 rounded w-5/6"></div>
-                </div>
-              ))}
+            <div className="bg-white rounded-xl p-6 border border-stone-200 animate-pulse">
+              <div className="h-5 bg-stone-200 rounded w-1/3 mb-4"></div>
+              <div className="h-3 bg-stone-100 rounded w-full mb-2"></div>
+              <div className="h-3 bg-stone-100 rounded w-5/6"></div>
             </div>
           ) : insights.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="relative">
               {insights.map((insight, i) => {
+                if (i !== currentInsightIndex) return null;
+                
                 const typeColors = {
-                  trimester: { bg: 'bg-gradient-to-br from-blue-50 to-blue-100', border: 'border-blue-200', icon: '🍼', accent: 'text-blue-600', badge: 'bg-blue-100 text-blue-700' },
-                  symptom: { bg: 'bg-gradient-to-br from-amber-50 to-amber-100', border: 'border-amber-200', icon: '⚕️', accent: 'text-amber-600', badge: 'bg-amber-100 text-amber-700' },
-                  trend: { bg: 'bg-gradient-to-br from-purple-50 to-purple-100', border: 'border-purple-200', icon: '📈', accent: 'text-purple-600', badge: 'bg-purple-100 text-purple-700' },
-                  age: { bg: 'bg-gradient-to-br from-rose-50 to-rose-100', border: 'border-rose-200', icon: '👨‍👩‍👧', accent: 'text-rose-600', badge: 'bg-rose-100 text-rose-700' },
+                  trimester: { bg: 'bg-emerald-50', border: 'border-emerald-300', icon: '🌱', accent: 'text-emerald-700', badge: 'bg-emerald-100 text-emerald-700' },
+                  symptom: { bg: 'bg-emerald-50', border: 'border-emerald-300', icon: '✓', accent: 'text-emerald-700', badge: 'bg-emerald-100 text-emerald-700' },
+                  trend: { bg: 'bg-emerald-50', border: 'border-emerald-300', icon: '📈', accent: 'text-emerald-700', badge: 'bg-emerald-100 text-emerald-700' },
+                  age: { bg: 'bg-emerald-50', border: 'border-emerald-300', icon: '👤', accent: 'text-emerald-700', badge: 'bg-emerald-100 text-emerald-700' },
                 };
                 const colors = typeColors[insight.type] || typeColors.trimester;
+                
                 return (
-                  <div key={i} className={`${colors.bg} rounded-2xl border-2 ${colors.border} p-5 min-h-40 flex flex-col justify-between hover:shadow-lg hover:scale-105 transition-all duration-200 cursor-pointer group`}>
-                    {/* Icon + Badge Header */}
-                    <div className="flex items-start justify-between gap-3 mb-3">
-                      <span className="text-3xl group-hover:scale-110 transition-transform">{colors.icon}</span>
-                      <span className={`${colors.badge} text-xs font-bold px-2.5 py-1 rounded-full whitespace-nowrap text-[11px]`}>
-                        {insight.type === 'trimester' ? (language === 'en' ? 'Trimester' : 'तिनमास') :
-                         insight.type === 'symptom' ? (language === 'en' ? 'Symptom' : 'लक्षण') :
-                         insight.type === 'trend' ? (language === 'en' ? 'Trend' : 'प्रवृत्ति') :
-                         insight.type === 'age' ? (language === 'en' ? 'Age-Specific' : 'उमेर') :
-                         (language === 'en' ? 'General' : 'सामान्य')}
+                  <div key={i} className={`${colors.bg} rounded-xl border-2 ${colors.border} p-6 shadow-sm hover:shadow-lg transition-all duration-300`}>
+                    {/* Header with icon and badge */}
+                    <div className="flex items-start justify-between gap-4 mb-4">
+                      <span className="text-4xl">{colors.icon}</span>
+                      <span className={`${colors.badge} text-[10px] font-bold px-3 py-1 rounded-full whitespace-nowrap`}>
+                        {insight.type === 'trimester' ? (language === 'en' ? 'Pregnancy Week' : 'गर्भावस्था हप्ता') :
+                         insight.type === 'symptom' ? (language === 'en' ? 'Symptom Advice' : 'लक्षण सुझाव') :
+                         insight.type === 'trend' ? (language === 'en' ? 'Health Trend' : 'स्वास्थ्य प्रवृत्ति') :
+                         insight.type === 'age' ? (language === 'en' ? 'Age-Specific' : 'उमेर-विशेष') :
+                         (language === 'en' ? 'Health Tip' : 'स्वास्थ्य सुझाव')}
                       </span>
                     </div>
                     
                     {/* Title */}
-                    <p className={`font-bold text-sm leading-tight mb-2 ${colors.accent}`}>{insight.title}</p>
+                    <p className={`font-bold text-lg leading-tight mb-3 ${colors.accent}`}>{insight.title}</p>
                     
                     {/* Content */}
-                    <p className="text-stone-700 text-xs leading-relaxed flex-1">{insight.content}</p>
+                    <p className="text-stone-700 text-sm leading-relaxed mb-4">{insight.content}</p>
                     
-                    {/* Learn More indicator */}
-                    <div className={`mt-3 inline-flex items-center gap-1 text-xs font-semibold ${colors.accent} opacity-0 group-hover:opacity-100 transition-opacity`}>
-                      {language === 'en' ? 'Learn more' : 'थप जान्नुहोस्'} →
-                    </div>
+
                   </div>
                 );
               })}
             </div>
           ) : (
-            <div className="bg-linear-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 text-center border-2 border-dashed border-blue-200">
-              <p className="text-3xl mb-2">📊</p>
-              <p className="text-blue-800 font-bold text-sm mb-1">
-                {language === 'en' ? 'No Health Insights Yet' : 'अभी कोही सुझाव नहीं'}
+            <div className="bg-emerald-50 rounded-xl p-8 text-center border-2 border-dashed border-emerald-200 shadow-sm">
+              <p className="text-5xl mb-4">💚</p>
+              <p className="text-emerald-800 font-bold text-base mb-2">
+                {language === 'en' ? 'Start Logging Health Data' : 'स्वास्थ्य डेटा लग गर्न सुरु गर्नुहोस्'}
               </p>
-              <p className="text-blue-600 text-xs leading-relaxed max-w-xs mx-auto">
+              <p className="text-emerald-600 text-sm leading-relaxed max-w-lg mx-auto mb-5">
                 {language === 'en' 
-                  ? 'Start logging your weight, blood pressure, and symptoms to get personalized health insights powered by AI' 
-                  : 'आफ्नो वजन, रक्तचाप र लक्षणहरू लग गरेर AI-द्वारा व्यक्तिगत स्वास्थ्य सुझावहरू पाउन सुरु गर्नुहोस्'}
+                  ? 'Log your weight, blood pressure, and symptoms to receive personalized health guidance tailored to your pregnancy journey' 
+                  : 'आफ्नो वजन, रक्तचाप र लक्षणहरू लग गरेर आफ्नो गर्भावस्था यात्रालाई अनुरूप व्यक्तिगत स्वास्थ्य सुझावहरू पाउनुहोस्'}
               </p>
-              <button onClick={() => navigate('/health')} className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-colors">
-                📝 {language === 'en' ? 'Log Health Data' : 'स्वास्थ्य डेटा लग गर्नुहोस्'}
+              <button onClick={() => navigate('/health')} className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-bold transition-colors shadow-sm">
+                {language === 'en' ? '+ Start Logging' : '+ लग गर्न सुरु गर्नुहोस्'}
               </button>
             </div>
           )}

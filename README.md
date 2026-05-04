@@ -4,7 +4,7 @@
 ![Status](https://img.shields.io/badge/status-Active-green)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-AamaSuraksha is an AI-powered maternal health companion application designed specifically for pregnant women in Nepal and South Asia. It provides personalized health tracking, AI-driven risk assessment, intelligent maternal health guidance through a smart chatbot, and emergency support.
+AamaSuraksha is a maternal health companion application designed specifically for pregnant women in Nepal. It provides personalized health tracking, risk assessment, intelligent health guidance through a chatbot, and emergency support.
 
 Languages Supported: English | नेपाली (Nepali)
 
@@ -109,7 +109,7 @@ Languages Supported: English | नेपाली (Nepali)
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 aama-suraksha/
@@ -167,7 +167,7 @@ aama-suraksha/
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 - **Python 3.12+** (backend)
@@ -183,7 +183,7 @@ aama-suraksha/
 
 ---
 
-## 📦 Installation
+## Installation
 
 ### 1. Clone the Repository
 ```bash
@@ -230,7 +230,7 @@ npm install
 
 ---
 
-## ⚙️ Configuration
+## Configuration
 
 ### Backend Configuration
 
@@ -265,7 +265,7 @@ VITE_API_URL=https://your-api-domain.com/api
 
 ---
 
-## ▶️ Running the Application
+## Running the Application
 
 ### Option 1: Run Locally (Development)
 
@@ -307,7 +307,7 @@ npm run preview
 
 ---
 
-## 📡 API Endpoints
+## API Endpoints
 
 ### Health Tracking
 ```
@@ -353,25 +353,25 @@ POST   /api/auth/logout                # User logout
 
 ---
 
-## 🤖 Chatbot Architecture
+## Chatbot Architecture
 
-The chatbot is a **multi-layered intelligent system**:
+The chatbot uses a layered approach to answer pregnancy health questions:
 
-### Layer 1: Smart Question Understanding
+### Layer 1: Question Understanding
 - Detects pregnancy-related vs. general questions
-- Handles emergency signals instantly
-- Manages greetings and small talk
+- Identifies emergency signals
+- Handles greetings and small talk
 
-### Layer 2: Built-in Knowledge Base
+### Layer 2: Knowledge Base
 - Comprehensive pregnancy medical information
 - Trimester-specific guidance
-- Nutrition, exercise, symptom advice
-- Emergency and danger sign detection
+- Nutrition and exercise advice
+- Symptom and emergency detection
 
-### Layer 3: Free AI Integration
+### Layer 3: AI Integration
 - **Primary:** Hugging Face Falcon 7B LLM (if API key available)
 - **Fallback:** Local rule-based responses (always available)
-- **Advantage:** Works offline, no expensive APIs
+- **Advantage:** Works offline without requiring external APIs
 
 **Example Flow:**
 ```
@@ -388,7 +388,7 @@ For detailed architecture, see [CHATBOT_IMPLEMENTATION_GUIDE.md](./CHATBOT_IMPLE
 
 ---
 
-## 🧠 ML Models
+## ML Models
 
 ### 1. **Risk Assessment Model**
 - **Type:** Random Forest Classifier
@@ -421,7 +421,7 @@ python train_model.py
 
 ---
 
-## 💾 Database
+## Database
 
 ### MongoDB Collections
 
@@ -488,7 +488,7 @@ python train_model.py
 
 ---
 
-## 🧪 Testing
+## Testing
 
 ### Run All Tests
 ```bash
@@ -520,7 +520,7 @@ python -m pytest tests/ -v
 
 ---
 
-## 🚢 Deployment
+## Deployment
 
 ### Deploy Backend (Heroku, Railway, or any VPS)
 
@@ -552,7 +552,7 @@ Ensure all `.env` variables are set in your hosting platform:
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 We welcome contributions! Please follow these steps:
 
@@ -570,15 +570,15 @@ We welcome contributions! Please follow these steps:
 
 ---
 
-## 📊 Health Insights (Dashboard)
+## Health Insights (Dashboard)
 
 The dashboard now displays **3+ personalized health insights**:
 
 ### Insight Types
-1. **🍼 Trimester Guide** - Week-specific pregnancy advice
-2. **⚕️ Symptom Alert** - Guidance on logged symptoms
-3. **📈 Health Trend** - Weight gain, BP changes analysis
-4. **👨‍👩‍👧 Age-Specific** - For teen or 35+ pregnancies
+1. **Trimester Guide** - Week-specific pregnancy advice
+2. **Symptom Alert** - Guidance on logged symptoms
+3. **Health Trend** - Weight gain, BP changes analysis
+4. **Age-Specific** - For teen or 35+ pregnancies
 
 ### How Insights Are Generated
 ```python
@@ -595,7 +595,7 @@ insights = generator.generate_insights(
 
 ---
 
-## 🆘 Support
+## Support
 
 ### Getting Help
 
@@ -796,4 +796,4 @@ cd frontend && npm run build
 
 ---
 
-**Made with ❤️ for maternal health in Nepal and South Asia**
+**Made with ❤️ for maternal health in Nepal**
