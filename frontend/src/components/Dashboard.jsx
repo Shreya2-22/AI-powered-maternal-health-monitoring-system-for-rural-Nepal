@@ -96,13 +96,6 @@ const Dashboard = ({ user, language, setLanguage, onLogout }) => {
 
     fetchInsights();
   }, [user, language]);
-
-  // Auto-rotate insights every 5 seconds
-  useEffect(() => {
-    if (insights.length === 0) return;
-    const id = setInterval(() => setCurrentInsightIndex(p => (p + 1) % insights.length), 5000);
-    return () => clearInterval(id);
-  }, [insights.length]);
   const weeksProgress   = user.weeks_pregnant || 0;
   const percentComplete = Math.min(100, (weeksProgress / 40) * 100);
   const daysLeft        = (() => {
@@ -342,30 +335,72 @@ const Dashboard = ({ user, language, setLanguage, onLogout }) => {
  
         {/* ── SECTION 5: PERSONALIZED INSIGHTS ──────────────────────────────── */}
         <section className="mb-8">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-4">{language === 'en' ? 'Your Health Insights' : 'तपाईंको स्वास्थ्य सुझावहरू'}</h2>
-          <div className="relative bg-gradient-to-br from-teal-600 to-teal-700 rounded-2xl p-5 overflow-hidden min-h-[90px] flex items-center">
-            <div className="absolute -top-6 -right-6 w-28 h-28 rounded-full bg-teal-500 opacity-30"/>
-            <div className="absolute -bottom-8 -left-4 w-20 h-20 rounded-full bg-teal-800 opacity-20"/>
-            
-            {insightsLoading ? (
-              <p className="relative text-teal-100 text-sm">{language === 'en' ? 'Loading insights...' : 'सुझाव लोड हो रहेको छ...'}</p>
-            ) : insights.length > 0 ? (
-              <>
-                <div className="relative flex-1">
-                  <p className="text-white font-bold text-sm">{insights[currentInsightIndex]?.title}</p>
-                  <p className="text-teal-50 text-xs mt-2 leading-relaxed">{insights[currentInsightIndex]?.content}</p>
+          <h2 className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-4">{language === 'en' ? '💡 Your Health Insights' : '💡 तपाईंको स्वास्थ्य सुझावहरू'}</h2>
+          
+          {insightsLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="bg-white rounded-2xl p-5 border border-stone-200 animate-pulse">
+                  <div className="h-5 bg-stone-200 rounded w-3/4 mb-4"></div>
+                  <div className="h-3 bg-stone-100 rounded w-full mb-2"></div>
+                  <div className="h-3 bg-stone-100 rounded w-5/6"></div>
                 </div>
-                <div className="absolute bottom-3 right-4 flex gap-1.5">
-                  {insights.map((_, i) => (
-                    <div key={i} className="w-1.5 h-1.5 rounded-full transition-all duration-300"
-                      style={{ background: i === currentInsightIndex ? '#fff' : 'rgba(255,255,255,0.35)' }} />
-                  ))}
-                </div>
-              </>
-            ) : (
-              <p className="relative text-teal-100 text-sm">{language === 'en' ? 'Log health records to see personalized insights' : 'व्यक्तिगत सुझावहरू देखनको लागि स्वास्थ्य रेकर्डहरू लग गर्नुहोस्'}</p>
-            )}
-          </div>
+              ))}
+            </div>
+          ) : insights.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {insights.map((insight, i) => {
+                const typeColors = {
+                  trimester: { bg: 'bg-gradient-to-br from-blue-50 to-blue-100', border: 'border-blue-200', icon: '🍼', accent: 'text-blue-600', badge: 'bg-blue-100 text-blue-700' },
+                  symptom: { bg: 'bg-gradient-to-br from-amber-50 to-amber-100', border: 'border-amber-200', icon: '⚕️', accent: 'text-amber-600', badge: 'bg-amber-100 text-amber-700' },
+                  trend: { bg: 'bg-gradient-to-br from-purple-50 to-purple-100', border: 'border-purple-200', icon: '📈', accent: 'text-purple-600', badge: 'bg-purple-100 text-purple-700' },
+                  age: { bg: 'bg-gradient-to-br from-rose-50 to-rose-100', border: 'border-rose-200', icon: '👨‍👩‍👧', accent: 'text-rose-600', badge: 'bg-rose-100 text-rose-700' },
+                };
+                const colors = typeColors[insight.type] || typeColors.trimester;
+                return (
+                  <div key={i} className={`${colors.bg} rounded-2xl border-2 ${colors.border} p-5 min-h-40 flex flex-col justify-between hover:shadow-lg hover:scale-105 transition-all duration-200 cursor-pointer group`}>
+                    {/* Icon + Badge Header */}
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <span className="text-3xl group-hover:scale-110 transition-transform">{colors.icon}</span>
+                      <span className={`${colors.badge} text-xs font-bold px-2.5 py-1 rounded-full whitespace-nowrap text-[11px]`}>
+                        {insight.type === 'trimester' ? (language === 'en' ? 'Trimester' : 'तिनमास') :
+                         insight.type === 'symptom' ? (language === 'en' ? 'Symptom' : 'लक्षण') :
+                         insight.type === 'trend' ? (language === 'en' ? 'Trend' : 'प्रवृत्ति') :
+                         insight.type === 'age' ? (language === 'en' ? 'Age-Specific' : 'उमेर') :
+                         (language === 'en' ? 'General' : 'सामान्य')}
+                      </span>
+                    </div>
+                    
+                    {/* Title */}
+                    <p className={`font-bold text-sm leading-tight mb-2 ${colors.accent}`}>{insight.title}</p>
+                    
+                    {/* Content */}
+                    <p className="text-stone-700 text-xs leading-relaxed flex-1">{insight.content}</p>
+                    
+                    {/* Learn More indicator */}
+                    <div className={`mt-3 inline-flex items-center gap-1 text-xs font-semibold ${colors.accent} opacity-0 group-hover:opacity-100 transition-opacity`}>
+                      {language === 'en' ? 'Learn more' : 'थप जान्नुहोस्'} →
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="bg-linear-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 text-center border-2 border-dashed border-blue-200">
+              <p className="text-3xl mb-2">📊</p>
+              <p className="text-blue-800 font-bold text-sm mb-1">
+                {language === 'en' ? 'No Health Insights Yet' : 'अभी कोही सुझाव नहीं'}
+              </p>
+              <p className="text-blue-600 text-xs leading-relaxed max-w-xs mx-auto">
+                {language === 'en' 
+                  ? 'Start logging your weight, blood pressure, and symptoms to get personalized health insights powered by AI' 
+                  : 'आफ्नो वजन, रक्तचाप र लक्षणहरू लग गरेर AI-द्वारा व्यक्तिगत स्वास्थ्य सुझावहरू पाउन सुरु गर्नुहोस्'}
+              </p>
+              <button onClick={() => navigate('/health')} className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-colors">
+                📝 {language === 'en' ? 'Log Health Data' : 'स्वास्थ्य डेटा लग गर्नुहोस्'}
+              </button>
+            </div>
+          )}
         </section>
  
         {/* ── SECTION 6: GUIDELINES ───────────────────────────────────────── */}

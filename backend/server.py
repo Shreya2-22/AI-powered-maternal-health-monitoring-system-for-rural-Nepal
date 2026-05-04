@@ -9,6 +9,7 @@ from datetime import datetime
 from typing import List, Optional
 from risk_assessment import PregnancyRiskAssessment
 from chat_service import PregnancyChatService
+from ai_chatbot_enhanced import PregnancyAIChatbot
 
 # Import validation module
 try:
@@ -67,7 +68,7 @@ chat_logs_collection      = db["chat_logs"]       if db is not None else None
 
 os.makedirs("models", exist_ok=True)
 risk_assessment = PregnancyRiskAssessment()
-pregnancy_chat = PregnancyChatService()
+pregnancy_chat = PregnancyAIChatbot()
 
 # Import ML enhancement modules
 try:
@@ -225,37 +226,43 @@ async def get_personalized_insights(request: PersonalizedInsightsRequest):
 @app.post("/api/chat")
 async def chat_with_guardrails(request: ChatRequest):
     """
-    Pregnancy-only chat endpoint with explicit safety guardrails:
-    1) Emergency escalation
-    2) Strict maternal-health topic restriction
+    AI-powered pregnancy chat endpoint with emergency detection and smart responses.
+    Uses Hugging Face free API or intelligent local fallback.
     """
     try:
         cleaned_message = request.message.strip()
         if not cleaned_message:
             raise HTTPException(status_code=400, detail="Message is required")
 
-        result = pregnancy_chat.answer(
+        # Get user pregnancy weeks
+        weeks_pregnant = 20  # Default
+        if db is not None and users_collection is not None:
+            try:
+                user = users_collection.find_one({"_id": ObjectId(request.session_id)})
+                if user and "weeks_pregnant" in user:
+                    weeks_pregnant = user["weeks_pregnant"]
+            except Exception:
+                pass
+
+        # Call AI chatbot
+        result = pregnancy_chat.chat(
+            user_id=request.session_id,
             message=cleaned_message,
             language=request.language,
-            session_id=request.session_id,
-            memory_turns=request.memory_turns,
+            weeks_pregnant=weeks_pregnant,
         )
 
         response_payload = {
             "reply": result.reply,
             "intent": result.intent,
-            "restricted": result.restricted,
-            "emergency": result.emergency,
+            "is_pregnancy_related": result.is_pregnancy_related,
+            "emergency_detected": result.emergency_detected,
             "confidence": result.confidence,
             "context_used": result.context_used,
-            "memory_turns": result.memory_turns,
-            "top_intents": result.top_intents or [],
-            "model_used": result.model_used,
-            "safety_path": result.safety_path,
             "timestamp": datetime.now().isoformat(),
         }
 
-        # Best practice for healthcare bots: keep audit logs when DB is available.
+        # Keep audit logs
         if chat_logs_collection is not None:
             try:
                 chat_logs_collection.insert_one(
@@ -265,18 +272,21 @@ async def chat_with_guardrails(request: ChatRequest):
                         "message": cleaned_message,
                         "reply": result.reply,
                         "intent": result.intent,
+                        "is_pregnancy_related": result.is_pregnancy_related,
+                        "emergency_detected": result.emergency_detected,
                         "confidence": float(result.confidence),
-                        "restricted": bool(result.restricted),
-                        "emergency": bool(result.emergency),
-                        "context_used": bool(result.context_used),
-                        "model_used": result.model_used,
-                        "safety_path": result.safety_path,
                         "created_at": datetime.now().isoformat(),
                     }
                 )
             except Exception:
-                # Logging should never break patient-facing chat responses.
                 pass
+
+        return response_payload
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Chat error: {str(e)}")
 
         return response_payload
     except HTTPException:

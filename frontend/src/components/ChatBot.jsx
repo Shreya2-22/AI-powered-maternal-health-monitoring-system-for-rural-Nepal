@@ -91,12 +91,12 @@ export default function ChatBot({ user, language }) {
         body: JSON.stringify({
           message: inputValue,
           language: language,
-          user_name: user?.name
+          session_id: user?.id || user?.name || 'session_' + Date.now()
         })
       });
 
       const data = await response.json();
-      const botMessage = { type: 'bot', text: data.response || 'I could not generate a response.' };
+      const botMessage = { type: 'bot', text: data.reply || 'I could not generate a response.' };
       const updatedMessages = [...newMessages, botMessage];
       setMessages(updatedMessages);
       localStorage.setItem(`chat_history_${user?.name}`, JSON.stringify(updatedMessages));
@@ -123,12 +123,12 @@ export default function ChatBot({ user, language }) {
         body: JSON.stringify({
           message: question,
           language: language,
-          user_name: user?.name
+          session_id: user?.id || user?.name || 'session_' + Date.now()
         })
       });
 
       const data = await response.json();
-      const botMessage = { type: 'bot', text: data.response || 'I could not generate a response.' };
+      const botMessage = { type: 'bot', text: data.reply || 'I could not generate a response.' };
       const updatedMessages = [...newMessages, botMessage];
       setMessages(updatedMessages);
       localStorage.setItem(`chat_history_${user?.name}`, JSON.stringify(updatedMessages));
@@ -219,6 +219,14 @@ export default function ChatBot({ user, language }) {
               className="px-5 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-bold rounded-lg hover:shadow-lg active:scale-95 transition disabled:opacity-50"
             >
               {text.send}
+            </button>
+            <button
+              onClick={() => setMessages([])}
+              disabled={messages.length === 0 || isLoading}
+              className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+              title={language === 'ne' ? 'सबै संदेशहरू हटाउनुहोस्' : 'Clear all messages'}
+            >
+              {language === 'ne' ? 'साफ गर्नुहोस्' : 'Clear'}
             </button>
           </div>
         </div>

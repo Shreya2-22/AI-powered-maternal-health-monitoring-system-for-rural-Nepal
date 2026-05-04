@@ -109,12 +109,14 @@ class PersonalizedInsightsGenerator:
                 "en": {
                     "title": "Early pregnancy focus: energy and nausea are normal",
                     "content": "Around week 10, your body is adjusting to hormonal changes. Fatigue and mild nausea are common and usually ease by week 14. Eat small, frequent meals—ginger and peppermint help many people. Rest is your priority right now.",
+                    "type": "trimester",
                     "category": "trimester",
                     "urgency_score": 2,
                 },
                 "ne": {
                     "title": "गर्भावस्थाको सुरु: थकान र मितली सामान्य छ",
                     "content": "अब तपाईंको शरीर हार्मोनल परिवर्तनमा ढल किरहेको छ। थकान र हल्का मितली सामान्य हुन्छ र सामान्यतः १४ हप्तामा सुधरन्छ। थोरै-थोरै खाना खानुहोस्—अदुवा र पुदीना मदत गर्छ। अब आराम मुख्य हो।",
+                    "type": "trimester",
                     "category": "trimester",
                     "urgency_score": 2,
                 },
@@ -124,12 +126,14 @@ class PersonalizedInsightsGenerator:
                 "en": {
                     "title": "Mid-pregnancy growth: baby is developing rapidly",
                     "content": "You're likely feeling baby movements now. Focus on steady nutrition and gentle movement—walking 20-30 mins daily helps. Watch for any sudden swelling or vision changes, as these need prompt attention.",
+                    "type": "trimester",
                     "category": "trimester",
                     "urgency_score": 2,
                 },
                 "ne": {
                     "title": "गर्भावस्थाको बीच: बच्चा छिटो बढिरहेको छ",
                     "content": "तपाईं अब बच्चाको चाल अनुभव गरिरहनुभएको हुनसक्छ। पोषण र हल्का व्यायाममा ध्यान दिनुहोस्—दिनमा २०-३० मिनेट हिँडाइ गर्नुहोस्। कुनै पनि अचानक सूजन वा दृष्टि परिवर्तन आए तुरुन्त जाँच गराउनुहोस्।",
+                    "type": "trimester",
                     "category": "trimester",
                     "urgency_score": 2,
                 },
@@ -139,12 +143,14 @@ class PersonalizedInsightsGenerator:
                 "en": {
                     "title": "Late pregnancy: prepare for delivery and practice comfort",
                     "content": "Baby is mostly developed now. Discomfort is normal—back pain, swelling, and interrupted sleep are common. Sleep on your left side, use support pillows, and stay mobile. Start thinking about your birth plan with your doctor.",
+                    "type": "trimester",
                     "category": "trimester",
                     "urgency_score": 3,
                 },
                 "ne": {
                     "title": "गर्भावस्थाको अन्त: प्रसव तयारी र आराम",
                     "content": "बच्चा अब लगभग पूरा विकसित छ। असहजता सामान्य छ—पीठको दर्द, सूजन र नींद मा समस्या सामान्य हुन्छ। बायाँ तिरमा सुत्नुहोस्, सहायक तकिया प्रयोग गर्नुहोस्। डाक्टरसँग प्रसव योजना बनाउन सुरु गर्नुहोस्।",
+                    "type": "trimester",
                     "category": "trimester",
                     "urgency_score": 3,
                 },
@@ -167,16 +173,19 @@ class PersonalizedInsightsGenerator:
                 "nausea": {
                     "title": "Managing nausea: try small, frequent meals",
                     "content": "You've logged nausea a few times. Eat every 2-3 hours—keep snacks by your bed. Avoid strong smells and greasy foods. Ginger tea, citrus, and peppermint often help. If it's severe or you're losing weight, tell your doctor.",
+                    "type": "symptom",
                     "urgency_score": 1,
                 },
                 "headache": {
                     "title": "Headaches in pregnancy: hydration and rest help",
                     "content": "We noticed you've had headaches. Stay hydrated (10+ glasses of water daily), rest in a quiet room, and try a cool compress. If headaches are severe, come with vision changes or swelling, contact your doctor.",
+                    "type": "symptom",
                     "urgency_score": 2,
                 },
                 "swelling": {
                     "title": "Mild swelling is normal, but monitor for changes",
                     "content": "Some swelling in legs and feet is common. Elevate your feet when resting, wear compression socks if available, and stay hydrated. If swelling is sudden or severe with headache, seek care immediately.",
+                    "type": "symptom",
                     "urgency_score": 2,
                 },
             },
@@ -184,11 +193,13 @@ class PersonalizedInsightsGenerator:
                 "मितली": {
                     "title": "मितली कम गर्ने: थोरै-थोरै खाना खानुहोस्",
                     "content": "तपाईंले मितली लग गरेको छु। २-३ घण्टाको अन्तरमा खाना खानुहोस्। बिरामीजनक खुशबु र तेलेको खाना बचाउनुहोस्। अदुवाको चिया, नेबू र पुदीना मदत गर्छ। गम्भीर छ वा वजन घटिरहेको छ भने डाक्टरलाई बताउनुहोस्।",
+                    "type": "symptom",
                     "urgency_score": 1,
                 },
                 "टाउको दुखाइ": {
                     "title": "गर्भावस्थामा टाउको दुखाइ: पानी र आराम मदत गर्छ",
                     "content": "तपाईंले टाउको दुखाइ लग गरेको छु। दिनमा १० गिलास पानी पिनुहोस्, शान्त कोठामा आराम गर्नुहोस्। ठण्डो सेक गर्नुहोस्। गम्भीर हो वा दृष्टि परिवर्तन/सूजन छ भने तुरुन्त सम्पर्क गर्नुहोस्।",
+                    "type": "symptom",
                     "urgency_score": 2,
                 },
             },
@@ -215,12 +226,14 @@ class PersonalizedInsightsGenerator:
                 "en": {
                     "title": "Weight gain is faster than typical—discuss with doctor",
                     "content": f"You've gained {wt['change']:.1f}kg recently. Average is ~0.5kg per week. This could indicate fluid retention or other changes. Mention it at your next visit.",
+                    "type": "trend",
                     "category": "trend",
                     "urgency_score": 2,
                 },
                 "ne": {
                     "title": "वजन बढ्न थेक भन्दा छिटो बढिरहेको छ",
                     "content": f"तपाईंको वजन हालै {wt['change']:.1f}किलो बढेको छ। सामान्य हार प्रति हप्ता ०.५किलो हो। यो पानी जमा हुनु वा अन्य परिवर्तन हुन सक्छ। अर्को भेटमा बताउनुहोस्।",
+                    "type": "trend",
                     "category": "trend",
                     "urgency_score": 2,
                 },
@@ -231,12 +244,14 @@ class PersonalizedInsightsGenerator:
                 "en": {
                     "title": "Blood pressure is trending higher—monitor closely",
                     "content": "Recent BP readings are elevated (140+). Keep tracking daily if possible. Reduce salt, stay hydrated, and report at your next checkup. If sudden or with headache, seek care.",
+                    "type": "trend",
                     "category": "trend",
                     "urgency_score": 3,
                 },
                 "ne": {
                     "title": "रक्तचाप बढिरहेको छ—नजिकबाट हेर्नुहोस्",
                     "content": "हालको रक्तचाप उच्च छ (१४० भन्दा माथि)। दैनिक जाँच गर्नुहोस् यदि सम्भव छ। नमक कम गर्नुहोस्, पानी पिनुहोस्। अचानक बढे वा टाउको दुखाइ भए तुरुन्त गएर हेराउनुहोस्।",
+                    "type": "trend",
                     "category": "trend",
                     "urgency_score": 3,
                 },
@@ -267,12 +282,14 @@ class PersonalizedInsightsGenerator:
                 "en": {
                     "title": "Pregnancy after 35: routine screening is your friend",
                     "content": "Additional genetic screening is recommended. Follow your doctor's timeline closely. Stay active, manage stress, and keep your checkups. Most pregnancies over 35 are healthy.",
+                    "type": "age",
                     "category": "age",
                     "urgency_score": 2,
                 },
                 "ne": {
                     "title": "३५ पछि गर्भावस्था: नियमित जाँच महत्वपूर्ण",
                     "content": "अतिरिक्त आनुवंशिक जाँच सिफारिश गरिन्छ। डाक्टरको समय तालिका पालना गर्नुहोस्। सक्रिय रहनुहोस्, तनाव कम गर्नुहोस्। ३५ पछि अधिकांश गर्भावस्था स्वस्थ रहन्छ।",
+                    "type": "age",
                     "category": "age",
                     "urgency_score": 2,
                 },
