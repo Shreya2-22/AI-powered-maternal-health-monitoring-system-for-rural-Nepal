@@ -46,7 +46,8 @@ export default function ChatBot({ user, language }) {
     send: 'पठाउनुहोस्',
     suggested: 'सुझाव गरिएका प्रश्नहरू',
     howToUse: 'यसलाई कसरी प्रयोग गरें',
-    faq: 'सामान्य प्रश्नहरू'
+    faq: 'सामान्य प्रश्नहरू',
+    steps: ['सुझाव गरिएको प्रश्नमा क्लिक गर्नुहोस्', 'वा आफ्नो प्रश्न लेख्नुहोस्', 'पठाउनुहोस् बटनमा क्लिक गर्नुहोस्', 'अनुवर्ती प्रश्नहरू सोध्नुहोस्', 'सधैं डाक्टरसँग परामर्श गर्नुहोस्']
   } : {
     title: 'Health Assistant',
     subtitle: 'Your AI-powered companion for your pregnancy journey',
@@ -55,7 +56,8 @@ export default function ChatBot({ user, language }) {
     send: 'Send',
     suggested: 'Suggested Questions',
     howToUse: 'How to Use',
-    faq: 'Frequently Asked Questions'
+    faq: 'Frequently Asked Questions',
+    steps: ['Click a suggested question', 'Or type your own', 'Press Send', 'Ask follow-ups', 'Always consult your doctor']
   };
 
   useEffect(() => {
@@ -112,156 +114,169 @@ export default function ChatBot({ user, language }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900">
-      {/* Animated background elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse"></div>
-        <div className="absolute bottom-20 right-10 w-72 h-72 bg-cyan-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse" style={{ animationDelay: '2s' }}></div>
-      </div>
-
-      <div className="relative z-10">
-        {/* Header */}
-        <header className="sticky top-0 z-20 backdrop-blur-md bg-slate-950/50 border-b border-blue-500/20">
-          <div className="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
-            <button 
-              onClick={() => navigate('/')}
-              className="px-4 py-2 text-sm font-semibold text-slate-300 hover:bg-slate-800 rounded-lg transition"
-            >
-              ← {text.back}
-            </button>
-            <div className="flex-1 text-center">
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-300 bg-clip-text text-transparent">{text.title}</h1>
-              <p className="text-xs text-slate-400 mt-1">{text.subtitle}</p>
-            </div>
-            <div style={{ width: '100px' }}></div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
+      {/* Header */}
+      <header className="bg-white border-b-2 border-slate-200 shadow-md sticky top-0 z-20">
+        <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
+          <button 
+            onClick={() => navigate('/')}
+            className="px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-100 rounded-lg transition"
+          >
+            ← {text.back}
+          </button>
+          <div className="flex-1 text-center">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">{text.title}</h1>
+            <p className="text-xs text-slate-600 mt-1">{text.subtitle}</p>
           </div>
-        </header>
+          <div style={{ width: '100px' }}></div>
+        </div>
+      </header>
 
-        {/* Main Container */}
-        <div className="max-w-6xl mx-auto px-6 py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        
+        {/* Chat Window - Compact */}
+        <div className="bg-white rounded-2xl border-2 border-slate-200 shadow-lg mb-8 overflow-hidden">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 h-96">
             
-            {/* Chat Area - 2/3 width */}
-            <div className="lg:col-span-2">
-              <div className="bg-slate-900/60 backdrop-blur-xl rounded-2xl border border-blue-500/30 shadow-2xl h-[600px] flex flex-col overflow-hidden">
-                
-                {/* Messages */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-4 scroll-smooth">
-                  {messages.length === 0 && (
-                    <div className="h-full flex items-center justify-center">
-                      <div className="text-center">
-                        <div className="text-5xl mb-4">💬</div>
-                        <p className="text-slate-400 text-sm">Start a conversation by asking a question</p>
-                      </div>
+            {/* Messages Area */}
+            <div className="lg:col-span-2 border-r border-slate-200 flex flex-col">
+              <div className="flex-1 overflow-y-auto p-5 space-y-3">
+                {messages.length === 0 && (
+                  <div className="h-full flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="text-4xl mb-2">💭</div>
+                      <p className="text-slate-500 text-sm">Start chatting...</p>
                     </div>
-                  )}
-                  
-                  {messages.map((msg, idx) => (
-                    <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-xs px-4 py-3 rounded-xl ${
-                        msg.role === 'user' 
-                          ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-br-none' 
-                          : 'bg-slate-800 text-slate-100 rounded-bl-none border border-slate-700'
-                      }`}>
-                        <p className="text-sm leading-relaxed">{msg.content}</p>
-                      </div>
-                    </div>
-                  ))}
-                  
-                  {isLoading && (
-                    <div className="flex justify-start">
-                      <div className="bg-slate-800 text-slate-100 px-4 py-3 rounded-xl rounded-bl-none border border-slate-700">
-                        <div className="flex gap-2">
-                          <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce"></div>
-                          <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                          <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  
-                  <div ref={messagesEndRef} />
-                </div>
-
-                {/* Input Area */}
-                <div className="border-t border-blue-500/20 p-4 bg-slate-900/30">
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={inputValue}
-                      onChange={(e) => setInputValue(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                      placeholder={text.typePlaceholder}
-                      className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 transition"
-                      disabled={isLoading}
-                    />
-                    <button
-                      onClick={() => handleSendMessage()}
-                      disabled={isLoading || !inputValue.trim()}
-                      className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-bold rounded-lg hover:from-blue-500 hover:to-cyan-500 disabled:from-slate-600 disabled:to-slate-600 transition"
-                    >
-                      {text.send}
-                    </button>
                   </div>
-                </div>
+                )}
+                
+                {messages.map((msg, idx) => (
+                  <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-[70%] px-4 py-2 rounded-lg text-sm ${
+                      msg.role === 'user' 
+                        ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-br-none' 
+                        : 'bg-slate-200 text-slate-900 rounded-bl-none'
+                    }`}>
+                      {msg.content}
+                    </div>
+                  </div>
+                ))}
+                
+                {isLoading && (
+                  <div className="flex justify-start">
+                    <div className="bg-slate-200 px-4 py-2 rounded-lg rounded-bl-none">
+                      <div className="flex gap-1">
+                        <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce"></div>
+                        <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                        <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                <div ref={messagesEndRef} />
               </div>
             </div>
 
-            {/* Sidebar - 1/3 width */}
-            <div className="space-y-6">
-              
-              {/* Suggested Questions */}
-              <div className="bg-slate-900/60 backdrop-blur-xl rounded-xl border border-blue-500/30 p-4">
-                <h3 className="text-sm font-bold text-cyan-400 mb-3 flex items-center gap-2">
-                  <span>✨</span> {text.suggested}
-                </h3>
-                <div className="space-y-2">
-                  {suggestedQuestions.map((q, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => handleSendMessage(q)}
-                      className="w-full text-left text-xs px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-cyan-300 rounded-lg transition line-clamp-2"
-                    >
-                      → {q}
-                    </button>
-                  ))}
-                </div>
+            {/* Quick Access Sidebar */}
+            <div className="bg-gradient-to-b from-blue-50 to-blue-100 p-5 flex flex-col gap-3 overflow-y-auto">
+              <div>
+                <p className="text-xs font-bold text-blue-700 mb-2 uppercase">Quick Actions</p>
+                {suggestedQuestions.slice(0, 3).map((q, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => handleSendMessage(q)}
+                    className="w-full text-left text-xs px-2 py-2 bg-white hover:bg-blue-100 text-slate-700 rounded transition mb-2 line-clamp-2 border border-blue-200 hover:border-blue-400"
+                  >
+                    ▸ {q}
+                  </button>
+                ))}
               </div>
+            </div>
+          </div>
 
-              {/* How to Use */}
-              <div className="bg-gradient-to-br from-blue-900/40 to-blue-800/20 backdrop-blur-xl rounded-xl border border-blue-500/40 p-4">
-                <h3 className="text-sm font-bold text-blue-300 mb-3">📖 {text.howToUse}</h3>
-                <ol className="text-xs text-slate-300 space-y-2">
-                  <li className="flex gap-2"><span className="text-blue-400 font-bold">1.</span> <span>Click a suggested question</span></li>
-                  <li className="flex gap-2"><span className="text-blue-400 font-bold">2.</span> <span>Or type your own</span></li>
-                  <li className="flex gap-2"><span className="text-blue-400 font-bold">3.</span> <span>Press Send</span></li>
-                  <li className="flex gap-2"><span className="text-blue-400 font-bold">4.</span> <span>Ask follow-ups</span></li>
-                  <li className="flex gap-2"><span className="text-blue-400 font-bold">5.</span> <span>Always see a doctor</span></li>
-                </ol>
-              </div>
+          {/* Input Area */}
+          <div className="border-t-2 border-slate-200 bg-slate-50 p-4">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                placeholder={text.typePlaceholder}
+                className="flex-1 bg-white border-2 border-slate-300 rounded-lg px-4 py-2 text-sm text-slate-900 placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition"
+                disabled={isLoading}
+              />
+              <button
+                onClick={() => handleSendMessage()}
+                disabled={isLoading || !inputValue.trim()}
+                className="px-5 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-bold rounded-lg hover:from-blue-500 hover:to-cyan-500 disabled:from-slate-400 disabled:to-slate-400 transition text-sm"
+              >
+                {text.send}
+              </button>
+            </div>
+          </div>
+        </div>
 
-              {/* FAQ */}
-              <div className="bg-slate-900/60 backdrop-blur-xl rounded-xl border border-blue-500/30 p-4 max-h-96 overflow-y-auto">
-                <h3 className="text-sm font-bold text-cyan-400 mb-3">❓ {text.faq}</h3>
-                <div className="space-y-2">
-                  {faqItems.map((item, idx) => (
-                    <div key={idx} className="border border-slate-700 rounded-lg overflow-hidden">
-                      <button
-                        onClick={() => setExpandedFAQ(expandedFAQ === idx ? null : idx)}
-                        className="w-full px-3 py-2 bg-slate-800 hover:bg-slate-700 text-left flex items-center justify-between transition"
-                      >
-                        <p className="text-xs font-semibold text-slate-300">{item.q}</p>
-                        <span className={`text-slate-500 transition ${expandedFAQ === idx ? 'rotate-180' : ''}`}>▼</span>
-                      </button>
-                      {expandedFAQ === idx && (
-                        <div className="px-3 py-2 bg-slate-900 border-t border-slate-700">
-                          <p className="text-xs text-slate-400 leading-relaxed">{item.a}</p>
-                        </div>
-                      )}
+        {/* Info Grid - All visible at once */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          {/* Suggested Questions */}
+          <div className="bg-white rounded-xl border-2 border-blue-200 shadow-lg p-6">
+            <h3 className="text-lg font-bold text-blue-600 mb-4 flex items-center gap-2">
+              <span className="text-2xl">✨</span> {text.suggested}
+            </h3>
+            <div className="space-y-2">
+              {suggestedQuestions.map((q, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handleSendMessage(q)}
+                  className="w-full text-left text-sm px-3 py-3 bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 text-slate-800 rounded-lg transition border border-blue-200 hover:border-blue-400 font-medium"
+                >
+                  → {q}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* How to Use */}
+          <div className="bg-white rounded-xl border-2 border-purple-200 shadow-lg p-6">
+            <h3 className="text-lg font-bold text-purple-600 mb-4 flex items-center gap-2">
+              <span className="text-2xl">📖</span> {text.howToUse}
+            </h3>
+            <ol className="space-y-3">
+              {text.steps.map((step, idx) => (
+                <li key={idx} className="flex gap-3">
+                  <span className="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">{idx + 1}</span>
+                  <span className="text-sm text-slate-700">{step}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          {/* FAQ */}
+          <div className="bg-white rounded-xl border-2 border-green-200 shadow-lg p-6">
+            <h3 className="text-lg font-bold text-green-600 mb-4 flex items-center gap-2">
+              <span className="text-2xl">❓</span> {text.faq}
+            </h3>
+            <div className="space-y-2 max-h-96 overflow-y-auto">
+              {faqItems.map((item, idx) => (
+                <div key={idx} className="border border-green-200 rounded-lg overflow-hidden">
+                  <button
+                    onClick={() => setExpandedFAQ(expandedFAQ === idx ? null : idx)}
+                    className="w-full px-4 py-3 bg-gradient-to-r from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 text-left flex items-center justify-between transition"
+                  >
+                    <p className="text-sm font-bold text-slate-800">{item.q}</p>
+                    <span className={`text-green-600 transition text-lg ${expandedFAQ === idx ? 'rotate-180' : ''}`}>▼</span>
+                  </button>
+                  {expandedFAQ === idx && (
+                    <div className="px-4 py-3 bg-white border-t border-green-200">
+                      <p className="text-sm text-slate-700 leading-relaxed">{item.a}</p>
                     </div>
-                  ))}
+                  )}
                 </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>
