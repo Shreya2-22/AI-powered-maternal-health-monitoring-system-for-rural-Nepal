@@ -8,53 +8,50 @@ export default function HealthInsights({ user, language }) {
   const [healthRecords, setHealthRecords] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [selectedInsight, setSelectedInsight] = useState(null);
+  const [expandedInsight, setExpandedInsight] = useState(null);
 
   const text = language === 'ne' ? {
-    title: 'स्वास्थ्य अन्तर्दृष्टि',
+    title: 'मेरो स्वास्थ्य',
+    subtitle: 'व्यक्तिगत स्वास्थ्य मूल्यांकन र सिफारिशहरु',
     back: 'फिर्ता',
-    personalized: 'व्यक्तिगत स्वास्थ्य सुझाव',
+    overview: 'अवलोकन',
+    insights_title: 'आपनो अन्तर्दृष्टिहरु',
     loading: 'लोड भइरहेको छ...',
-    noInsights: 'अहिले कुनै अन्तर्दृष्टि उपलब्ध छैन',
-    viewDetails: 'विवरण हेर्नुहोस्',
-    userInfo: 'आपको जानकारी',
-    age: 'आयु',
-    weeks: 'हप्ता',
-    insights: 'अन्तर्दृष्टिहरू',
-    category: 'वर्ग',
-    urgency: 'तातो',
-    summary: 'सारांश',
+    noInsights: 'अहिले कुनै अन्तर्दृष्टि उपलब्ध छैन।',
+    addRecords: 'स्वास्थ्य रेकर्ड थप्नुहोस्',
+    recentMetrics: 'हालको मेट्रिक्स',
+    healthy: 'स्वस्थ',
+    warning: 'चेतावनी',
+    critical: 'गम्भीर',
+    latestWeight: 'वजन',
+    latestBP: 'रक्तचाप',
+    totalRecords: 'कुल रेकर्डहरू',
     recommendations: 'सिफारिशहरू',
-    trends: 'प्रवृत्तिहरू',
-    healthy: '✅ स्वस्थ',
-    warning: '⚠️ सावधानी',
-    critical: '🚨 गम्भीर',
-    noRecords: 'अहिले कुनै स्वास्थ्य रेकर्ड छैन',
-    addRecords: 'स्वास्थ्य रेकर्ड थप्नुहोस्'
+    category: 'श्रेणी',
+    noRecords: 'कुनै स्वास्थ्य रेकर्ड छैन।',
+    startTracking: 'स्वास्थ्य ट्र्याकिङ शुरु गर्नुहोस्'
   } : {
-    title: 'Health Insights',
+    title: 'My Health',
+    subtitle: 'Personalized health assessment and recommendations',
     back: 'Back',
-    personalized: 'Personalized Health Guidance',
+    overview: 'Overview',
+    insights_title: 'Your Insights',
     loading: 'Loading...',
-    noInsights: 'No insights available yet',
-    viewDetails: 'View Details',
-    userInfo: 'Your Information',
-    age: 'Age',
-    weeks: 'Weeks Pregnant',
-    insights: 'Insights',
-    category: 'Category',
-    urgency: 'Urgency',
-    summary: 'Summary',
+    noInsights: 'No insights available yet.',
+    addRecords: 'Add Health Records',
+    recentMetrics: 'Recent Metrics',
+    healthy: 'Healthy',
+    warning: 'Warning',
+    critical: 'Critical',
+    latestWeight: 'Weight',
+    latestBP: 'Blood Pressure',
+    totalRecords: 'Total Records',
     recommendations: 'Recommendations',
-    trends: 'Trends',
-    healthy: '✅ Healthy',
-    warning: '⚠️ Warning',
-    critical: '🚨 Critical',
-    noRecords: 'No health records yet',
-    addRecords: 'Add Health Records'
+    category: 'Category',
+    noRecords: 'No health records available.',
+    startTracking: 'Start Health Tracking'
   };
 
-  // Fetch health records from localStorage
   useEffect(() => {
     const storedRecords = localStorage.getItem(`health_records_${user?.name}`);
     if (storedRecords) {
@@ -66,11 +63,9 @@ export default function HealthInsights({ user, language }) {
     }
   }, [user?.name]);
 
-  // Fetch personalized insights from backend
   useEffect(() => {
     const fetchInsights = async () => {
       if (!user) return;
-      
       setIsLoading(true);
       setError('');
       try {
@@ -83,10 +78,9 @@ export default function HealthInsights({ user, language }) {
             user_age: user.age || 25,
             weeks_pregnant: user.weeks_pregnant || 20,
             language: language,
-            limit: 3
+            limit: 6
           })
         });
-
         if (response.ok) {
           const data = await response.json();
           setInsights(data.insights || []);
@@ -98,165 +92,179 @@ export default function HealthInsights({ user, language }) {
         setIsLoading(false);
       }
     };
-
     fetchInsights();
   }, [user, healthRecords, language]);
 
-  const getUrgencyColor = (urgency) => {
-    if (urgency === 'critical') return 'bg-red-50 border-red-500 text-red-900';
-    if (urgency === 'warning') return 'bg-yellow-50 border-yellow-500 text-yellow-900';
-    return 'bg-green-50 border-green-500 text-green-900';
-  };
-
-  const getUrgencyBadge = (urgency) => {
-    if (urgency === 'critical') return '🚨 Critical';
-    if (urgency === 'warning') return '⚠️ Warning';
-    return '✅ Healthy';
+  const getUrgencyStyle = (urgency) => {
+    if (urgency === 'critical') return { bg: 'from-red-50 to-red-100', border: 'border-red-300', dot: 'bg-red-500', text: 'text-red-900', label: '🔴' };
+    if (urgency === 'warning') return { bg: 'from-amber-50 to-amber-100', border: 'border-amber-300', dot: 'bg-amber-500', text: 'text-amber-900', label: '🟡' };
+    return { bg: 'from-green-50 to-green-100', border: 'border-green-300', dot: 'bg-green-500', text: 'text-green-900', label: '🟢' };
   };
 
   const t = text;
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
       {/* Header */}
-      <header className="bg-white border-b border-slate-200">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+      <header className="bg-white border-b-2 border-slate-200 sticky top-0 z-10 shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
           <button 
             onClick={() => navigate('/')}
-            className="text-slate-600 hover:text-slate-900 font-medium text-sm transition"
+            className="px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 rounded-lg transition"
           >
-            {t.back}
+            ← {t.back}
           </button>
-          <h1 className="text-xl font-semibold text-slate-900">{t.title}</h1>
-          <div style={{ width: '40px' }}></div>
+          <div className="text-center flex-1">
+            <h1 className="text-4xl font-bold text-slate-900">{t.title}</h1>
+            <p className="text-sm text-slate-600 mt-1">{t.subtitle}</p>
+          </div>
+          <div style={{ width: '100px' }}></div>
         </div>
       </header>
 
-      <div className="max-w-6xl mx-auto w-full p-6 flex-1">
-        {/* User Info Card */}
-        <div className="bg-gradient-to-r from-teal-500 to-blue-600 text-white rounded-lg p-6 mb-8 shadow-lg">
-          <h2 className="text-2xl font-bold mb-4">{t.userInfo}</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div>
-              <p className="text-sm opacity-80">{t.age}</p>
-              <p className="text-2xl font-bold">{user?.age || '—'}</p>
-            </div>
-            <div>
-              <p className="text-sm opacity-80">{t.weeks}</p>
-              <p className="text-2xl font-bold">{user?.weeks_pregnant || '—'}</p>
-            </div>
-            <div>
-              <p className="text-sm opacity-80">Records</p>
-              <p className="text-2xl font-bold">{healthRecords.length}</p>
-            </div>
-            <div>
-              <p className="text-sm opacity-80">{t.insights}</p>
-              <p className="text-2xl font-bold">{insights.length}</p>
-            </div>
+      <div className="max-w-7xl mx-auto px-6 py-10">
+        {/* Quick Stats */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+          <div className="bg-white rounded-xl border-2 border-blue-200 p-6 shadow-md hover:shadow-lg transition transform hover:-translate-y-1">
+            <p className="text-slate-600 text-sm font-semibold">Age</p>
+            <p className="text-3xl font-bold text-slate-900 mt-2">{user?.age || '—'}</p>
+            <p className="text-xs text-slate-500 mt-1">years old</p>
+          </div>
+          <div className="bg-white rounded-xl border-2 border-purple-200 p-6 shadow-md hover:shadow-lg transition transform hover:-translate-y-1">
+            <p className="text-slate-600 text-sm font-semibold">Progress</p>
+            <p className="text-3xl font-bold text-slate-900 mt-2">{user?.weeks_pregnant || '—'}w</p>
+            <p className="text-xs text-slate-500 mt-1">weeks pregnant</p>
+          </div>
+          <div className="bg-white rounded-xl border-2 border-green-200 p-6 shadow-md hover:shadow-lg transition transform hover:-translate-y-1">
+            <p className="text-slate-600 text-sm font-semibold">Records</p>
+            <p className="text-3xl font-bold text-slate-900 mt-2">{healthRecords.length}</p>
+            <p className="text-xs text-slate-500 mt-1">tracked entries</p>
+          </div>
+          <div className="bg-white rounded-xl border-2 border-pink-200 p-6 shadow-md hover:shadow-lg transition transform hover:-translate-y-1">
+            <p className="text-slate-600 text-sm font-semibold">Insights</p>
+            <p className="text-3xl font-bold text-slate-900 mt-2">{insights.length}</p>
+            <p className="text-xs text-slate-500 mt-1">recommendations</p>
           </div>
         </div>
 
-        {/* Insights Section */}
-        <div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">{t.personalized}</h2>
-
-          {isLoading && (
-            <div className="text-center py-12">
-              <p className="text-gray-500">{t.loading}</p>
-            </div>
-          )}
-
-          {error && (
-            <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
-              <p className="text-red-800">{error}</p>
-            </div>
-          )}
-
-          {!isLoading && insights.length === 0 && !error && (
-            <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-8 text-center">
-              <p className="text-blue-800 font-medium">{t.noInsights}</p>
-              <p className="text-blue-600 text-sm mt-2">Start logging health records to get personalized insights</p>
-            </div>
-          )}
-
-          {!isLoading && insights.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {insights.map((insight, idx) => (
-                <div
-                  key={idx}
-                  className={`border-2 rounded-lg p-6 cursor-pointer transition-all hover:shadow-lg ${getUrgencyColor(insight.urgency)}`}
-                  onClick={() => setSelectedInsight(selectedInsight === idx ? null : idx)}
-                >
-                  {/* Header */}
-                  <div className="flex justify-between items-start mb-3">
-                    <h3 className="text-lg font-bold flex-1">{insight.title}</h3>
-                    <span className="text-xs font-semibold px-2 py-1 bg-white bg-opacity-70 rounded">
-                      {getUrgencyBadge(insight.urgency)}
-                    </span>
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
+          {/* Metrics Card */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-2xl border-2 border-slate-200 shadow-lg p-8">
+              <h2 className="text-xl font-bold text-slate-900 mb-6">Latest Metrics</h2>
+              {healthRecords.length > 0 ? (
+                <div className="space-y-4">
+                  <div className="bg-gradient-to-br from-blue-100 to-blue-50 rounded-xl p-5 border-2 border-blue-300">
+                    <p className="text-xs font-bold text-blue-700 uppercase tracking-wide">Weight</p>
+                    <p className="text-3xl font-bold text-blue-900 mt-2">{healthRecords[healthRecords.length - 1].weight}</p>
+                    <p className="text-xs text-blue-700 mt-1">kg • Most recent</p>
                   </div>
-
-                  {/* Category */}
-                  <p className="text-sm opacity-75 mb-3">{t.category}: {insight.category || 'Health'}</p>
-
-                  {/* Content Preview */}
-                  <p className="text-sm leading-relaxed mb-3">
-                    {insight.content?.substring(0, 100)}...
-                  </p>
-
-                  {/* Expand indicator */}
-                  {selectedInsight === idx && (
-                    <div className="mt-4 pt-4 border-t border-current border-opacity-20">
-                      <p className="text-sm leading-relaxed mb-3">{insight.content}</p>
-                      
-                      {insight.recommendation && (
-                        <div className="bg-white bg-opacity-50 rounded p-3 mt-3">
-                          <p className="font-semibold text-sm mb-1">{t.recommendations}:</p>
-                          <p className="text-sm">{insight.recommendation}</p>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                  <div className="bg-gradient-to-br from-red-100 to-red-50 rounded-xl p-5 border-2 border-red-300">
+                    <p className="text-xs font-bold text-red-700 uppercase tracking-wide">Blood Pressure</p>
+                    <p className="text-3xl font-bold text-red-900 mt-2">{healthRecords[healthRecords.length - 1].systolic}/{healthRecords[healthRecords.length - 1].diastolic}</p>
+                    <p className="text-xs text-red-700 mt-1">mmHg • Last reading</p>
+                  </div>
+                  <button
+                    onClick={() => navigate('/health')}
+                    className="w-full px-4 py-3 bg-gradient-to-r from-slate-900 to-slate-800 text-white font-bold rounded-lg hover:from-slate-800 hover:to-slate-700 transition mt-2"
+                  >
+                    View All Records
+                  </button>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Health Records Summary */}
-        {healthRecords.length > 0 && (
-          <div className="mt-12 bg-white rounded-lg shadow-md p-6 border-l-4 border-teal-500">
-            <h3 className="text-xl font-bold text-gray-800 mb-4">Recent Health Trends</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-blue-50 p-4 rounded">
-                <p className="text-sm text-blue-600 font-medium">Latest Weight</p>
-                <p className="text-2xl font-bold text-blue-900">
-                  {healthRecords.length > 0 ? `${healthRecords[healthRecords.length - 1].weight} kg` : '—'}
-                </p>
-              </div>
-              <div className="bg-red-50 p-4 rounded">
-                <p className="text-sm text-red-600 font-medium">Latest BP</p>
-                <p className="text-2xl font-bold text-red-900">
-                  {healthRecords.length > 0 
-                    ? `${healthRecords[healthRecords.length - 1].systolic}/${healthRecords[healthRecords.length - 1].diastolic}` 
-                    : '—'}
-                </p>
-              </div>
-              <div className="bg-purple-50 p-4 rounded">
-                <p className="text-sm text-purple-600 font-medium">Total Records</p>
-                <p className="text-2xl font-bold text-purple-900">{healthRecords.length}</p>
-              </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-sm text-slate-600 mb-4">No health data yet</p>
+                  <button
+                    onClick={() => navigate('/health')}
+                    className="w-full px-4 py-2 bg-slate-900 text-white text-sm font-bold rounded-lg hover:bg-slate-800 transition"
+                  >
+                    Add Records
+                  </button>
+                </div>
+              )}
             </div>
           </div>
-        )}
 
+          {/* Insights Cards */}
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-2xl border-2 border-slate-200 shadow-lg p-8">
+              <h2 className="text-xl font-bold text-slate-900 mb-6">{t.insights_title}</h2>
+              
+              {isLoading && (
+                <div className="text-center py-12">
+                  <div className="inline-block">
+                    <div className="w-12 h-12 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin mb-4"></div>
+                    <p className="text-slate-600">{t.loading}</p>
+                  </div>
+                </div>
+              )}
+
+              {error && (
+                <div className="bg-red-50 border-2 border-red-300 rounded-lg p-4 text-red-800 text-sm font-medium">
+                  {error}
+                </div>
+              )}
+
+              {!isLoading && insights.length === 0 && !error && (
+                <div className="text-center py-12 bg-slate-50 rounded-lg">
+                  <p className="text-slate-600 font-medium">{t.noInsights}</p>
+                </div>
+              )}
+
+              {!isLoading && insights.length > 0 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {insights.map((insight, idx) => {
+                    const style = getUrgencyStyle(insight.urgency);
+                    const isExpanded = expandedInsight === idx;
+                    
+                    return (
+                      <div
+                        key={idx}
+                        className={`rounded-xl border-2 ${style.border} bg-gradient-to-br ${style.bg} cursor-pointer transition-all hover:shadow-lg p-5`}
+                        onClick={() => setExpandedInsight(isExpanded ? null : idx)}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-lg">{style.label}</span>
+                              <h3 className={`font-bold text-sm ${style.text}`}>{insight.title}</h3>
+                            </div>
+                            <p className="text-xs text-slate-600 mb-3">{insight.category}</p>
+                            <p className={`text-sm leading-relaxed ${!isExpanded ? 'line-clamp-2' : ''} ${style.text}`}>
+                              {insight.content}
+                            </p>
+                          </div>
+                          <div className={`text-lg transition-transform flex-shrink-0 ${isExpanded ? 'rotate-180' : ''}`}>▼</div>
+                        </div>
+
+                        {isExpanded && insight.recommendation && (
+                          <div className="mt-4 pt-4 border-t-2 border-current border-opacity-20">
+                            <p className="text-xs font-bold text-slate-900 mb-2">What to do:</p>
+                            <p className="text-sm text-slate-800 leading-relaxed">{insight.recommendation}</p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* CTA */}
         {healthRecords.length === 0 && !isLoading && (
-          <div className="mt-8 bg-amber-50 border-2 border-amber-300 rounded-lg p-6 text-center">
-            <p className="text-amber-900 font-medium">{t.noRecords}</p>
+          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl border-2 border-indigo-400 p-10 text-center text-white shadow-xl">
+            <h3 className="text-2xl font-bold mb-3">Start Your Health Journey</h3>
+            <p className="mb-6 text-indigo-100 max-w-2xl mx-auto">
+              Track your weight, blood pressure, and symptoms to unlock personalized insights and recommendations tailored to your pregnancy.
+            </p>
             <button
               onClick={() => navigate('/health')}
-              className="mt-3 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition"
+              className="px-8 py-3 bg-white text-indigo-600 font-bold rounded-lg hover:bg-indigo-50 transition transform hover:scale-105"
             >
-              {t.addRecords}
+              Begin Health Tracking Now
             </button>
           </div>
         )}
