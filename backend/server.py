@@ -285,6 +285,41 @@ async def chat_with_guardrails(request: ChatRequest):
         raise HTTPException(status_code=500, detail=f"Chat endpoint error: {str(e)}")
 
 
+@app.get("/api/chat/suggested-questions")
+async def get_suggested_questions(language: str = "en", intent: Optional[str] = None, count: int = 3):
+    """
+    Get 3 suggested questions to help users understand what to ask the chatbot.
+    Optionally filtered by detected intent (nutrition, symptoms, labor, etc).
+    """
+    try:
+        questions = pregnancy_chat.get_suggested_questions(
+            language=language,
+            intent=intent,
+            count=count
+        )
+        return {
+            "suggested_questions": questions,
+            "language": language,
+            "intent": intent or "general",
+            "count": len(questions)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching suggested questions: {str(e)}")
+
+
+@app.get("/api/chat/question-types-guide")
+async def get_question_types_guide(language: str = "en"):
+    """
+    Get the complete guide showing what types of questions the chatbot can handle.
+    Includes 8 categories with examples and emoji icons.
+    """
+    try:
+        guide = pregnancy_chat.get_question_types_guide(language=language)
+        return guide
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching question types guide: {str(e)}")
+
+
 @app.post("/api/emergency-assessment")
 async def emergency_assessment(request: EmergencyAssessmentRequest):
     """Advanced triage endpoint combining symptoms, vitals, and pregnancy context."""

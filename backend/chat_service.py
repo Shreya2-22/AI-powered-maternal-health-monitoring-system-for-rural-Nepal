@@ -5,6 +5,7 @@ from typing import Deque, Dict, List, Optional, Tuple
 from collections import deque
 
 from chatbot_model import PregnancyChatIntentModel
+from chat_prompts import prompts_and_suggestions
 
 
 @dataclass
@@ -786,3 +787,17 @@ class PregnancyChatService:
         self._remember(session, "user", normalized, "fallback")
         self._remember(session, "assistant", reply, "fallback")
         return ChatResult(reply, "fallback", False, False, confidence, context_used, safe_turns, top_intents=top_intents, safety_path="fallback")
+
+    def get_suggested_questions(self, language: str = "en", intent: Optional[str] = None, count: int = 3) -> List[str]:
+        """
+        Get suggested questions to help the user understand what to ask.
+        Returns 3 random questions based on detected intent or general topics.
+        """
+        return prompts_and_suggestions.get_suggested_questions(intent=intent, language=language, count=count)
+
+    def get_question_types_guide(self, language: str = "en") -> Dict:
+        """
+        Get the complete guide showing what types of questions the chatbot can handle.
+        Includes categories, descriptions, and examples.
+        """
+        return prompts_and_suggestions.get_question_types_guide(language=language)

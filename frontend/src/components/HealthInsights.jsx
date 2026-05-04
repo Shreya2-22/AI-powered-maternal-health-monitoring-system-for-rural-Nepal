@@ -5,360 +5,244 @@ import { API } from '../constants';
 export default function HealthInsights({ user, language }) {
   const navigate = useNavigate();
   const [healthRecords, setHealthRecords] = useState([]);
-  const [generatedInsights, setGeneratedInsights] = useState([]);
-  const [selectedInsight, setSelectedInsight] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState('overview');
+  const [expandedInsight, setExpandedInsight] = useState(null);
 
   const text = language === 'ne' ? {
-    title: 'मेरो गर्भावस्था डैशबोर्ड',
-    subtitle: 'व्यक्तिगत सलाह र जानकारी',
+    title: 'गर्भावस्था स्वास्थ्य डैशबोर्ड',
+    subtitle: 'व्यक्तिगत सलाह र सिफारिसहरू',
     back: 'फिर्ता',
+    addRecords: 'स्वास्थ्य रेकर्ड थप्नुहोस्',
     startTracking: 'स्वास्थ्य ट्र्याकिङ शुरु गर्नुहोस्',
-    addRecords: 'रेकर्ड थप्नुहोस्',
-    noRecords: 'कोनै रेकर्ड छैन।'
+    categories: {
+      overview: 'सारांश',
+      nutrition: 'पोषण',
+      exercise: 'व्यायाम',
+      mental: 'मानसिक स्वास्थ्य',
+      medical: 'चिकित्सा',
+      preparation: 'प्रसव तयारी'
+    }
   } : {
-    title: 'My Pregnancy Dashboard',
-    subtitle: 'Personalized advice and information',
+    title: 'Pregnancy Wellness Dashboard',
+    subtitle: 'Personalized health insights and recommendations',
     back: 'Back',
+    addRecords: 'Add Health Records',
     startTracking: 'Start Tracking',
-    addRecords: 'Add Records',
-    noRecords: 'No records yet.'
+    categories: {
+      overview: 'Overview',
+      nutrition: 'Nutrition',
+      exercise: 'Exercise',
+      mental: 'Mental Health',
+      medical: 'Medical',
+      preparation: 'Preparation'
+    }
   };
+
+  const insights = {
+    overview: language === 'ne' ? [
+      { title: 'गर्भावस्था सारांश', tip: 'आपको गर्भावस्था यात्रा अद्भुत छ। नियमित जाँच र सुस्वास्थ्य संचय जारी राख्नुहोस्।', urgency: 'normal' },
+      { title: 'कल्याणकारी लक्ष्य', tip: 'प्रति हप्ता पोषण र व्यायाम को सन्तुलन राख्नुहोस्।', urgency: 'normal' },
+      { title: 'समर्थन नेटवर्क', tip: 'परिवार र स्वास्थ्य सेवा प्रदाताहरु को साथ संपर्क राख्नुहोस्।', urgency: 'normal' }
+    ] : [
+      { title: 'Pregnancy Journey', tip: 'Your pregnancy journey is unique. Continue regular check-ups and wellness tracking.', urgency: 'normal' },
+      { title: 'Wellness Goals', tip: 'Maintain balance between nutrition and exercise every week.', urgency: 'normal' },
+      { title: 'Support Network', tip: 'Stay connected with family and healthcare providers.', urgency: 'normal' }
+    ],
+    nutrition: language === 'ne' ? [
+      { title: 'दैनिक कैलोरी लक्ष्य', tip: 'दोस्रो र तेस्रो त्रैमासिकमा प्रतिदिन २००-३०० अतिरिक्त कैलोरी खान आवश्यक छ।', urgency: 'normal' },
+      { title: 'प्रोटिन सेवन', tip: 'प्रतिदिन कम्तीमा ७०-१०० ग्राम प्रोटिन खानुहोस्। दही, दाल, अण्डा र गोश्त राम्रो स्रोत हो।', urgency: 'normal' },
+      { title: 'आयरन समृद्ध खाना', tip: 'पालक, लिभर, पालक र दाल खान रक्तस्राव रोकन मदत गर्छ।', urgency: 'warning' },
+      { title: 'क्यालसियम र दूध', tip: 'प्रतिदिन २ कप दूध वा कम्तीमा १०००-१२०० मिलिग्राम क्यालसियम आवश्यक छ।', urgency: 'warning' },
+      { title: 'फल र सब्जी', tip: 'विभिन्न रंगको फल र सब्जी खानुहोस्। प्रतिदिन ५ सर्भिङ लक्ष्य गर्नुहोस्।', urgency: 'normal' }
+    ] : [
+      { title: 'Daily Calorie Intake', tip: 'In 2nd and 3rd trimester, you need 200-300 extra calories per day. Focus on nutrient-dense foods.', urgency: 'normal' },
+      { title: 'Protein Requirements', tip: 'Consume 70-100g of protein daily. Good sources: yogurt, lentils, eggs, fish, and meat.', urgency: 'normal' },
+      { title: 'Iron & Anemia Prevention', tip: 'Include iron-rich foods like spinach, liver, lentils, and fortified cereals to prevent anemia.', urgency: 'warning' },
+      { title: 'Calcium & Bone Health', tip: 'You need 1000-1200mg of calcium daily. Dairy, leafy greens, and fortified foods are excellent sources.', urgency: 'warning' },
+      { title: 'Fruits & Vegetables', tip: 'Eat 5+ servings of colorful fruits and vegetables daily for vitamins and minerals.', urgency: 'normal' }
+    ],
+    exercise: language === 'ne' ? [
+      { title: 'दैनिक सक्रियता', tip: 'प्रतिदिन कम्तीमा २०-३० मिनिट हल्का व्यायाम गर्नुहोस्। टहलना राम्रो विकल्प हो।', urgency: 'normal' },
+      { title: 'योग र स्ट्रेचिङ', tip: 'सौम्य योग र स्ट्रेचिङ पेशी लचकता राखन र तनाव कम गर्न मदत गर्छ।', urgency: 'normal' },
+      { title: 'पेल्विक फ्लोर व्यायाम', tip: 'केगेल व्यायाम श्रोणि फ्लोर मांसपेशी मजबूत गर्न र प्रसव सम्म मदत गर्छ।', urgency: 'normal' },
+      { title: 'तैरावट', tip: 'तैरावट न्यून-प्रभाव व्यायाम हो र सम्पूर्ण शरीरको फिटनेस सुधार गर्छ।', urgency: 'normal' },
+      { title: 'व्यायाम सावधानी', tip: 'उच्च-प्रभाव क्रीडा र सम्पर्क खेल बचनुहोस्। पहिलो परामर्श गर्नुहोस्।', urgency: 'warning' }
+    ] : [
+      { title: 'Daily Activity Goal', tip: 'Aim for at least 20-30 minutes of light exercise daily. Walking is excellent for pregnancy.', urgency: 'normal' },
+      { title: 'Yoga & Stretching', tip: 'Gentle yoga and stretching maintain flexibility, reduce stress, and prepare for labor.', urgency: 'normal' },
+      { title: 'Pelvic Floor Exercises', tip: 'Kegel exercises strengthen pelvic floor muscles, helping with labor and postpartum recovery.', urgency: 'normal' },
+      { title: 'Swimming Benefits', tip: 'Swimming is a low-impact exercise that improves overall fitness and relieves back pain.', urgency: 'normal' },
+      { title: 'Exercise Precautions', tip: 'Avoid high-impact sports and contact activities. Get clearance from your doctor first.', urgency: 'warning' }
+    ],
+    mental: language === 'ne' ? [
+      { title: 'ध्यान र शान्ति', tip: 'दैनिक १०-२० मिनिट ध्यान गर्नुहोस्। यो चिन्ता र तनाव कम गर्छ।', urgency: 'normal' },
+      { title: 'नींद की गुणवत्ता', tip: 'प्रतिदिन ८-९ घन्टा नींद लिनु आवश्यक छ। तकिया र बिस्तर सुविधाजनक बनाउनुहोस्।', urgency: 'normal' },
+      { title: 'परिवार को साथ समय', tip: 'अपने प्रियजनों को साथ समय बिताएं। उनका समर्थन महत्वपूर्ण है।', urgency: 'normal' },
+      { title: 'पेशेवर सहायता', tip: 'यदि चिन्ता वा अवसाद महसूस होय तो डाक्टर वा परामर्शदातासँग कुरा गर्नुहोस्।', urgency: 'warning' },
+      { title: 'तनाव व्यवस्थापन', tip: 'संगीत सुन्नुहोस्, आरामदायक कार्य गर्नुहोस्, प्रकृतिमा समय बिताउनुहोस्।', urgency: 'normal' }
+    ] : [
+      { title: 'Meditation & Mindfulness', tip: 'Practice 10-20 minutes of meditation daily. It reduces anxiety and promotes relaxation.', urgency: 'normal' },
+      { title: 'Sleep Quality Matters', tip: 'Aim for 8-9 hours of sleep nightly. Use comfortable pillows and maintain a cool room.', urgency: 'normal' },
+      { title: 'Partner Support', tip: 'Spend quality time with your partner. Communication and emotional support are crucial.', urgency: 'normal' },
+      { title: 'Seek Professional Help', tip: 'If experiencing anxiety or depression, reach out to your doctor or counselor immediately.', urgency: 'warning' },
+      { title: 'Stress Relief Activities', tip: 'Listen to music, pursue hobbies, spend time in nature, or journal your feelings.', urgency: 'normal' }
+    ],
+    medical: language === 'ne' ? [
+      { title: 'नियमित जाँच', tip: 'प्रतिमास डाक्टर भेट्नुहोस्। नियमित जाँच समस्या जल्दै पहिचान गर्छ।', urgency: 'warning' },
+      { title: 'फोलिक एसिड सप्लिमेन्ट', tip: 'दैनिक ४०० माइक्रोग्राम फोलिक एसिड लिनु आवश्यक छ।', urgency: 'warning' },
+      { title: 'आयरन सप्लिमेन्ट', tip: 'दोस्रो त्रैमासिकदेखि दैनिक आयरन सप्लिमेन्ट लिनुहोस्।', urgency: 'warning' },
+      { title: 'कोविड १९ सुरक्षा', tip: 'गर्भावस्थामा भ्याक्सीन र सुरक्षा उपाय राम्रो हो।', urgency: 'normal' },
+      { title: 'लक्षण निरीक्षण', tip: 'गुर्दो रक्तस्राव, तीव्र दर्द, वा अन्य चिन्ताजनक लक्षण देखिए तुरन्त संपर्क गर्नुहोस्।', urgency: 'warning' }
+    ] : [
+      { title: 'Regular Check-ups', tip: 'Visit your doctor monthly. Regular monitoring helps detect issues early.', urgency: 'warning' },
+      { title: 'Folic Acid Supplement', tip: 'Take 400 micrograms of folic acid daily to prevent neural tube defects.', urgency: 'warning' },
+      { title: 'Iron Supplement', tip: 'Start iron supplements in 2nd trimester. This prevents anemia during pregnancy.', urgency: 'warning' },
+      { title: 'Vaccines & Safety', tip: 'Certain vaccines like flu shot are safe during pregnancy. Consult your doctor.', urgency: 'normal' },
+      { title: 'Watch for Warning Signs', tip: 'Report heavy bleeding, severe pain, or unusual symptoms immediately to your doctor.', urgency: 'warning' }
+    ],
+    preparation: language === 'ne' ? [
+      { title: 'प्रसव वर्गहरु', tip: 'प्रसव वर्ग लिनुहोस्। यो शारीरिक र मानसिक तयारी गर्न मदत गर्छ।', urgency: 'normal' },
+      { title: 'प्रसव योजना', tip: 'आपनो प्रसव विकल्प र वरीयताहरू निर्धारण गर्नुहोस्। दाई र डाक्टरसँग कुरा गर्नुहोस्।', urgency: 'normal' },
+      { title: 'बच्चाको तयारी', tip: 'कपडा, खेलौना, र अन्य आवश्यक चीजहरु तयार गर्नुहोस्।', urgency: 'normal' },
+      { title: 'स्तनपान तयारी', tip: 'स्तनपान कोर्सहरु लिनुहोस्। यो सफल स्तनपान सुनिश्चित गर्छ।', urgency: 'normal' },
+      { title: 'लेबर संकेत', tip: 'नियमित संकुचन, जल टुट्ने, र रक्तस्राव लेबरको संकेत हो। अस्पताल जानुहोस्।', urgency: 'warning' }
+    ] : [
+      { title: 'Childbirth Classes', tip: 'Take prenatal classes. They prepare you physically and mentally for labor.', urgency: 'normal' },
+      { title: 'Birth Plan Discussion', tip: 'Discuss your delivery preferences with your doctor. Consider pain management options.', urgency: 'normal' },
+      { title: 'Baby Preparation', tip: 'Stock essential items: diapers, clothes, blankets, feeding bottles, and car seat.', urgency: 'normal' },
+      { title: 'Breastfeeding Prep', tip: 'Learn about breastfeeding techniques. Consider a lactation consultant for guidance.', urgency: 'normal' },
+      { title: 'Labor Signs', tip: 'Know the signs: regular contractions, rupture of membranes, bleeding. Go to hospital immediately.', urgency: 'warning' }
+    ]
+  };
+
+  const overviewStats = [
+    { label: language === 'ne' ? 'आयु' : 'Age', value: user?.age || '-', color: 'bg-blue-100 border-blue-300' },
+    { label: language === 'ne' ? 'सप्ताह' : 'Weeks', value: user?.weeks_pregnant || '-', color: 'bg-purple-100 border-purple-300' },
+    { label: language === 'ne' ? 'रेकर्डहरु' : 'Records', value: healthRecords.length, color: 'bg-green-100 border-green-300' },
+    { label: language === 'ne' ? 'संसाधनहरु' : 'Tips', value: Object.values(insights).reduce((a, b) => a + b.length, 0), color: 'bg-orange-100 border-orange-300' }
+  ];
 
   useEffect(() => {
     const storedRecords = localStorage.getItem(`health_records_${user?.name}`);
     if (storedRecords) {
       try {
         setHealthRecords(JSON.parse(storedRecords));
-      } catch (e) {
+      } catch {
         setHealthRecords([]);
       }
     }
   }, [user?.name]);
 
-  useEffect(() => {
-    generateComprehensiveInsights();
-  }, [user, healthRecords, language]);
-
-  const generateComprehensiveInsights = () => {
-    const insights = [];
-    const weeks = user?.weeks_pregnant || 20;
-    const age = user?.age || 25;
-
-    // Trimester insights
-    if (weeks <= 13) {
-      insights.push({
-        icon: '🌱',
-        title: language === 'ne' ? 'पहिलो त्रैमासिक' : 'First Trimester',
-        category: language === 'ne' ? 'गर्भावस्था' : 'Pregnancy',
-        urgency: 'healthy',
-        description: language === 'ne' ? 'विकास का महत्वपूर्ण सप्ताह' : 'Critical weeks of development',
-        tip: language === 'ne' ? 'विटामिन B6 लिनुहोस्, आराम गर्नुहोस्' : 'Take Vitamin B6, get rest'
-      });
-    } else if (weeks <= 26) {
-      insights.push({
-        icon: '🌸',
-        title: language === 'ne' ? 'दोस्रो त्रैमासिक' : 'Second Trimester',
-        category: language === 'ne' ? 'गर्भावस्था' : 'Pregnancy',
-        urgency: 'healthy',
-        description: language === 'ne' ? 'सबैभन्दा आरामदायक समय' : 'Most comfortable period',
-        tip: language === 'ne' ? 'व्यायाम शुरु गर्नुहोस्, हल्का योग गर्नुहोस्' : 'Start exercise, do light yoga'
-      });
-    } else {
-      insights.push({
-        icon: '🍂',
-        title: language === 'ne' ? 'तेस्रो त्रैमासिक' : 'Third Trimester',
-        category: language === 'ne' ? 'गर्भावस्था' : 'Pregnancy',
-        urgency: 'warning',
-        description: language === 'ne' ? 'प्रसव नजदिकै छ' : 'Delivery approaching',
-        tip: language === 'ne' ? 'प्रसव कक्षा लिनुहोस्' : 'Take delivery classes'
-      });
-    }
-
-    // Nutrition insights
-    insights.push({
-      icon: '🥗',
-      title: language === 'ne' ? 'पोषण' : 'Nutrition',
-      category: language === 'ne' ? 'स्वास्थ्य' : 'Health',
-      urgency: 'healthy',
-      description: language === 'ne' ? 'दैनिक पोषण आवश्यकता' : 'Daily nutritional needs',
-      tip: language === 'ne' ? 'दाल, दूध, फल, सब्जी खानुहोस्' : 'Eat lentils, milk, fruits, vegetables'
-    });
-
-    // Hydration
-    insights.push({
-      icon: '💧',
-      title: language === 'ne' ? 'पानी पिउनुहोस्' : 'Stay Hydrated',
-      category: language === 'ne' ? 'स्वास्थ्य' : 'Health',
-      urgency: 'healthy',
-      description: language === 'ne' ? 'पानी आवश्यक छ' : 'Water is essential',
-      tip: language === 'ne' ? 'दैनिक 8-10 गिलास पानी पिनुहोस्' : 'Drink 8-10 glasses daily'
-    });
-
-    // Exercise insights
-    insights.push({
-      icon: '🚶',
-      title: language === 'ne' ? 'व्यायाम' : 'Exercise',
-      category: language === 'ne' ? 'स्वास्थ्य' : 'Health',
-      urgency: 'healthy',
-      description: language === 'ne' ? 'नियमित गतिविधि' : 'Regular activity',
-      tip: language === 'ne' ? 'दैनिक 30 मिनेट हिड्ने वा योग गर्नुहोस्' : 'Walk 30 min or do yoga daily'
-    });
-
-    // Sleep
-    insights.push({
-      icon: '😴',
-      title: language === 'ne' ? 'नींद' : 'Sleep',
-      category: language === 'ne' ? 'स्वास्थ्य' : 'Health',
-      urgency: 'healthy',
-      description: language === 'ne' ? 'पर्याप्त आराम' : 'Get enough rest',
-      tip: language === 'ne' ? '8-9 घण्टा नींद लिनुहोस्' : 'Get 8-9 hours of sleep'
-    });
-
-    // Mental Health
-    insights.push({
-      icon: '🧘',
-      title: language === 'ne' ? 'मानसिक स्वास्थ्य' : 'Mental Health',
-      category: language === 'ne' ? 'स्वास्थ्य' : 'Health',
-      urgency: 'healthy',
-      description: language === 'ne' ? 'तनाव व्यवस्थापन' : 'Stress management',
-      tip: language === 'ne' ? 'ध्यान, संगीत, पढ्न, बरफ़ गर्नुहोस्' : 'Meditate, listen to music, relax'
-    });
-
-    // Partner Support
-    insights.push({
-      icon: '💑',
-      title: language === 'ne' ? 'पति/सहयोगी' : 'Partner Support',
-      category: language === 'ne' ? 'समर्थन' : 'Support',
-      urgency: 'healthy',
-      description: language === 'ne' ? 'परिवारको समर्थन महत्वपूर्ण' : 'Family support matters',
-      tip: language === 'ne' ? 'आफ्नो साथी संग सवाल-जवाब गर्नुहोस्' : 'Communicate with your partner'
-    });
-
-    // Doctor Visits
-    insights.push({
-      icon: '👨‍⚕️',
-      title: language === 'ne' ? 'नियमित जाँच' : 'Regular Checkups',
-      category: language === 'ne' ? 'स्वास्थ्य' : 'Health',
-      urgency: 'warning',
-      description: language === 'ne' ? 'डाक्टरसँग नियमित भेट' : 'Regular doctor visits',
-      tip: language === 'ne' ? 'महिनामा कम-कम एक पल डाक्टरसँग भेट गर्नुहोस्' : 'See doctor at least monthly'
-    });
-
-    // Folic Acid
-    insights.push({
-      icon: '💊',
-      title: language === 'ne' ? 'फोलिक एसिड' : 'Folic Acid',
-      category: language === 'ne' ? 'स्वास्थ्य' : 'Health',
-      urgency: 'warning',
-      description: language === 'ne' ? 'महत्वपूर्ण भिटामिन' : 'Essential vitamin',
-      tip: language === 'ne' ? 'डाक्टरको सलाह अनुसार फोलिक एसिड लिनुहोस्' : 'Take folic acid as advised'
-    });
-
-    // Iron & Calcium
-    insights.push({
-      icon: '🦴',
-      title: language === 'ne' ? 'लोह र क्यालसियम' : 'Iron & Calcium',
-      category: language === 'ne' ? 'स्वास्थ्य' : 'Health',
-      urgency: 'warning',
-      description: language === 'ne' ? 'हड्डी र रक्त स्वास्थ्य' : 'Bone and blood health',
-      tip: language === 'ne' ? 'दूध, दही, मछली खानुहोस्' : 'Eat milk, yogurt, fish'
-    });
-
-    // Sexual Health
-    insights.push({
-      icon: '💕',
-      title: language === 'ne' ? 'यौन स्वास्थ्य' : 'Sexual Health',
-      category: language === 'ne' ? 'स्वास्थ्य' : 'Health',
-      urgency: 'healthy',
-      description: language === 'ne' ? 'सुरक्षित सम्बन्ध' : 'Safe intimacy',
-      tip: language === 'ne' ? 'डाक्टरसँग परामर्श गर्नुहोस्' : 'Ask doctor for guidance'
-    });
-
-    // Labor Signs
-    if (weeks > 36) {
-      insights.push({
-        icon: '🚨',
-        title: language === 'ne' ? 'प्रसवको संकेत' : 'Labor Signs',
-        category: language === 'ne' ? 'महत्वपूर्ण' : 'Important',
-        urgency: 'critical',
-        description: language === 'ne' ? 'जन्मको तयारी' : 'Birth is near',
-        tip: language === 'ne' ? 'पीठा, गर्भाशय संकुचन, पानी टपकाउन, अस्पताल जानुहोस्' : 'If contractions, go to hospital'
-      });
-    }
-
-    // Breastfeeding
-    insights.push({
-      icon: '👶',
-      title: language === 'ne' ? 'स्तनपान' : 'Breastfeeding',
-      category: language === 'ne' ? 'तयारी' : 'Preparation',
-      urgency: 'healthy',
-      description: language === 'ne' ? 'प्रारम्भिक तयारी' : 'Start preparation early',
-      tip: language === 'ne' ? 'स्तनपान कक्षा लिनुहोस्' : 'Take breastfeeding classes'
-    });
-
-    // Age-based
-    if (age < 20) {
-      insights.push({
-        icon: '⚠️',
-        title: language === 'ne' ? 'किशोर गर्भावस्था' : 'Teen Pregnancy',
-        category: language === 'ne' ? 'विशेष' : 'Special',
-        urgency: 'warning',
-        description: language === 'ne' ? 'अतिरिक्त सावधानी' : 'Extra care needed',
-        tip: language === 'ne' ? 'नियमित डाक्टरको जाँच गर्नुहोस्' : 'Regular doctor visits crucial'
-      });
-    } else if (age > 35) {
-      insights.push({
-        icon: '⚠️',
-        title: language === 'ne' ? 'उन्नत मातृत्व' : 'Advanced Age',
-        category: language === 'ne' ? 'विशेष' : 'Special',
-        urgency: 'warning',
-        description: language === 'ne' ? 'अतिरिक्त स्क्रीनिङ' : 'More screening needed',
-        tip: language === 'ne' ? 'विशेष स्क्रीनिङ टेस्ट गर्नुहोस्' : 'Get special screening tests'
-      });
-    }
-
-    // Health metrics based
-    if (healthRecords.length > 0) {
-      const last = healthRecords[healthRecords.length - 1];
-      const sys = parseInt(last.systolic) || 0;
-      const dia = parseInt(last.diastolic) || 0;
-      
-      if (sys > 140 || dia > 90) {
-        insights.push({
-          icon: '❤️',
-          title: language === 'ne' ? 'उच्च रक्तचाप' : 'High BP',
-          category: language === 'ne' ? 'महत्वपूर्ण' : 'Important',
-          urgency: 'critical',
-          description: language === 'ne' ? 'तुरन्त ध्यान' : 'Immediate attention',
-          tip: language === 'ne' ? 'डाक्टरसँग सम्पर्क गर्नुहोस्' : 'Contact doctor immediately'
-        });
-      }
-    }
-
-    setGeneratedInsights(insights);
-  };
-
-  const getBackgroundColor = (urgency) => {
-    if (urgency === 'critical') return 'from-red-100 to-red-50';
-    if (urgency === 'warning') return 'from-amber-100 to-amber-50';
-    return 'from-green-100 to-green-50';
-  };
-
-  const getBorderColor = (urgency) => {
-    if (urgency === 'critical') return 'border-red-400';
-    if (urgency === 'warning') return 'border-amber-400';
-    return 'border-green-400';
-  };
-
-  const getTitleColor = (urgency) => {
-    if (urgency === 'critical') return 'text-red-900';
-    if (urgency === 'warning') return 'text-amber-900';
-    return 'text-green-900';
-  };
+  const currentInsights = insights[selectedCategory] || insights.overview;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50">
       {/* Header */}
-      <header className="bg-white border-b-2 border-slate-200 shadow-md sticky top-0 z-20">
-        <div className="max-w-7xl mx-auto px-6 py-5">
-          <button 
-            onClick={() => navigate('/')}
-            className="px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-100 rounded-lg transition mb-3"
-          >
-            ← {text.back}
-          </button>
-          <div className="text-center">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">{text.title}</h1>
-            <p className="text-sm text-slate-600 mt-2">{text.subtitle}</p>
+      <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b-2 border-purple-100 shadow-sm">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="px-3 py-1 text-sm font-semibold text-purple-600 hover:bg-purple-50 rounded-lg transition"
+            >
+              ← {text.back}
+            </button>
+            <div>
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                {text.title}
+              </h1>
+              <p className="text-sm text-slate-500">{text.subtitle}</p>
+            </div>
           </div>
+          <button
+            onClick={() => navigate('/health')}
+            className="px-5 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold rounded-lg hover:shadow-lg transition"
+          >
+            {text.addRecords}
+          </button>
         </div>
-      </header>
+      </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        
-        {/* User Info Bar */}
-        <div className="bg-gradient-to-r from-purple-100 to-blue-100 border-2 border-purple-300 rounded-xl p-6 mb-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-            <div>
-              <p className="text-sm text-purple-700 font-bold">Age</p>
-              <p className="text-2xl font-bold text-purple-900">{user?.age || '—'}</p>
+      <div className="max-w-6xl mx-auto px-6 py-8">
+        {/* Stats Overview */}
+        <div className="grid grid-cols-4 gap-4 mb-8">
+          {overviewStats.map((stat, idx) => (
+            <div key={idx} className={`${stat.color} border-2 rounded-xl p-4 text-center shadow-md`}>
+              <p className="text-xs text-slate-600 font-medium">{stat.label}</p>
+              <p className="text-3xl font-bold text-slate-900 mt-1">{stat.value}</p>
             </div>
-            <div>
-              <p className="text-sm text-purple-700 font-bold">Weeks</p>
-              <p className="text-2xl font-bold text-purple-900">{user?.weeks_pregnant || '—'}</p>
-            </div>
-            <div>
-              <p className="text-sm text-purple-700 font-bold">Records</p>
-              <p className="text-2xl font-bold text-purple-900">{healthRecords.length}</p>
-            </div>
-            <div>
-              <p className="text-sm text-purple-700 font-bold">Insights</p>
-              <p className="text-2xl font-bold text-purple-900">{generatedInsights.length}</p>
-            </div>
+          ))}
+        </div>
+
+        {/* Category Navigation */}
+        <div className="mb-8">
+          <p className="text-sm font-semibold text-slate-600 mb-3">{language === 'ne' ? 'वर्गहरु छान्नुहोस्' : 'Select Category'}</p>
+          <div className="grid grid-cols-3 gap-3 lg:grid-cols-6">
+            {Object.entries(text.categories).map(([key, label]) => (
+              <button
+                key={key}
+                onClick={() => setSelectedCategory(key)}
+                className={`px-4 py-2 rounded-lg font-semibold text-sm transition ${
+                  selectedCategory === key
+                    ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
+                    : 'bg-white border-2 border-purple-200 text-purple-700 hover:border-purple-400'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
           </div>
         </div>
 
         {/* Insights Grid */}
-        {generatedInsights.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-xl border-2 border-slate-200">
-            <p className="text-slate-600 mb-6 text-lg">{text.noRecords}</p>
-            <button
-              onClick={() => navigate('/health')}
-              className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-bold rounded-lg hover:from-purple-500 hover:to-blue-500 transition"
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {currentInsights.map((insight, idx) => (
+            <div
+              key={idx}
+              onClick={() => setExpandedInsight(expandedInsight === idx ? null : idx)}
+              className={`p-5 rounded-xl border-2 shadow-md cursor-pointer transition transform hover:scale-105 ${
+                insight.urgency === 'warning'
+                  ? 'bg-gradient-to-br from-amber-50 to-orange-50 border-amber-300'
+                  : 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-300'
+              }`}
             >
-              {text.addRecords}
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {generatedInsights.map((insight, idx) => (
-              <div
-                key={idx}
-                onClick={() => setSelectedInsight(selectedInsight === idx ? null : idx)}
-                className={`bg-gradient-to-br ${getBackgroundColor(insight.urgency)} border-2 ${getBorderColor(insight.urgency)} rounded-xl p-6 cursor-pointer transition transform hover:scale-105 hover:shadow-lg`}
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <span className="text-4xl">{insight.icon}</span>
-                  <span className={`text-xs font-bold px-2 py-1 rounded-full ${
-                    insight.urgency === 'critical' 
-                      ? 'bg-red-200 text-red-800'
-                      : insight.urgency === 'warning'
-                      ? 'bg-amber-200 text-amber-800'
-                      : 'bg-green-200 text-green-800'
-                  }`}>
-                    {insight.category}
-                  </span>
-                </div>
-
-                <h3 className={`text-lg font-bold ${getTitleColor(insight.urgency)} mb-2`}>
+              <div className="flex justify-between items-start mb-2">
+                <h3 className={`font-bold text-lg ${insight.urgency === 'warning' ? 'text-amber-900' : 'text-green-900'}`}>
                   {insight.title}
                 </h3>
-
-                <p className={`text-sm ${getTitleColor(insight.urgency).replace('900', '700')} mb-3`}>
-                  {insight.description}
-                </p>
-
-                {selectedInsight === idx && (
-                  <div className="mt-4 pt-4 border-t-2 border-current border-opacity-30 bg-white/60 p-3 rounded-lg">
-                    <p className="text-sm font-bold text-slate-900 mb-2">💡 {language === 'ne' ? 'सुझाव' : 'Tip'}:</p>
-                    <p className="text-sm text-slate-800">{insight.tip}</p>
-                  </div>
-                )}
+                <span className={`text-xs font-bold px-2 py-1 rounded-full ${
+                  insight.urgency === 'warning'
+                    ? 'bg-amber-200 text-amber-900'
+                    : 'bg-green-200 text-green-900'
+                }`}>
+                  {insight.urgency === 'warning' ? '⚠️ Important' : '✓ Healthy'}
+                </span>
               </div>
-            ))}
-          </div>
-        )}
+              
+              {expandedInsight === idx && (
+                <div className={`mt-3 p-3 rounded-lg text-sm leading-relaxed ${
+                  insight.urgency === 'warning'
+                    ? 'bg-amber-100 text-amber-900'
+                    : 'bg-green-100 text-green-900'
+                }`}>
+                  💡 {insight.tip}
+                </div>
+              )}
+              {expandedInsight !== idx && (
+                <p className="text-sm text-slate-600 italic">{language === 'ne' ? 'विवरणको लागि क्लिक गर्नुहोस्' : 'Click for details'}</p>
+              )}
+            </div>
+          ))}
+        </div>
 
         {/* CTA Section */}
         {healthRecords.length === 0 && (
-          <div className="mt-12 bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl p-10 text-center text-white shadow-xl border-2 border-purple-400">
-            <h2 className="text-3xl font-bold mb-3">Ready to Start Tracking?</h2>
-            <p className="mb-6 text-purple-100 max-w-2xl mx-auto">
-              Add your health records now to unlock more personalized insights and recommendations for your pregnancy journey.
-            </p>
+          <div className="mt-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl p-8 text-center text-white shadow-xl">
+            <h3 className="text-2xl font-bold mb-2">{language === 'ne' ? 'स्वास्थ्य ट्र्याकिङ शुरु गर्नुहोस्' : 'Start Tracking Your Health'}</h3>
+            <p className="text-sm mb-4 opacity-90">{language === 'ne' ? 'आपनो स्वास्थ्य रेकर्ड थप्न शुरु गर्नुहोस् र अधिक व्यक्तिगत सिफारिसहरु प्राप्त गर्नुहोस्।' : 'Add your health records to receive more personalized recommendations and insights.'}</p>
             <button
               onClick={() => navigate('/health')}
-              className="px-8 py-3 bg-white text-purple-600 font-bold rounded-lg hover:bg-purple-50 transition transform hover:scale-105"
+              className="px-8 py-3 bg-white text-blue-600 font-bold rounded-lg hover:shadow-xl transition"
             >
               {text.startTracking}
             </button>

@@ -50,14 +50,14 @@ export default function ChatBot({ user, language }) {
     steps: ['सुझाव गरिएको प्रश्नमा क्लिक गर्नुहोस्', 'वा आफ्नो प्रश्न लेख्नुहोस्', 'पठाउनुहोस् बटनमा क्लिक गर्नुहोस्', 'अनुवर्ती प्रश्नहरू सोध्नुहोस्', 'सधैं डाक्टरसँग परामर्श गर्नुहोस्']
   } : {
     title: 'Health Assistant',
-    subtitle: 'Your AI-powered companion for your pregnancy journey',
+    subtitle: 'AI-powered companion for your pregnancy journey',
     back: 'Back',
-    typePlaceholder: 'Ask your question here...',
+    typePlaceholder: 'Type your question here...',
     send: 'Send',
     suggested: 'Suggested Questions',
     howToUse: 'How to Use',
     faq: 'Frequently Asked Questions',
-    steps: ['Click a suggested question', 'Or type your own', 'Press Send', 'Ask follow-ups', 'Always consult your doctor']
+    steps: ['Click a suggested question', 'Or type your own question', 'Click Send', 'Ask follow-ups', 'Always consult your doctor']
   };
 
   useEffect(() => {
@@ -65,7 +65,7 @@ export default function ChatBot({ user, language }) {
     if (storedMessages) {
       try {
         setMessages(JSON.parse(storedMessages));
-      } catch (e) {
+      } catch {
         setMessages([]);
       }
     }
@@ -75,16 +75,12 @@ export default function ChatBot({ user, language }) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  useEffect(() => {
-    localStorage.setItem(`chat_history_${user?.name}`, JSON.stringify(messages));
-  }, [messages, user?.name]);
+  const handleSendMessage = async () => {
+    if (!inputValue.trim()) return;
 
-  const handleSendMessage = async (question) => {
-    const messageText = question || inputValue.trim();
-    if (!messageText) return;
-
-    const userMessage = { role: 'user', content: messageText };
-    setMessages(prev => [...prev, userMessage]);
+    const userMessage = { type: 'user', text: inputValue };
+    const newMessages = [...messages, userMessage];
+    setMessages(newMessages);
     setInputValue('');
     setIsLoading(true);
 
@@ -93,146 +89,151 @@ export default function ChatBot({ user, language }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: messageText,
-          user_id: user?.id || user?.name,
+          message: inputValue,
           language: language,
-          chat_history: messages.map(m => ({ role: m.role, content: m.content }))
+          user_name: user?.name
         })
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        const botMessage = { role: 'assistant', content: data.response || 'I understand your concern.' };
-        setMessages(prev => [...prev, botMessage]);
-      }
-    } catch (err) {
-      console.error('Chat error:', err);
-      setMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, I could not process your question. Please try again.' }]);
+      const data = await response.json();
+      const botMessage = { type: 'bot', text: data.response || 'I could not generate a response.' };
+      const updatedMessages = [...newMessages, botMessage];
+      setMessages(updatedMessages);
+      localStorage.setItem(`chat_history_${user?.name}`, JSON.stringify(updatedMessages));
+    } catch (error) {
+      const errorMessage = { type: 'bot', text: 'Error connecting to server.' };
+      const updatedMessages = [...newMessages, errorMessage];
+      setMessages(updatedMessages);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSuggestedQuestion = async (question) => {
+    setInputValue(question);
+    const userMessage = { type: 'user', text: question };
+    const newMessages = [...messages, userMessage];
+    setMessages(newMessages);
+    setIsLoading(true);
+
+    try {
+      const response = await fetch(`${API}/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: question,
+          language: language,
+          user_name: user?.name
+        })
+      });
+
+      const data = await response.json();
+      const botMessage = { type: 'bot', text: data.response || 'I could not generate a response.' };
+      const updatedMessages = [...newMessages, botMessage];
+      setMessages(updatedMessages);
+      localStorage.setItem(`chat_history_${user?.name}`, JSON.stringify(updatedMessages));
+      setInputValue('');
+    } catch (error) {
+      const errorMessage = { type: 'bot', text: 'Error connecting to server.' };
+      const updatedMessages = [...newMessages, errorMessage];
+      setMessages(updatedMessages);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-cyan-50">
       {/* Header */}
-      <header className="bg-white border-b-2 border-slate-200 shadow-md sticky top-0 z-20">
-        <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
-          <button 
-            onClick={() => navigate('/')}
-            className="px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-100 rounded-lg transition"
+      <div className="sticky top-0 z-40 bg-white border-b-2 border-blue-100 shadow-sm">
+        <div className="max-w-full px-4 py-3 flex items-center gap-3">
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="px-3 py-1 text-sm font-semibold text-blue-600 hover:bg-blue-50 rounded-lg transition"
           >
             ← {text.back}
           </button>
-          <div className="flex-1 text-center">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">{text.title}</h1>
-            <p className="text-xs text-slate-600 mt-1">{text.subtitle}</p>
+          <div className="flex-1">
+            <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+              {text.title}
+            </h1>
+            <p className="text-xs text-slate-500">{text.subtitle}</p>
           </div>
-          <div style={{ width: '100px' }}></div>
         </div>
-      </header>
+      </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        
-        {/* Chat Window - Compact */}
-        <div className="bg-white rounded-2xl border-2 border-slate-200 shadow-lg mb-8 overflow-hidden">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 h-96">
-            
-            {/* Messages Area */}
-            <div className="lg:col-span-2 border-r border-slate-200 flex flex-col">
-              <div className="flex-1 overflow-y-auto p-5 space-y-3">
-                {messages.length === 0 && (
-                  <div className="h-full flex items-center justify-center">
-                    <div className="text-center">
-                      <div className="text-4xl mb-2">💭</div>
-                      <p className="text-slate-500 text-sm">Start chatting...</p>
-                    </div>
-                  </div>
-                )}
-                
-                {messages.map((msg, idx) => (
-                  <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[70%] px-4 py-2 rounded-lg text-sm ${
-                      msg.role === 'user' 
-                        ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-br-none' 
+      {/* Main Layout: Chat (2/3) + Info Panel (1/3) */}
+      <div className="flex gap-4 h-[calc(100vh-80px)] p-4 max-w-full">
+        {/* Left: Chat Window (2/3) */}
+        <div className="w-2/3 flex flex-col bg-white rounded-xl shadow-lg border-2 border-blue-100 overflow-hidden">
+          {/* Messages Area */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50">
+            {messages.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-center">
+                <div className="text-4xl mb-3">💭</div>
+                <p className="text-slate-500 font-medium">{language === 'ne' ? 'कुनै संदेश छैन' : 'No messages yet'}</p>
+                <p className="text-xs text-slate-400 mt-1">{language === 'ne' ? 'एक प्रश्नको साथ शुरु गर्नुहोस्' : 'Start with a question'}</p>
+              </div>
+            ) : (
+              messages.map((msg, idx) => (
+                <div
+                  key={idx}
+                  className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-xs px-4 py-2 rounded-lg text-sm ${
+                      msg.type === 'user'
+                        ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-br-none'
                         : 'bg-slate-200 text-slate-900 rounded-bl-none'
-                    }`}>
-                      {msg.content}
-                    </div>
-                  </div>
-                ))}
-                
-                {isLoading && (
-                  <div className="flex justify-start">
-                    <div className="bg-slate-200 px-4 py-2 rounded-lg rounded-bl-none">
-                      <div className="flex gap-1">
-                        <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                        <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                
-                <div ref={messagesEndRef} />
-              </div>
-            </div>
-
-            {/* Quick Access Sidebar */}
-            <div className="bg-gradient-to-b from-blue-50 to-blue-100 p-5 flex flex-col gap-3 overflow-y-auto">
-              <div>
-                <p className="text-xs font-bold text-blue-700 mb-2 uppercase">Quick Actions</p>
-                {suggestedQuestions.slice(0, 3).map((q, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => handleSendMessage(q)}
-                    className="w-full text-left text-xs px-2 py-2 bg-white hover:bg-blue-100 text-slate-700 rounded transition mb-2 line-clamp-2 border border-blue-200 hover:border-blue-400"
+                    }`}
                   >
-                    ▸ {q}
-                  </button>
-                ))}
+                    {msg.text}
+                  </div>
+                </div>
+              ))
+            )}
+            {isLoading && (
+              <div className="flex justify-start">
+                <div className="bg-slate-200 text-slate-900 px-4 py-2 rounded-lg rounded-bl-none text-sm animate-bounce">
+                  {language === 'ne' ? 'टाइप गर्दै...' : 'Typing...'}
+                </div>
               </div>
-            </div>
+            )}
+            <div ref={messagesEndRef} />
           </div>
 
           {/* Input Area */}
-          <div className="border-t-2 border-slate-200 bg-slate-50 p-4">
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                placeholder={text.typePlaceholder}
-                className="flex-1 bg-white border-2 border-slate-300 rounded-lg px-4 py-2 text-sm text-slate-900 placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition"
-                disabled={isLoading}
-              />
-              <button
-                onClick={() => handleSendMessage()}
-                disabled={isLoading || !inputValue.trim()}
-                className="px-5 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-bold rounded-lg hover:from-blue-500 hover:to-cyan-500 disabled:from-slate-400 disabled:to-slate-400 transition text-sm"
-              >
-                {text.send}
-              </button>
-            </div>
+          <div className="p-4 bg-white border-t-2 border-blue-100 flex gap-2">
+            <input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+              placeholder={text.typePlaceholder}
+              className="flex-1 bg-slate-50 border-2 border-slate-300 rounded-lg px-4 py-2 text-sm text-slate-900 placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition"
+              disabled={isLoading}
+            />
+            <button
+              onClick={handleSendMessage}
+              disabled={isLoading}
+              className="px-5 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-bold rounded-lg hover:shadow-lg active:scale-95 transition disabled:opacity-50"
+            >
+              {text.send}
+            </button>
           </div>
         </div>
 
-        {/* Info Grid - All visible at once */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
+        {/* Right: Info Panel (1/3) */}
+        <div className="w-1/3 flex flex-col gap-3 overflow-y-auto">
           {/* Suggested Questions */}
-          <div className="bg-white rounded-xl border-2 border-blue-200 shadow-lg p-6">
-            <h3 className="text-lg font-bold text-blue-600 mb-4 flex items-center gap-2">
-              <span className="text-2xl">✨</span> {text.suggested}
-            </h3>
+          <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-4 border-2 border-blue-200 shadow-md">
+            <h3 className="font-bold text-blue-700 mb-3 text-sm">{text.suggested}</h3>
             <div className="space-y-2">
               {suggestedQuestions.map((q, idx) => (
                 <button
                   key={idx}
-                  onClick={() => handleSendMessage(q)}
-                  className="w-full text-left text-sm px-3 py-3 bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 text-slate-800 rounded-lg transition border border-blue-200 hover:border-blue-400 font-medium"
+                  onClick={() => handleSuggestedQuestion(q)}
+                  className="w-full text-left text-xs px-3 py-2 bg-white hover:bg-blue-100 rounded-lg border border-blue-200 transition text-slate-900 font-medium hover:border-blue-400"
                 >
                   → {q}
                 </button>
@@ -241,38 +242,36 @@ export default function ChatBot({ user, language }) {
           </div>
 
           {/* How to Use */}
-          <div className="bg-white rounded-xl border-2 border-purple-200 shadow-lg p-6">
-            <h3 className="text-lg font-bold text-purple-600 mb-4 flex items-center gap-2">
-              <span className="text-2xl">📖</span> {text.howToUse}
-            </h3>
-            <ol className="space-y-3">
+          <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-4 border-2 border-purple-200 shadow-md">
+            <h3 className="font-bold text-purple-700 mb-3 text-sm">{text.howToUse}</h3>
+            <ol className="space-y-2">
               {text.steps.map((step, idx) => (
-                <li key={idx} className="flex gap-3">
-                  <span className="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">{idx + 1}</span>
-                  <span className="text-sm text-slate-700">{step}</span>
+                <li key={idx} className="flex gap-2 items-start text-xs">
+                  <span className="inline-flex items-center justify-center w-5 h-5 bg-purple-500 text-white rounded-full font-bold text-xs flex-shrink-0">
+                    {idx + 1}
+                  </span>
+                  <span className="text-slate-700 pt-0.5">{step}</span>
                 </li>
               ))}
             </ol>
           </div>
 
           {/* FAQ */}
-          <div className="bg-white rounded-xl border-2 border-green-200 shadow-lg p-6">
-            <h3 className="text-lg font-bold text-green-600 mb-4 flex items-center gap-2">
-              <span className="text-2xl">❓</span> {text.faq}
-            </h3>
-            <div className="space-y-2 max-h-96 overflow-y-auto">
+          <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border-2 border-green-200 shadow-md">
+            <h3 className="font-bold text-green-700 mb-3 text-sm">{text.faq}</h3>
+            <div className="space-y-2 max-h-64 overflow-y-auto">
               {faqItems.map((item, idx) => (
-                <div key={idx} className="border border-green-200 rounded-lg overflow-hidden">
+                <div key={idx} className="border border-green-200 rounded-lg bg-white overflow-hidden">
                   <button
                     onClick={() => setExpandedFAQ(expandedFAQ === idx ? null : idx)}
-                    className="w-full px-4 py-3 bg-gradient-to-r from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 text-left flex items-center justify-between transition"
+                    className="w-full text-left px-3 py-2 flex justify-between items-center hover:bg-green-50 transition text-xs font-medium text-slate-900"
                   >
-                    <p className="text-sm font-bold text-slate-800">{item.q}</p>
-                    <span className={`text-green-600 transition text-lg ${expandedFAQ === idx ? 'rotate-180' : ''}`}>▼</span>
+                    <span>{item.q}</span>
+                    <span className={`transform transition ${expandedFAQ === idx ? 'rotate-180' : ''}`}>▼</span>
                   </button>
                   {expandedFAQ === idx && (
-                    <div className="px-4 py-3 bg-white border-t border-green-200">
-                      <p className="text-sm text-slate-700 leading-relaxed">{item.a}</p>
+                    <div className="px-3 py-2 bg-green-50 border-t border-green-200 text-xs text-slate-700">
+                      {item.a}
                     </div>
                   )}
                 </div>
