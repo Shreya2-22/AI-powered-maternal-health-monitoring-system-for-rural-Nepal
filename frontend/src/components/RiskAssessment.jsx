@@ -372,20 +372,20 @@ export default function RiskAssessment({ user, language }) {
                       return (
                         <div key={key} className="flex items-center gap-3">
                           {/* Rank */}
-                          <span className="text-xs font-semibold text-slate-300 w-4 flex-shrink-0 text-right">{i + 1}</span>
+                          <span className="text-xs font-semibold text-slate-300 w-4 shrink-0 text-right">{i + 1}</span>
                           {/* Emoji */}
-                          <span className="text-sm w-5 text-center flex-shrink-0">{meta?.emoji || '•'}</span>
+                          <span className="text-sm w-5 text-center shrink-0">{meta?.emoji || '•'}</span>
                           {/* Label */}
                           <span className="text-sm text-slate-700 flex-1 min-w-0 truncate capitalize">{label}</span>
                           {/* Bar */}
-                          <div className="w-28 bg-slate-100 rounded-full h-2 flex-shrink-0 overflow-hidden">
+                          <div className="w-28 bg-slate-100 rounded-full h-2 shrink-0 overflow-hidden">
                             <div
                               className="h-2 rounded-full transition-all duration-700"
                               style={{ width: `${pct}%`, background: fillColor }}
                             />
                           </div>
                           {/* Badge */}
-                          <span className={`text-xs font-semibold px-2 py-0.5 rounded-md flex-shrink-0 w-12 text-center ${bgPill}`}>
+                          <span className={`text-xs font-semibold px-2 py-0.5 rounded-md shrink-0 w-12 text-center ${bgPill}`}>
                             {val}%
                           </span>
                         </div>
@@ -409,7 +409,7 @@ export default function RiskAssessment({ user, language }) {
                   {riskData.recommendations.map((rec, i) => (
                     <li key={i} className="flex items-start gap-3">
                       <div
-                        className="w-2 h-2 rounded-full flex-shrink-0 mt-1.5"
+                        className="w-2 h-2 rounded-full shrink-0 mt-1.5"
                         style={{ background: rc.dot }}
                       />
                       <span className="text-sm text-slate-700 leading-relaxed">{rec}</span>
