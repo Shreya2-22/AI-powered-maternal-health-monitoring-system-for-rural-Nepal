@@ -1,262 +1,85 @@
-# AamaSuraksha - Maternal Health Companion
+# AamaSuraksha
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue)
-![Status](https://img.shields.io/badge/status-Active-green)
-![License](https://img.shields.io/badge/license-MIT-green)
+AamaSuraksha is a maternal health companion for pregnant women in Nepal. It combines health tracking, emergency triage, personalized insights, appointment support, education, and a bilingual chatbot in English and Nepali.
 
-AamaSuraksha is a maternal health companion application designed specifically for pregnant women in Nepal. It provides personalized health tracking, risk assessment, intelligent health guidance through a chatbot, and emergency support.
+## What it does
 
-Languages Supported: English | नेपाली (Nepali)
-
----
-
-## Table of Contents
-
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Project Structure](#project-structure)
-- [Getting Started](#getting-started)
-- [Installation](#installation)
-- [Configuration](#configuration)
-- [Running the Application](#running-the-application)
-- [Using the AI Chatbot](#using-the-ai-chatbot-beginner-guide)
-- [API Endpoints](#api-endpoints)
-- [Chatbot Architecture](#chatbot-architecture)
-- [ML Models](#ml-models)
-- [Database](#database)
-- [Testing](#testing)
-- [Deployment](#deployment)
-- [Contributing](#contributing)
-- [Support](#support)
-- [License](#license)
-
----
-
-## Features
-
-### Health Tracking
-- Log weight, blood pressure, blood sugar, hemoglobin levels
-- Track symptoms (nausea, bleeding, swelling, headaches, etc.)
-- Automatic pregnancy week calculation
-- Health record history with trend analysis
-
-### AI-Powered Chatbot
-- Smart question handling: Answers ANY pregnancy question
-- Graceful redirects: Non-pregnancy topics redirected kindly to pregnancy topics
-- Emergency detection: Instantly recognizes danger signs
-- Multilingual: English & Nepali
-- Context-aware: Responses tailored to pregnancy week, severity level
-- Free AI integration: Uses free Hugging Face models with intelligent fallback
-- Works offline: Local knowledge base ensures 24/7 availability
-
-### Risk Assessment
-- ML-based pregnancy risk classifier
-- Feature importance analysis
-- Real-time risk scoring (Low/Medium/High)
-- Nepal-specific health indicators (hemoglobin, gestational diabetes)
-- Personalized recommendations
-
-### Health Insights
-- Trimester-specific guidance
-- Symptom-based alerts
-- Health trend analysis (weight gain, BP changes)
-- Age-specific recommendations
-- 3+ personalized insights on dashboard
-
-### Appointment Management
-- Schedule and track doctor appointments
-- Set reminders
-- Manage visit history
-
-### Educational Resources
-- Week-by-week pregnancy guide
-- Nutrition, exercise, and symptom information
-- Labor preparation guide
-- Breastfeeding tips
-- Postpartum recovery advice
-
-### Emergency Assessment
-- Quick symptom checker
-- Emergency escalation system
-- Direct hospital recommendation
-- Vital signs tracking (temperature, BP, pain level)
-
----
+- Tracks weight, blood pressure, blood sugar, haemoglobin, symptoms, and notes.
+- Flags emergency symptoms and gives safer escalation guidance.
+- Generates personalized health insights from recorded data.
+- Schedules and manages appointments.
+- Provides pregnancy education by trimester and topic.
+- Offers a bilingual chatbot and AI-assisted guidance.
 
 ## Tech Stack
 
-### Backend
-- Framework: FastAPI 0.104.1
-- Language: Python 3.12
-- Database: MongoDB Atlas
-- ML/AI: scikit-learn, Hugging Face Inference API, TFIDF + Logistic Regression
-- Authentication: JWT + bcrypt
-- Server: uvicorn
-
-### Frontend
-- Framework: React 19.2.4
-- Build Tool: Vite 8.0.1
-- Styling: Tailwind CSS 4.2.2
-- Routing: React Router 7.13.1
-- Charts: Recharts 2.15.0
-- HTTP: Axios 1.13.6
-
-### DevOps & Tools
-- Testing: pytest 8.3.3
-- Package Manager: pip (Python), npm (Node.js)
-- Version Control: Git
-- Environment: .env files for secrets
-
----
+- Frontend: React, Vite, Tailwind CSS, React Router, Axios, Recharts
+- Backend: FastAPI, Python, MongoDB, scikit-learn, pymongo, pydantic, bcrypt
+- Testing: pytest, httpx
 
 ## Project Structure
 
-```
-aama-suraksha/
-├── backend/
-│   ├── ai_chatbot_enhanced.py      # AI chatbot with knowledge base
-│   ├── chat_service.py             # Rule-based chat guardrails
-│   ├── chat_prompts.py             # Chat templates & suggestions
-│   ├── chatbot_model.py            # Intent classification model
-│   ├── risk_assessment.py          # ML risk classifier
-│   ├── personalized_insights.py    # Insight generation engine
-│   ├── server.py                   # FastAPI server & endpoints
-│   ├── validation.py               # Input validation
-│   ├── train_model.py              # Model training pipeline
-│   ├── ml_analyzer.py              # Advanced ML analysis
-│   ├── requirements.txt            # Python dependencies
-│   ├── .env                        # Environment variables (secret)
-│   ├── .env.example                # Example env file
-│   ├── models/
-│   │   ├── trained_model.pkl       # Random Forest classifier
-│   │   ├── label_encoder.pkl       # Risk label encoder
-│   │   └── chatbot_intent_model.pkl # Intent classifier
-│   ├── tests/
-│   │   ├── test_chat_api.py        # Chat endpoint tests
-│   │   └── test_chat_service.py    # Chat service tests
-│   ├── venv/                       # Virtual environment
-│   └── README.md                   # Backend documentation
-│
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── App.jsx             # Main app layout
-│   │   │   ├── Dashboard.jsx       # Dashboard with insights
-│   │   │   ├── ChatBot.jsx         # Chat interface
-│   │   │   ├── HealthTracker.jsx   # Health logging
-│   │   │   ├── RiskAssessment.jsx  # Risk display
-│   │   │   ├── Appointments.jsx    # Appointment management
-│   │   │   ├── Emergency.jsx       # Emergency assessment
-│   │   │   ├── Education.jsx       # Educational resources
-│   │   │   └── Login.jsx           # Authentication
-│   │   ├── constants.js            # API endpoints
-│   │   ├── index.css               # Global styles
-│   │   └── main.jsx                # React entry point
-│   ├── public/                     # Static assets
-│   ├── package.json                # Node dependencies
-│   ├── vite.config.js              # Vite configuration
-│   ├── tailwind.config.js          # Tailwind setup
-│   ├── eslint.config.js            # ESLint rules
-│   └── index.html                  # HTML template
-│
-├── README.md                       # THIS FILE
-├── CHATBOT_IMPLEMENTATION_GUIDE.md # Chatbot architecture details
-├── .gitignore                      # Git ignore rules
-└── .env.example                    # Example env file
+```text
+backend/
+  ai_chatbot_enhanced.py
+  chat_prompts.py
+  chat_service.py
+  chatbot_model.py
+  ml_analyzer.py
+  personalized_insights.py
+  risk_assessment.py
+  server.py
+  train_model.py
+  validation.py
+  models/
+  notebooks/
+  tests/
+  requirements.txt
+frontend/
+  src/
+  public/
+  package.json
+  vite.config.js
+  tailwind.config.js
+Database/
+  schema/
+  sample-data/
+  queries/
+  validation/
+  screenshots/
 ```
 
----
+## Setup
 
-## Getting Started
+Backend:
 
-### Prerequisites
-- **Python 3.12+** (backend)
-- **Node.js 18+** (frontend)
-- **MongoDB Atlas account** (cloud database)
-- **Git** for version control
-- **Hugging Face API Key** (optional, for enhanced AI)
-
-### System Requirements
-- RAM: 4GB minimum (8GB recommended)
-- Disk: 2GB free space
-- OS: Windows, macOS, or Linux
-
----
-
-## Installation
-
-### 1. Clone the Repository
-```bash
-git clone https://github.com/yourusername/aama-suraksha.git
-cd aama-suraksha
-```
-
-### 2. Backend Setup
-
-#### Create Virtual Environment
 ```bash
 cd backend
 python -m venv venv
-
-# Activate virtual environment
-# Windows:
+# PowerShell
+.\venv\Scripts\Activate.ps1
+# Command Prompt
 venv\Scripts\activate
-# macOS/Linux:
-source venv/bin/activate
-```
-
-#### Install Dependencies
-```bash
 pip install -r requirements.txt
 ```
 
-**Note:** If you encounter timeout errors during pip install:
-```bash
-# Retry with longer timeout
-pip install --default-timeout=1000 -r requirements.txt
-
-# Or install packages individually
-pip install fastapi uvicorn python-dotenv pymongo pydantic bcrypt
-pip install scikit-learn numpy scipy
-pip install pytest httpx joblib requests
-```
-
-### 3. Frontend Setup
+Frontend:
 
 ```bash
-cd ../frontend
+cd frontend
 npm install
 ```
 
----
-
 ## Configuration
 
-### Backend Configuration
+- Copy `backend/.env.example` to `backend/.env`.
+- Set `MONGODB_URL` and `JWT_SECRET`.
+- Set `VITE_API_URL` in `frontend/.env.local` if needed.
 
-1. **Create `.env` file** in `backend/` directory:
-```bash
-cp .env.example .env
-```
+## Notes
 
-2. **Fill in your credentials** in `backend/.env`:
-```env
-# MongoDB Connection
-MONGODB_URL=mongodb+srv://username:password@cluster.mongodb.net/aama_suraksha?retryWrites=true&w=majority
-
-# JWT Secret (generate a strong random string)
-JWT_SECRET=your-super-secret-key-here-change-in-production
-
-# Optional: Hugging Face API Key (for enhanced AI responses)
-HUGGINGFACE_API_KEY=hf_your_api_key_here
-```
-
-### Frontend Configuration
-
-Create `.env.local` in `frontend/` directory:
-```env
-VITE_API_URL=http://localhost:8001/api
-```
+- Keep generated build output, virtual environments, caches, and local secrets out of version control.
+- The database documentation lives under `Database/` for submission and reference.
 
 For production:
 ```env

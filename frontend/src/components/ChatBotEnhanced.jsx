@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { API } from '../constants';
  
@@ -14,6 +14,38 @@ export default function ChatBot({ user, language }) {
   const messagesEndRef = useRef(null);
  
   // Load chat history from localStorage on mount
+  const fetchSuggestedQuestions = useCallback(async (intent = null) => {
+    setLoadingSuggestions(true);
+    try {
+      const params = new URLSearchParams({
+        language,
+        count: 3
+      });
+      if (intent) params.append('intent', intent);
+
+      const response = await fetch(`${API}/chat/suggested-questions?${params}`);
+      if (response.ok) {
+        const data = await response.json();
+        setSuggestedQuestions(data.suggested_questions || []);
+      }
+    } catch (error) {
+      console.error('Error fetching suggested questions:', error);
+    }
+    setLoadingSuggestions(false);
+  }, [language]);
+
+  const fetchQuestionGuide = useCallback(async () => {
+    try {
+      const response = await fetch(`${API}/chat/question-types-guide?language=${language}`);
+      if (response.ok) {
+        const data = await response.json();
+        setQuestionGuide(data);
+      }
+    } catch (error) {
+      console.error('Error fetching question guide:', error);
+    }
+  }, [language]);
+
   useEffect(() => {
     const savedMessages = localStorage.getItem(`chat_${user.name}`);
     Promise.resolve().then(() => {
@@ -21,17 +53,17 @@ export default function ChatBot({ user, language }) {
         setMessages([]);
         return;
       }
- 
+
       try {
         setMessages(JSON.parse(savedMessages));
       } catch {
         setMessages([]);
       }
     });
-    
+
     // Fetch suggested questions on mount
     fetchSuggestedQuestions();
-  }, [user.name]);
+  }, [user.name, fetchSuggestedQuestions]);
  
   // Auto-scroll to latest message
   useEffect(() => {
@@ -43,7 +75,7 @@ export default function ChatBot({ user, language }) {
     if (showQuestionGuide && !questionGuide) {
       fetchQuestionGuide();
     }
-  }, [showQuestionGuide]);
+  }, [showQuestionGuide, questionGuide, fetchQuestionGuide]);
  
   const text = language === 'ne' ? {
     title: 'गर्भावस्था सहायक 🤰',
@@ -54,7 +86,7 @@ export default function ChatBot({ user, language }) {
     clearBtn: 'साफ गर्नुहोस्',
     suggestedQuestionsTitle: 'सुझाव भएका प्रश्नहरू',
     questionGuideBtn: 'प्रश्न प्रकारहरू',
-    welcome: 'नमस्ते! 👋 मैले गर्भावस्था र मातृ स्वास्थ्य सम्बन्धि आपका सवालको जवाब दिन यहाँ हूँ। कृपया कुनै प्रश्न सोध्नुहोस्।',
+    welcome: 'नमस्ते! 👋 म गर्भावस्था र मातृ स्वास्थ्य सम्बन्धी तपाईंका प्रश्नहरूको उत्तर दिन यहाँ छु। कृपया कुनै प्रश्न सोध्नुहोस्।',
     typing: 'सोच्दै...'
   } : {
     title: 'Pregnancy Assistant 🤰',
@@ -69,38 +101,6 @@ export default function ChatBot({ user, language }) {
     typing: 'Thinking...'
   };
  
-  const fetchSuggestedQuestions = async (intent = null) => {
-    setLoadingSuggestions(true);
-    try {
-      const params = new URLSearchParams({
-        language,
-        count: 3
-      });
-      if (intent) params.append('intent', intent);
-      
-      const response = await fetch(`${API}/chat/suggested-questions?${params}`);
-      if (response.ok) {
-        const data = await response.json();
-        setSuggestedQuestions(data.suggested_questions || []);
-      }
-    } catch (error) {
-      console.error('Error fetching suggested questions:', error);
-    }
-    setLoadingSuggestions(false);
-  };
-
-  const fetchQuestionGuide = async () => {
-    try {
-      const response = await fetch(`${API}/chat/question-types-guide?language=${language}`);
-      if (response.ok) {
-        const data = await response.json();
-        setQuestionGuide(data);
-      }
-    } catch (error) {
-      console.error('Error fetching question guide:', error);
-    }
-  };
-
   const handleSuggestedQuestionClick = (question) => {
     setInputValue(question);
     // Focus input and trigger send after a small delay
@@ -135,7 +135,7 @@ export default function ChatBot({ user, language }) {
     const keywords = {
       ne: {
         greeting: ['नमस्ते', 'हेलो', 'हाय', 'कस्तो', 'किसिम'],
-        emergency: ['तुरंत', 'आपातकाल', 'गंभीर', 'खतरा', 'बेहोश'],
+        emergency: ['तुरुन्त', 'आपतकाल', 'गम्भीर', 'खतरा', 'बेहोस'],
         bleeding: ['रक्त', 'खून', 'फहराउँदै', 'रक्तस्राव', 'स्पटिङ'],
         nausea: ['मितली', 'उल्टी', 'वमन', 'भोकिएको'],
         pain: ['दर्द', 'पीडा', 'पेट', 'ऐंठन', 'तकलिफ'],
@@ -200,12 +200,12 @@ export default function ChatBot({ user, language }) {
     // Dynamic responses based on context
     const getAnswers = () => ({
       ne: {
-        greeting: 'नमस्ते! 👋 गर्भावस्था सम्बन्धि कुनै पनि प्रश्न गर्नुहोस्। मैले तपाईंलाई मदत गर्न खुसी छु।',
-        emergency: '🚨 तुरंत आपनो डाक्टरसँग सम्पर्क गर्नुहोस् वा निकटतम अस्पताल जानुहोस्! यो गम्भीर छ। देरी न गर्नुहोस्।',
-        bleeding: '🚨 भारी रक्तस्राव गम्भीर हो सक्छ। तुरंत आपनो स्वास्थ्य सेवा प्रदानकर्तासँग सम्पर्क गर्नुहोस्। यदि धेरै भारी छ भने जरुरी कक्षमा जानुहोस्।',
-        nausea: '😷 गर्भावस्थामा मितली सामान्य छ, विशेषगरी पहिलो तिनमासमा। कोसिस गर्नुहोस्: अदुवाको चिया, साना खानाहरु, भिटामिन B6। यदि गम्भीर छ भने डाक्टरसँग कुरा गर्नुहोस्।',
-        pain: '🤒 हल्का पेटको दर्द सामान्य छ, तर तीव्र वा लामो समय सम्मको दर्दको लागि तुरंत डाक्टरसँग मिलनुहोस्। विशेषगरी यदि ऐंठन वा रक्तस्राव छ भने।',
-        fever: '🌡️ गर्भावस्थामा बुखारलाई गम्भीरताको साथ लिनुहोस्। यदि तापमान 38°C भन्दा माथि छ भने डाक्टरलाई बताउनुहोस्। प्रबन्ध गर्नुहोस्: ठंडा पानी, हल्का कपडा, आराम।',
+        greeting: 'नमस्ते! 👋 गर्भावस्था सम्बन्धि कुनै पनि प्रश्न गर्नुहोस्। मैले तपाईंलाई मद्दत गर्न खुसी छु।',
+        emergency: '🚨 तुरुन्त तपाईंको डाक्टरसँग सम्पर्क गर्नुहोस् वा नजिकको अस्पताल जानुहोस्! यो गम्भीर छ। ढिला नगर्नुहोस्।',
+        bleeding: '🚨 भारी रक्तस्राव गम्भीर हुन सक्छ। तुरुन्त तपाईंको स्वास्थ्य सेवा प्रदायकसँग सम्पर्क गर्नुहोस्। यदि धेरै भारी छ भने आपतकालीन कक्षमा जानुहोस्।',
+        nausea: '😷 गर्भावस्थामा मितली सामान्य हुन्छ, विशेषगरी पहिलो तिनमासमा। प्रयास गर्नुहोस्: अदुवा चिया, साना खाना, भिटामिन B6। यदि गम्भीर छ भने डाक्टरसँग परामर्श गर्नुहोस्।',
+        pain: '🤒 हल्का पेटसम्बन्धी पीडा सामान्य हुन सक्छ, तर तीव्र वा लामो समयसम्म रहँदा तुरुन्त डाक्टरसँग परामर्श गर्नुहोस्। विशेषगरी यदि ऐंठन वा रक्तस्राव छ भने।',
+        fever: '🌡️ गर्भावस्थामा बुखारलाई गम्भीरताका साथ लिनुहोस्। यदि तापमान 38°C भन्दा माथि छ भने डाक्टरलाई जानकारी दिनुहोस्। व्यवस्थापन: चिसो पानी, हल्का लुगा, आराम।',
       },
       en: {
         greeting: 'Hello! 👋 I\'m glad to help you. Feel free to ask me anything about your pregnancy journey.',
@@ -433,7 +433,7 @@ export default function ChatBot({ user, language }) {
   };
  
   const handleClearChat = () => {
-    if (confirm(language === 'ne' ? 'क्या तपाई चैट साफ गर्न चाहनुहुन्छ?' : 'Clear all messages?')) {
+    if (confirm(language === 'ne' ? 'के तपाईं च्याट सफा गर्न चाहनुहुन्छ?' : 'Clear all messages?')) {
       setMessages([]);
       localStorage.removeItem(`chat_${user.name}`);
     }
@@ -442,7 +442,7 @@ export default function ChatBot({ user, language }) {
   const t = text;
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen flex flex-col bg-linear-to-br from-slate-50 to-slate-100">
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -524,10 +524,10 @@ export default function ChatBot({ user, language }) {
                 <div key={message.id} className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                   <div className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl shadow-sm transition ${
                     message.sender === 'user'
-                      ? 'bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-br-none'
+                      ? 'bg-linear-to-r from-teal-500 to-teal-600 text-white rounded-br-none'
                       : 'bg-slate-100 text-slate-900 border border-slate-200 rounded-bl-none'
                   }`}>
-                    <p className="text-sm leading-relaxed break-words">{message.text}</p>
+                    <p className="text-sm leading-relaxed wrap-break-word">{message.text}</p>
                     <span className={`text-xs mt-2 block opacity-70 ${
                       message.sender === 'user' ? 'text-teal-100' : 'text-slate-600'
                     }`}>{message.timestamp}</span>
@@ -584,7 +584,7 @@ export default function ChatBot({ user, language }) {
           <button 
             type="submit"
             disabled={!inputValue.trim() || isLoading}
-            className="px-6 py-3 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white font-bold text-sm rounded-lg hover:shadow-md disabled:opacity-50 disabled:from-slate-400 disabled:to-slate-500 transition"
+            className="px-6 py-3 bg-linear-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white font-bold text-sm rounded-lg hover:shadow-md disabled:opacity-50 disabled:from-slate-400 disabled:to-slate-500 transition"
           >
             {isLoading ? t.typing : t.sendBtn}
           </button>

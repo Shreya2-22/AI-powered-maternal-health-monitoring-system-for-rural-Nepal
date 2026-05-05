@@ -671,6 +671,21 @@ class PregnancyChatService:
                 return 0.72 if " " in phrase else 0.66
         return 0.0
 
+    def _keyword_intent_override(self, message: str, lang: str) -> Tuple[Optional[str], float]:
+        best_intent = None
+        best_confidence = 0.0
+
+        for intent in self.responses.get(lang, {}):
+            if intent in {"greeting"}:
+                continue
+
+            confidence = self._keyword_confidence_boost(intent, message, lang)
+            if confidence > best_confidence:
+                best_intent = intent
+                best_confidence = confidence
+
+        return best_intent, best_confidence
+
     def _detect_intent(self, message: str, lang: str) -> Tuple[str, Dict[str, float], float]:
         model_result = self.intent_model.predict(message)
         scores = {intent: score for intent, score in model_result.top_intents}
@@ -753,6 +768,11 @@ class PregnancyChatService:
 
         best_intent, scores, confidence = self._detect_intent(normalized, lang)
         top_intents = sorted(scores.items(), key=lambda item: item[1], reverse=True)[:3]
+
+        keyword_intent, keyword_confidence = self._keyword_intent_override(normalized, lang)
+        if keyword_intent is not None and keyword_confidence > confidence:
+            best_intent = keyword_intent
+            confidence = keyword_confidence
 
         confidence = max(confidence, self._keyword_confidence_boost(best_intent, normalized, lang))
 

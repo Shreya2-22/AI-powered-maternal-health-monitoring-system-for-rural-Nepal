@@ -26,11 +26,11 @@ export default function HealthInsights({ user, language }) {
     title: 'स्वास्थ्य अन्तर्दृष्टि',
     subtitle: 'व्यक्तिगत स्वास्थ्य सुझाव',
     back: 'फिर्ता',
-    personalized: 'आपको व्यक्तिगत स्वास्थ्य मार्गदर्शन',
+    personalized: 'तपाईंको व्यक्तिगत स्वास्थ्य मार्गदर्शन',
     loading: 'लोड भइरहेको छ...',
     noInsights: 'अहिले कुनै अन्तर्दृष्टि उपलब्ध छैन',
     viewDetails: 'विवरण हेर्नुहोस्',
-    userInfo: 'आपको जानकारी',
+    userInfo: 'तपाईंको जानकारी',
     age: 'आयु',
     weeks: 'हप्ता',
     insights: 'अन्तर्दृष्टिहरू',
@@ -150,7 +150,7 @@ export default function HealthInsights({ user, language }) {
   const t = text;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-teal-50 to-slate-100">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-teal-50 to-slate-100">
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -170,7 +170,7 @@ export default function HealthInsights({ user, language }) {
 
       <div className="max-w-6xl mx-auto w-full px-4 py-8 flex-1">
         {/* User Info Card - Enhanced */}
-        <div className="bg-gradient-to-r from-teal-500 via-teal-600 to-blue-600 text-white rounded-2xl p-8 mb-10 shadow-xl hover:shadow-2xl transition-shadow">
+        <div className="bg-linear-to-r from-teal-500 via-teal-600 to-blue-600 text-white rounded-2xl p-8 mb-10 shadow-xl hover:shadow-2xl transition-shadow">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-3xl font-bold">👩‍⚕️ {t.userInfo}</h2>
             <div className="text-5xl opacity-20">🤰</div>
@@ -210,13 +210,13 @@ export default function HealthInsights({ user, language }) {
           )}
 
           {error && (
-            <div className="bg-gradient-to-r from-red-50 to-red-100 border border-red-300 rounded-xl p-6 mb-6 shadow-sm">
+            <div className="bg-linear-to-r from-red-50 to-red-100 border border-red-300 rounded-xl p-6 mb-6 shadow-sm">
               <p className="text-red-800 font-semibold">⚠️ {error}</p>
             </div>
           )}
 
           {!isLoading && insights.length === 0 && !error && (
-            <div className="bg-gradient-to-r from-blue-50 to-blue-100 border-2 border-blue-200 rounded-2xl p-12 text-center shadow-sm hover:shadow-md transition">
+            <div className="bg-linear-to-r from-blue-50 to-blue-100 border-2 border-blue-200 rounded-2xl p-12 text-center shadow-sm hover:shadow-md transition">
               <p className="text-blue-900 font-bold text-lg mb-2">💭 {t.noInsights}</p>
               <p className="text-blue-700 text-sm">Start logging health records to get personalized insights</p>
             </div>
@@ -231,7 +231,7 @@ export default function HealthInsights({ user, language }) {
                 return (
                   <div
                     key={idx}
-                    className={`bg-gradient-to-br ${getUrgencyColor(insight.urgency)} rounded-2xl p-6 cursor-pointer shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1`}
+                    className={`bg-linear-to-br ${getUrgencyColor(insight.urgency)} rounded-2xl p-6 cursor-pointer shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1`}
                     onClick={() => setExpandedInsight(isExpanded ? null : idx)}
                   >
                     {/* Card Header */}
@@ -301,19 +301,19 @@ export default function HealthInsights({ user, language }) {
 
         {/* Health Records Summary */}
         {healthRecords.length > 0 && (
-          <div className="mt-12 bg-gradient-to-r from-white to-slate-50 rounded-2xl shadow-lg border border-slate-200 p-8">
+          <div className="mt-12 bg-linear-to-r from-white to-slate-50 rounded-2xl shadow-lg border border-slate-200 p-8">
             <h3 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
               📊 {t.recentTrends}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl border border-blue-200 hover:shadow-lg transition">
+              <div className="bg-linear-to-br from-blue-50 to-blue-100 p-6 rounded-xl border border-blue-200 hover:shadow-lg transition">
                 <p className="text-sm font-semibold text-blue-700 mb-2">⚖️ {t.latestWeight}</p>
                 <p className="text-3xl font-bold text-blue-900">
                   {healthRecords.length > 0 ? `${healthRecords[healthRecords.length - 1].weight}` : '—'} <span className="text-lg">kg</span>
                 </p>
                 <div className="text-xs text-blue-600 mt-2">Latest recorded</div>
               </div>
-              <div className="bg-gradient-to-br from-red-50 to-red-100 p-6 rounded-xl border border-red-200 hover:shadow-lg transition">
+              <div className="bg-linear-to-br from-red-50 to-red-100 p-6 rounded-xl border border-red-200 hover:shadow-lg transition">
                 <p className="text-sm font-semibold text-red-700 mb-2">💓 {t.latestBP}</p>
                 <p className="text-3xl font-bold text-red-900">
                   {healthRecords.length > 0 
@@ -322,7 +322,7 @@ export default function HealthInsights({ user, language }) {
                 </p>
                 <div className="text-xs text-red-600 mt-2">Latest reading</div>
               </div>
-              <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl border border-purple-200 hover:shadow-lg transition">
+              <div className="bg-linear-to-br from-purple-50 to-purple-100 p-6 rounded-xl border border-purple-200 hover:shadow-lg transition">
                 <p className="text-sm font-semibold text-purple-700 mb-2">📈 {t.totalRecords}</p>
                 <p className="text-3xl font-bold text-purple-900">{healthRecords.length}</p>
                 <div className="text-xs text-purple-600 mt-2">Health check-ins</div>
@@ -333,13 +333,13 @@ export default function HealthInsights({ user, language }) {
 
         {/* Empty State */}
         {healthRecords.length === 0 && !isLoading && (
-          <div className="mt-12 bg-gradient-to-r from-amber-50 to-orange-100 border-2 border-amber-300 rounded-2xl p-8 text-center shadow-lg hover:shadow-xl transition">
+          <div className="mt-12 bg-linear-to-r from-amber-50 to-orange-100 border-2 border-amber-300 rounded-2xl p-8 text-center shadow-lg hover:shadow-xl transition">
             <div className="text-5xl mb-4">📝</div>
             <p className="text-amber-900 font-bold text-lg mb-2">{t.noRecords}</p>
             <p className="text-amber-800 mb-6">Start tracking your health to unlock personalized insights!</p>
             <button
               onClick={() => navigate('/health')}
-              className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold rounded-xl transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+              className="px-6 py-3 bg-linear-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold rounded-xl transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
             >
               ➕ {t.addRecords}
             </button>

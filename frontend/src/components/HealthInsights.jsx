@@ -40,7 +40,7 @@ export default function HealthInsights({ user, language }) {
 
   const insights = {
     overview: language === 'ne' ? [
-      { title: 'गर्भावस्था सारांश', tip: 'आपको गर्भावस्था यात्रा अद्भुत छ। नियमित जाँच र सुस्वास्थ्य संचय जारी राख्नुहोस्।', urgency: 'normal' },
+      { title: 'गर्भावस्था सारांश', tip: 'तपाईंको गर्भावस्था यात्रा अद्भुत छ। नियमित जाँच र सुस्वास्थ्यको बानी जारी राख्नुहोस्।', urgency: 'normal' },
       { title: 'कल्याणकारी लक्ष्य', tip: 'प्रति हप्ता पोषण र व्यायाम को सन्तुलन राख्नुहोस्।', urgency: 'normal' },
       { title: 'समर्थन नेटवर्क', tip: 'परिवार र स्वास्थ्य सेवा प्रदाताहरु को साथ संपर्क राख्नुहोस्।', urgency: 'normal' }
     ] : [
@@ -102,7 +102,7 @@ export default function HealthInsights({ user, language }) {
     ],
     preparation: language === 'ne' ? [
       { title: 'प्रसव वर्गहरु', tip: 'प्रसव वर्ग लिनुहोस्। यो शारीरिक र मानसिक तयारी गर्न मदत गर्छ।', urgency: 'normal' },
-      { title: 'प्रसव योजना', tip: 'आपनो प्रसव विकल्प र वरीयताहरू निर्धारण गर्नुहोस्। दाई र डाक्टरसँग कुरा गर्नुहोस्।', urgency: 'normal' },
+      { title: 'प्रसव योजना', tip: 'आफ्नो प्रसव विकल्प र प्राथमिकताहरू निर्धारण गर्नुहोस्। दाई र डाक्टरसँग कुरा गर्नुहोस्।', urgency: 'normal' },
       { title: 'बच्चाको तयारी', tip: 'कपडा, खेलौना, र अन्य आवश्यक चीजहरु तयार गर्नुहोस्।', urgency: 'normal' },
       { title: 'स्तनपान तयारी', tip: 'स्तनपान कोर्सहरु लिनुहोस्। यो सफल स्तनपान सुनिश्चित गर्छ।', urgency: 'normal' },
       { title: 'लेबर संकेत', tip: 'नियमित संकुचन, जल टुट्ने, र रक्तस्राव लेबरको संकेत हो। अस्पताल जानुहोस्।', urgency: 'warning' }
@@ -136,7 +136,7 @@ export default function HealthInsights({ user, language }) {
   const currentInsights = insights[selectedCategory] || insights.overview;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50">
+    <div className="min-h-screen bg-linear-to-br from-purple-50 via-pink-50 to-blue-50">
       {/* Header */}
       <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b-2 border-purple-100 shadow-sm">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -148,7 +148,7 @@ export default function HealthInsights({ user, language }) {
               ← {text.back}
             </button>
             <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+              <h1 className="text-2xl font-bold bg-linear-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                 {text.title}
               </h1>
               <p className="text-sm text-slate-500">{text.subtitle}</p>
@@ -156,7 +156,7 @@ export default function HealthInsights({ user, language }) {
           </div>
           <button
             onClick={() => navigate('/health')}
-            className="px-5 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold rounded-lg hover:shadow-lg transition"
+            className="px-5 py-2 bg-linear-to-r from-green-500 to-emerald-500 text-white font-semibold rounded-lg hover:shadow-lg transition"
           >
             {text.addRecords}
           </button>
@@ -184,7 +184,7 @@ export default function HealthInsights({ user, language }) {
                 onClick={() => setSelectedCategory(key)}
                 className={`px-4 py-2 rounded-lg font-semibold text-sm transition ${
                   selectedCategory === key
-                    ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg'
+                    ? 'bg-linear-to-r from-purple-600 to-pink-600 text-white shadow-lg'
                     : 'bg-white border-2 border-purple-200 text-purple-700 hover:border-purple-400'
                 }`}
               >
@@ -202,8 +202,8 @@ export default function HealthInsights({ user, language }) {
               onClick={() => setExpandedInsight(expandedInsight === idx ? null : idx)}
               className={`p-5 rounded-xl border-2 shadow-md cursor-pointer transition transform hover:scale-105 ${
                 insight.urgency === 'warning'
-                  ? 'bg-gradient-to-br from-amber-50 to-orange-50 border-amber-300'
-                  : 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-300'
+                  ? 'bg-linear-to-br from-amber-50 to-orange-50 border-amber-300'
+                  : 'bg-linear-to-br from-green-50 to-emerald-50 border-green-300'
               }`}
             >
               <div className="flex justify-between items-start mb-2">
@@ -237,9 +237,9 @@ export default function HealthInsights({ user, language }) {
 
         {/* CTA Section */}
         {healthRecords.length === 0 && (
-          <div className="mt-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl p-8 text-center text-white shadow-xl">
+          <div className="mt-12 bg-linear-to-r from-blue-500 to-cyan-500 rounded-xl p-8 text-center text-white shadow-xl">
             <h3 className="text-2xl font-bold mb-2">{language === 'ne' ? 'स्वास्थ्य ट्र्याकिङ शुरु गर्नुहोस्' : 'Start Tracking Your Health'}</h3>
-            <p className="text-sm mb-4 opacity-90">{language === 'ne' ? 'आपनो स्वास्थ्य रेकर्ड थप्न शुरु गर्नुहोस् र अधिक व्यक्तिगत सिफारिसहरु प्राप्त गर्नुहोस्।' : 'Add your health records to receive more personalized recommendations and insights.'}</p>
+            <p className="text-sm mb-4 opacity-90">{language === 'ne' ? 'आफ्नो स्वास्थ्य रेकर्ड थप्न सुरु गर्नुहोस् र अझ बढी व्यक्तिगत सिफारिसहरू प्राप्त गर्नुहोस्।' : 'Add your health records to receive more personalized recommendations and insights.'}</p>
             <button
               onClick={() => navigate('/health')}
               className="px-8 py-3 bg-white text-blue-600 font-bold rounded-lg hover:shadow-xl transition"
